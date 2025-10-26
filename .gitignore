@@ -1,0 +1,55 @@
+# Large data files - exclude from Git
+*.dta
+*.dat
+*.XPT
+*.xpt
+*.sav
+*.zip
+
+# Data directories and CSV files in session/homework folders
+**/data/
+session_*/data/
+homework_*/data/
+session_*/*.csv
+homework_*/*.csv
+
+# Log files
+*.log
+*.smcl
+
+# Temporary Stata files
+*.gph
+*.ster
+
+# Output files
+*.png
+*.pdf
+*.jpg
+*.jpeg
+*.tif
+*.eps
+
+# System files
+.DS_Store
+Thumbs.db
+*.tmp
+
+# IDE settings (keep local settings only)
+.vscode/
+.idea/
+
+# Keep .claude folder for project settings
+!.claude/
+
+# Large specific files that caused errors
+session_1-3/LLCP2023.XPT
+session_1-3/BRFSS2023.dta
+session_1-3/BRFSS2023_class.dta
+session_4/nhis_00002.dta
+homework_2/nhis_00003.dat
+homework_2/homework2.zip
+
+# Keep only code files
+# .do files (Stata scripts) will be tracked
+# .md files (documentation) will be tracked
+# .txt files (text documentation) will be tracked
