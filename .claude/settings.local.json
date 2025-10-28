@@ -13,7 +13,8 @@
       "Bash(where:*)",
       "Bash(echo:*)",
       "Bash(source:*)",
-      "Read(//c/Users/l1697/**)"
+      "Read(//c/Users/l1697/**)",
+      "Bash(wmic:*)"
     ],
     "deny": [],
     "ask": []

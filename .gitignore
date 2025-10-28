@@ -23,7 +23,6 @@ homework_*/*.csv
 
 # Output files
 *.png
-*.pdf
 *.jpg
 *.jpeg
 *.tif
@@ -49,7 +48,20 @@ session_4/nhis_00002.dta
 homework_2/nhis_00003.dat
 homework_2/homework2.zip
 
+# Video and audio files (usually too large for GitHub)
+*.mp4
+*.avi
+*.mov
+*.wmv
+*.flv
+*.mp3
+*.wav
+*.m4a
+**/Midterm review recording*
+**/midterm review recording*
+
 # Keep only code files
 # .do files (Stata scripts) will be tracked
 # .md files (documentation) will be tracked
 # .txt files (text documentation) will be tracked
+# .pdf files (documentation) will be tracked
