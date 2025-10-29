@@ -141,7 +141,20 @@
 \begin{center}
      \fontsize{13pt}{13pt}\selectfont\textbf{Stata Cheat Sheet} \\
      \fontsize{6.5pt}{6.5pt}\selectfont Large Scale Data - Part 2
-\end{center}\vspace{-0.3cm}
+\end{center}\vspace{-0.2cm}
+
+% -----------------------------------------------------------------------
+\section{Example Dataset: Hospital Discharge Data}
+
+\fontsize{6.5pt}{7pt}\selectfont
+This cheat sheet uses \textbf{SPARCS hospital discharge data} as the running example:
+\begin{itemize}
+\item \textbf{Observations:} Individual hospital admissions (e.g., 150,000 records)
+\item \textbf{Variables:} Age, sex, admission type, length of stay, total charges
+\item \textbf{Geographic:} Multiple counties with county-level socioeconomic data
+\item \textbf{Outcome:} Total costs (continuous), expensive stay flag (binary)
+\item \textbf{Key coding challenges:} Missing values (999/9999), top-coding of costs, string variables (county names)
+\end{itemize}\vspace{-0.2cm}
 
 % -----------------------------------------------------------------------
 \section{1. Basic Setup \& Data Import}
@@ -162,21 +175,21 @@ log using "analysis.log", replace
 
 \subsection{Import Data}
 \begin{lstlisting}
-// Import CSV
-import delimited "file.csv", clear
+// Example: Load hospital discharge data
+use "sparcs_hospital_data.dta", clear
 
-// Import Excel
-import excel "file.xlsx", ///
-    sheet("Sheet1") firstrow clear
+// Load Stata file (general)
+use "filename.dta", clear
 
-// Import SAS XPT
-import sasxport5 "file.xpt", clear
+// Import from SAS XPT (e.g., SPARCS source)
+import sasxport5 "sparcs_raw.xpt", clear
 
-// Load Stata file
-use "file.dta", clear
+// Import from CSV (hospital subset)
+import delimited "hospital_subset.csv", ///
+    clear firstrow
 
-// Save data
-save "filename.dta", replace
+// Save processed data
+save "sparcs_processed.dta", replace
 \end{lstlisting}
 
 \begin{warningbox}
@@ -188,53 +201,49 @@ Always use \texttt{clear} or \texttt{, clear} option when loading new data to av
 
 \subsection{Basic Viewing}
 \begin{lstlisting}
-// View first 10 rows
-list var1 var2 var3 in 1/10
+// View first 10 hospital admissions
+list age los totalcosts county in 1/10
 
-// View specific observations
-list if condition
+// View high-cost stays (>$100k)
+list if totalcosts > 100000
 
-// Browse data (opens viewer)
-browse
-
-// Describe variables
+// Describe all variables
 describe
-describe var1 var2
 
-// View variable type
-codebook varname
+// Explore age and admission type
+codebook age admission_type
 \end{lstlisting}
 
 \subsection{Summary Statistics}
 \begin{lstlisting}
-// Basic summary
-summ varname
+// Summarize hospital costs
+summ totalcosts
 
-// Detailed summary (with percentiles)
-summ varname, d
-// Shows: p1, p5, p10, p25, p50, p75,
-//        p90, p95, p99
+// Detailed summary with percentiles
+summ totalcosts los age, d
+// Shows: min, max, mean, median, p25, p75
 
-// Multiple variables
-summ var1 var2 var3, d
+// Summary by group (admission type)
+bysort admission_type: summ totalcosts
 \end{lstlisting}
 
 \subsection{Frequency Tables}
 \begin{lstlisting}
-// Frequency table (include missing)
-tab varname, m
+// Admission type frequencies (show missing)
+tab admission_type, m
 
-// Show numeric codes (not labels)
-tab varname, nolabel
+// Age group distribution
+tab age_group
 
-// Two-way table with row %
-tab var1 var2, row m
+// Cross-tabulation: admission type x sex
+tab admission_type sex, row
 
-// Two-way table with column %
-tab var1 var2, col m
+// Expensive stay by admission type
+tab expensive_stay admission_type, col
 
-// Both row and column %
-tab var1 var2, row col
+// Two-way table with both row & col %
+tab admission_type admission_source, ///
+    row col
 \end{lstlisting}
 
 \subsection{Check Data Size}
@@ -285,14 +294,15 @@ replace flag = 0 if !condition
 // Method 2: One-liner
 gen flag = (condition) if var != .
 
-// Example: Age >= 18
-gen adult = 1 if age >= 18 & age != .
-replace adult = 0 if age < 18
+// Example: Elderly patient (age >= 65)
+gen elderly = 1 if age >= 65 & age != .
+replace elderly = 0 if age < 65
 
-// Example: High cost (>$50,000)
-gen expensive = 1 if cost > 50000 ///
-    & cost != .
-replace expensive = 0 if cost <= 50000
+// Example: Expensive stay (>$100,000)
+gen expensive_stay = 1 if totalcosts ///
+    > 100000 & totalcosts != .
+replace expensive_stay = 0 if ///
+    totalcosts <= 100000
 
 // VERIFY binary variable
 summ flag
@@ -682,8 +692,9 @@ reg y i.var1##i.var2
 // IMPORTANT: Use c. for continuous!
 reg y i.category##c.continuous
 
-// Example: Does income effect vary by sex?
-reg health i.sex##c.income age
+// Example: Do age effects vary by sex?
+reg totalcosts i.sex##c.age ///
+    i.admission_type, robust
 
 // Only interaction (no main effects)
 reg y i.var1#i.var2
@@ -1058,7 +1069,7 @@ reg cost_clean County_Income ///
 
 \fontsize{6pt}{6.5pt}\selectfont
 \noindent
-\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}ll@{}}
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}cc@{}}
 \hline\textbf{Task} & \textbf{Command} \\
 \hline
 Load data & use "file.dta", clear \\
