@@ -1,10 +1,10 @@
-\documentclass[8pt,landscape,letterpaper]{article}
+\documentclass[8pt,letterpaper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{multicol}
 \usepackage{calc}
 \usepackage{ifthen}
-\usepackage[landscape,margin=0.4cm,top=0.4cm,bottom=0.5cm]{geometry}
+\usepackage[margin=0.5cm,top=0.5cm,bottom=0.8cm]{geometry}
 \usepackage{hyperref}
 \usepackage{color}
 \usepackage{listings}
@@ -18,8 +18,8 @@
 \fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
 \renewcommand{\footrulewidth}{0pt}
-\cfoot{\fontsize{6pt}{6pt}\selectfont Page \thepage}
-\rfoot{\fontsize{6pt}{6pt}\selectfont Stata Cheat Sheet}
+\fancyfoot[C]{\fontsize{6pt}{6pt}\selectfont \thepage}
+\fancyfoot[R]{\fontsize{5pt}{5pt}\selectfont Stata Cheat Sheet}
 
 % Colors
 \definecolor{myblue}{RGB}{0,82,155}
@@ -35,13 +35,13 @@
                   use,import,delimited,excel,sheet,firstrow,sasxport5,save,
                   list,describe,browse,codebook,summ,d,tab,nolabel,m,row,col,
                   gen,replace,destring,force,encode,decode,recode,max,min,
-                  drop,keep,if,in,&,|,!,not,by,bysort,gsort,sort,duplicates,
+                  drop,keep,if,in,not,by,bysort,gsort,sort,duplicates,
                   append,merge,rename,reorder,reshape,long,wide,egen,rowtotal,
                   rowmean,rowmax,rowmin,mean,count,substr,strlen,strpos,string,
                   strupper,strlower,strproper,split,subinstr,concat,punct,
                   reg,regress,logit,logistic,svy,svyset,predict,margins,test,
-                  xtset,xtreg,fe,pweight,vce,robust,r,cluster,i.,c.,##,#,
-                  label,define,values,count,_N,_merge,display},
+                  xtset,xtreg,fe,pweight,vce,robust,r,cluster,
+                  label,define,values,count,display},
     morekeywords=[2]{gen,replace,encode,decode,merge,reg,logit,logistic,summ,
                      list,tab,describe,drop,keep,append,reshape,xtset,xtreg,
                      predict,margins},
@@ -133,14 +133,14 @@
 
 \raggedright
 \fontsize{7pt}{8pt}\selectfont
-\setlength{\columnsep}{0.3cm}
-\begin{multicols}{3}
+\setlength{\columnsep}{0.4cm}
+\begin{multicols}{2}
 
 % Title
 \begin{center}
-     \fontsize{11pt}{11pt}\selectfont\textbf{Stata Cheat Sheet for Midterm} \\
-     \fontsize{6pt}{6pt}\selectfont Large Scale Data Analysis - Part 2
-\end{center}\vspace{-0.3cm}
+     \fontsize{10pt}{10pt}\selectfont\textbf{Stata Cheat Sheet} \\
+     \fontsize{5.5pt}{5.5pt}\selectfont Large Scale Data - Part 2
+\end{center}\vspace{-0.2cm}
 
 % -----------------------------------------------------------------------
 \section{1. Basic Setup \& Data Import}
