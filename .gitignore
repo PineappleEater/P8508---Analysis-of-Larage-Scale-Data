@@ -65,3 +65,7 @@ homework_2/homework2.zip
 # .md files (documentation) will be tracked
 # .txt files (text documentation) will be tracked
 # .pdf files (documentation) will be tracked
+
+# Exclude other file types
+.claude/
+.github/
