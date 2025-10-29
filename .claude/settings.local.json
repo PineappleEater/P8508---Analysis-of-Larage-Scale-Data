@@ -14,7 +14,13 @@
       "Bash(echo:*)",
       "Bash(source:*)",
       "Read(//c/Users/l1697/**)",
-      "Bash(wmic:*)"
+      "Bash(wmic:*)",
+      "Read(//d/Microsoft VS Code Insiders/**)",
+      "Bash(tasklist:*)",
+      "Bash(findstr:*)",
+      "Bash(robocopy \"C:\\Users\\l1697\\.vscode-insiders\\extensions\" \"D:\\VSCode-Data\\extensions\" /E /MOVE /R:1 /W:1 /MT:8 /NP)",
+      "Bash(xcopy:*)",
+      "Bash(pdflatex --version)"
     ],
     "deny": [],
     "ask": []
