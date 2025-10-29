@@ -1,10 +1,10 @@
-\documentclass[10pt,landscape,a4paper]{article}
+\documentclass[8pt,landscape,a4paper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{multicol}
 \usepackage{calc}
 \usepackage{ifthen}
-\usepackage[landscape]{geometry}
+\usepackage[landscape,margin=0.3cm]{geometry}
 \usepackage{hyperref}
 \usepackage{color}
 \usepackage{listings}
@@ -14,7 +14,6 @@
 \usepackage{fontawesome}
 
 % Page setup
-\geometry{top=0.5cm,left=0.5cm,right=0.5cm,bottom=0.5cm}
 \pagestyle{fancy}
 \fancyhf{}
 \renewcommand{\headrulewidth}{0pt}
@@ -22,77 +21,114 @@
 
 % Colors
 \definecolor{myblue}{RGB}{0,82,155}
-\definecolor{mygreen}{RGB}{0,128,0}
+\definecolor{mygreen}{RGB}{34,139,34}
 \definecolor{myred}{RGB}{200,0,0}
-\definecolor{mygray}{RGB}{100,100,100}
-\definecolor{codebg}{RGB}{245,245,245}
+\definecolor{mygray}{RGB}{150,150,150}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codecomment}{RGB}{100,100,100}
 
-% Stata code style
+% Stata keywords
+\lstdefinelanguage{Stata}{
+    morekeywords={clear,all,set,more,off,cd,capture,log,close,using,replace,
+                  use,import,delimited,excel,sheet,firstrow,sasxport5,save,
+                  list,describe,browse,codebook,summ,d,tab,nolabel,m,row,col,
+                  gen,replace,destring,force,encode,decode,recode,max,min,
+                  drop,keep,if,in,&,|,!,not,by,bysort,gsort,sort,duplicates,
+                  append,merge,rename,reorder,reshape,long,wide,egen,rowtotal,
+                  rowmean,rowmax,rowmin,mean,count,substr,strlen,strpos,string,
+                  strupper,strlower,strproper,split,subinstr,concat,punct,
+                  reg,regress,logit,logistic,svy,svyset,predict,margins,test,
+                  xtset,xtreg,fe,pweight,vce,robust,r,cluster,i.,c.,##,#,
+                  label,define,values,count,_N,_merge,display},
+    morekeywords=[2]{gen,replace,encode,decode,merge,reg,logit,logistic,summ,
+                     list,tab,describe,drop,keep,append,reshape,xtset,xtreg,
+                     predict,margins},
+    sensitive=false,
+    morecomment=[l]{//},
+    morecomment=[l]{*},
+    morestring=[b]"
+}
+
+% Stata code style - improved highlighting
 \lstdefinestyle{statastyle}{
-    language=,
-    basicstyle=\ttfamily\scriptsize,
+    language=Stata,
+    basicstyle=\ttfamily\tiny\color{black},
     backgroundcolor=\color{codebg},
-    keywordstyle=\color{myblue}\bfseries,
-    commentstyle=\color{mygreen}\itshape,
+    keywordstyle=[1]\color{myblue}\bfseries,
+    keywordstyle=[2]\color{myblue}\bfseries,
+    commentstyle=\color{codecomment}\itshape,
     stringstyle=\color{myred},
     numbers=none,
     breaklines=true,
-    frame=single,
+    frame=lines,
+    framerule=0.5pt,
     rulecolor=\color{mygray},
-    xleftmargin=3pt,
-    xrightmargin=3pt,
-    aboveskip=3pt,
-    belowskip=3pt,
+    xleftmargin=2pt,
+    xrightmargin=2pt,
+    aboveskip=2pt,
+    belowskip=1pt,
     showstringspaces=false,
-    tabsize=2
+    tabsize=2,
+    columns=fixed,
+    keepspaces=true
 }
 
 \lstset{style=statastyle}
 
-% Section formatting
+% Section formatting - more compact
 \makeatletter
 \renewcommand{\section}{\@startsection{section}{1}{0mm}%
-                                {-1ex plus -.5ex minus -.2ex}%
-                                {0.5ex plus .2ex}%x
-                                {\normalfont\large\bfseries\color{myblue}}}
+                                {-0.6ex plus -.3ex minus -.1ex}%
+                                {0.2ex plus .1ex}%
+                                {\normalfont\fontsize{9pt}{9pt}\selectfont\bfseries\color{myblue}}}
 \renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
-                                {-1explus -.5ex minus -.2ex}%
-                                {0.5ex plus .2ex}%
-                                {\normalfont\normalsize\bfseries\color{myblue}}}
+                                {-0.4ex plus -.2ex minus -.05ex}%
+                                {0.1ex plus .05ex}%
+                                {\normalfont\fontsize{7.5pt}{7.5pt}\selectfont\bfseries\color{myblue}}}
 \makeatother
 
 % Don't print section numbers
 \setcounter{secnumdepth}{0}
 
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0pt plus 0.5ex}
+\setlength{\parskip}{0pt}
 
-% Custom boxes
+% Reduce list spacing
+\usepackage{enumitem}
+\setlist{nosep,topsep=0pt,partopsep=0pt,itemsep=1pt,parsep=0pt}
+\setlength{\leftmargin}{12pt}
+
+% Custom boxes - compact
 \newtcolorbox{warningbox}{
-    colback=red!5!white,
-    colframe=red!75!black,
-    fonttitle=\bfseries,
-    title=\faExclamationTriangle\ Important Warning
+    colback=red!3!white,
+    colframe=red!70!black,
+    fonttitle=\bfseries\fontsize{7pt}{7pt}\selectfont,
+    title=\faExclamationTriangle\ WARNING,
+    left=3pt,right=3pt,top=2pt,bottom=2pt,
+    arc=2pt
 }
 
 \newtcolorbox{tipbox}{
-    colback=blue!5!white,
-    colframe=blue!75!black,
-    fonttitle=\bfseries,
-    title=\faLightbulbO\ Pro Tip
+    colback=blue!3!white,
+    colframe=blue!70!black,
+    fonttitle=\bfseries\fontsize{7pt}{7pt}\selectfont,
+    title=\faLightbulbO\ TIP,
+    left=3pt,right=3pt,top=2pt,bottom=2pt,
+    arc=2pt
 }
 
 \begin{document}
 
 \raggedright
-\footnotesize
+\fontsize{7pt}{8pt}\selectfont
+\setlength{\columnsep}{0.3cm}
 \begin{multicols}{3}
 
 % Title
 \begin{center}
-     \Large{\textbf{Stata Cheat Sheet for Midterm}} \\
-     \small{Large Scale Data Analysis - Part 2 Reference}
-\end{center}
+     \fontsize{11pt}{11pt}\selectfont\textbf{Stata Cheat Sheet for Midterm} \\
+     \fontsize{6pt}{6pt}\selectfont Large Scale Data Analysis - Part 2
+\end{center}\vspace{-0.3cm}
 
 % -----------------------------------------------------------------------
 \section{1. Basic Setup \& Data Import}
@@ -271,8 +307,6 @@ recode age (0/29=1) (30/49=2) ///
 encode string_var, gen(numeric_var)
 \end{lstlisting}
 
-\columnbreak
-
 \subsection{Top-coding (Capping Outliers)}
 \begin{lstlisting}
 // Create clean version
@@ -444,8 +478,6 @@ split string_var, gen(part) parse("_")
 \texttt{substr(str, 1, 2)} = first 2 chars\\
 \texttt{substr(str, 2, 1)} = 2nd char only
 \end{warningbox}
-
-\columnbreak
 
 % -----------------------------------------------------------------------
 \section{6. Data Merging}
@@ -629,11 +661,11 @@ reg y c.x1 c.x2
 
 \subsection{Interaction Terms}
 \begin{lstlisting}
-// Categorical × Categorical
+// Categorical x Categorical
 reg y i.var1##i.var2
 // ## includes main effects + interaction
 
-// Categorical × Continuous
+// Categorical x Continuous
 // IMPORTANT: Use c. for continuous!
 reg y i.category##c.continuous
 
@@ -650,8 +682,6 @@ MUST use \texttt{c.} prefix!\\
 Wrong: \texttt{i.sex\#\#age}\\
 Right: \texttt{i.sex\#\#c.age}
 \end{warningbox}
-
-\columnbreak
 
 \subsection{Logistic Regression}
 \begin{lstlisting}
@@ -959,17 +989,17 @@ reg cost_clean County_Income ///
 \begin{lstlisting}
 // Linear regression coefficient:
 // "Each 1-unit increase in X is
-// associated with β-unit change in Y,
+// associated with beta-unit change in Y,
 // controlling for other variables."
 
 // Logistic regression OR:
 // "Each 1-unit increase in X is
-// associated with OR× change in the
+// associated with ORx change in the
 // odds of Y, controlling for others."
 
 // Binary outcome + linear regression:
 // "Each 1-unit increase in X is
-// associated with β percentage point
+// associated with beta percentage point
 // change in probability of Y."
 \end{lstlisting}
 
@@ -1011,11 +1041,11 @@ reg cost_clean County_Income ///
 \end{enumerate}
 \end{tipbox}
 
-\subsection{Quick Reference Table}
+\subsection{Quick Reference}
 
-\begin{tabular}{|l|l|}
-\hline
-\textbf{Task} & \textbf{Command} \\
+\fontsize{6pt}{6.5pt}\selectfont
+\begin{tabular}{@{}ll@{}}
+\hline\textbf{Task} & \textbf{Command} \\
 \hline
 Load data & use "file.dta", clear \\
 Import CSV & import delimited "file.csv" \\
@@ -1036,15 +1066,10 @@ Verify binary & summ flag (should be 0-1) \\
 Cross-check & tab oldvar newvar \\
 \hline
 \end{tabular}
+\normalsize
 
-\vfill
-\hrule
-\vspace{2pt}
-\begin{center}
-\scriptsize
-\textbf{Stata Cheat Sheet for Large Scale Data Analysis} \\
-Version 1.0 | October 2025 | Good luck on your midterm!
-\end{center}
+\vspace{0.1cm}
+{\fontsize{5pt}{6pt}\selectfont \textbf{Stata Cheat Sheet v1.0 | October 2025}}
 
 \end{multicols}
 \end{document}
