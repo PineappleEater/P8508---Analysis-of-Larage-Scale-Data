@@ -98,23 +98,29 @@
 \setlist{nosep,topsep=0pt,partopsep=0pt,itemsep=1pt,parsep=0pt}
 \setlength{\leftmargin}{12pt}
 
-% Custom boxes - compact
+% Custom boxes - subtle style with left border only
 \newtcolorbox{warningbox}{
-    colback=red!3!white,
-    colframe=red!70!black,
-    fonttitle=\bfseries\fontsize{7pt}{7pt}\selectfont,
-    title=\faExclamationTriangle\ WARNING,
-    left=3pt,right=3pt,top=2pt,bottom=2pt,
-    arc=2pt
+    colback=white,
+    colframe=mygray,
+    colbacktitle=white,
+    coltitle=black,
+    fonttitle=\bfseries\fontsize{6.5pt}{6.5pt}\selectfont,
+    title=\faExclamationTriangle\ Warning,
+    left=2pt,right=2pt,top=1pt,bottom=1pt,
+    borderline west={1.5pt}{0pt}{mygray},
+    boxsep=2pt
 }
 
 \newtcolorbox{tipbox}{
-    colback=blue!3!white,
-    colframe=blue!70!black,
-    fonttitle=\bfseries\fontsize{7pt}{7pt}\selectfont,
-    title=\faLightbulbO\ TIP,
-    left=3pt,right=3pt,top=2pt,bottom=2pt,
-    arc=2pt
+    colback=white,
+    colframe=mygray,
+    colbacktitle=white,
+    coltitle=black,
+    fonttitle=\bfseries\fontsize{6.5pt}{6.5pt}\selectfont,
+    title=\faLightbulbO\ Tip,
+    left=2pt,right=2pt,top=1pt,bottom=1pt,
+    borderline west={1.5pt}{0pt}{mygray},
+    boxsep=2pt
 }
 
 \begin{document}
