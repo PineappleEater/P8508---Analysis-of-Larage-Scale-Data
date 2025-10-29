@@ -69,3 +69,18 @@ homework_2/homework2.zip
 # Exclude other file types
 .claude/
 .github/
+
+# LaTeX intermediate files
+*.aux
+*.fls
+*.fdb_latexmk
+*.out
+*.dvi
+*.synctex
+*.synctex.gz
+*.bcf
+*.run.xml
+*.blg
+*.bbl
+*_cache/
+*.xdv
