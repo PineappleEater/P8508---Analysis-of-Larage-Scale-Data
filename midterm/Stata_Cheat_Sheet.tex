@@ -1,4 +1,4 @@
-\documentclass[8pt,letterpaper]{article}
+﻿\documentclass[8pt,letterpaper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
 \usepackage{multicol}
@@ -68,12 +68,13 @@
     rulecolor=\color{mygray},
     xleftmargin=2pt,
     xrightmargin=2pt,
-    aboveskip=2pt,
-    belowskip=1pt,
+    aboveskip=3pt,
+    belowskip=3pt,
     showstringspaces=false,
     tabsize=2,
     columns=fixed,
-    keepspaces=true
+    keepspaces=true,
+    lineskip=0.5pt
 }
 
 \lstset{style=statastyle}
@@ -81,13 +82,13 @@
 % Section formatting - more compact
 \makeatletter
 \renewcommand{\section}{\@startsection{section}{1}{0mm}%
-                                {-0.6ex plus -.3ex minus -.1ex}%
-                                {0.2ex plus .1ex}%
-                                {\normalfont\fontsize{9pt}{9pt}\selectfont\bfseries\color{myblue}}}
+                                {-0.4ex plus -.15ex minus -.08ex}%
+                                {0.2ex plus .08ex}%
+                                {\normalfont\fontsize{9.5pt}{9.5pt}\selectfont\bfseries\color{myblue}}}
 \renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
-                                {-0.4ex plus -.2ex minus -.05ex}%
-                                {0.1ex plus .05ex}%
-                                {\normalfont\fontsize{7.5pt}{7.5pt}\selectfont\bfseries\color{myblue}}}
+                                {-0.25ex plus -.12ex minus -.03ex}%
+                                {0.12ex plus .04ex}%
+                                {\normalfont\fontsize{8pt}{8pt}\selectfont\bfseries\color{myblue}}}
 \makeatother
 
 % Don't print section numbers
@@ -98,7 +99,7 @@
 
 % Reduce list spacing
 \usepackage{enumitem}
-\setlist{nosep,topsep=0pt,partopsep=0pt,itemsep=1pt,parsep=0pt}
+\setlist{nosep,topsep=1pt,partopsep=0pt,itemsep=1pt,parsep=0pt}
 \setlength{\leftmargin}{12pt}
 
 % Custom boxes - subtle style
@@ -133,33 +134,431 @@
 \begin{document}
 
 \raggedright
-\fontsize{7pt}{8pt}\selectfont
-\setlength{\columnsep}{0.4cm}
+\fontsize{7pt}{8.2pt}\selectfont
+\setlength{\columnsep}{0.8cm}
 \begin{multicols}{2}
 
 % Title
 \begin{center}
-     \fontsize{13pt}{13pt}\selectfont\textbf{Stata Cheat Sheet} \\
-     \fontsize{6.5pt}{6.5pt}\selectfont Large Scale Data - Part 2
-\end{center}\vspace{-0.2cm}
+     \fontsize{16pt}{18pt}\selectfont\textbf{Stata Cheat Sheet} \\
+     \fontsize{8pt}{9pt}\selectfont\textbf{Large Scale Data - Midterm Review}
+\end{center}
+
+\vspace{0.2cm}
+\noindent\rule{\linewidth}{1pt}
+\vspace{0.1cm}
 
 % -----------------------------------------------------------------------
-\section{Example Dataset: Hospital Discharge Data}
+\section*{\Large Example: Hospital Discharge Data}
 
 \fontsize{6.5pt}{7pt}\selectfont
 This cheat sheet uses \textbf{SPARCS hospital discharge data} as the running example:
 \begin{itemize}
 \item \textbf{Observations:} Individual hospital admissions (e.g., 150,000 records)
 \item \textbf{Variables:} Age, sex, admission type, length of stay, total charges
-\item \textbf{Geographic:} Multiple counties with county-level socioeconomic data
+\item \textbf{Geographic:} Multiple counties with socioeconomic data
 \item \textbf{Outcome:} Total costs (continuous), expensive stay flag (binary)
-\item \textbf{Key coding challenges:} Missing values (999/9999), top-coding of costs, string variables (county names)
-\end{itemize}\vspace{-0.2cm}
+\item \textbf{Key challenges:} Missing values (999/9999), top-coding, strings
+\end{itemize}
+
+\vspace{0.3cm}
+\noindent\rule{\linewidth}{1.5pt}
+\vspace{0.2cm}
 
 % -----------------------------------------------------------------------
-\section{1. Basic Setup \& Data Import}
+\section*{\Large\colorbox{myblue!10}{\makebox[\linewidth][c]{\textcolor{myblue}{PART 1: CONCEPTS \& LOGIC}}}}
+\vspace{0.15cm}
 
-\subsection{Standard Setup}
+\subsection{1. Data Types: Pros, Cons, \& Use Cases}
+
+\subsubsection{Cross-sectional Surveys}
+
+\textbf{Examples:} BRFSS, NHANES, NHIS
+
+\textbf{Advantages:} Relatively low cost, quick large samples, ideal for prevalence estimates, nationally representative, population-level health estimates
+
+\textbf{Disadvantages:} Cannot track individual changes, difficult causality (associations only), compare different people not same person, declining response rates, cannot control unmeasured time-invariant characteristics
+
+\textbf{Best for:} ``What is diabetes prevalence?'' ``Insurance coverage by income?'' ``Physical activity guideline adherence?''
+
+\subsubsection{Longitudinal Surveys}
+
+\textbf{Examples:} MEPS, National Longitudinal Survey of Youth
+
+\textbf{Advantages:} Track same individuals (within-person), support fixed effects, stronger causal inference, observe temporal sequences, control time-invariant characteristics
+
+\textbf{Disadvantages:} High cost, attrition bias, long collection period, learning effects, complex analysis
+
+\textbf{Best for:} ``Does having baby reduce sleep?'' ``Does retirement improve mental health?'' ``Job loss effect on health?''
+
+\subsubsection{Claims/Hospital Discharge Data}
+
+\textbf{Examples:} SPARCS (NY), Medicare Claims
+
+\textbf{Advantages:} Very large samples (population-level), actual costs/utilization, tracks across providers, less missing data, readmission tracking, covers entire populations
+
+\textbf{Disadvantages:} No clinical details (labs, vitals), inaccurate diagnoses (billing focus), excludes non-users, limited socioeconomic info, coding errors, cannot capture out-of-network care
+
+\textbf{Best for:} ``Hospitalization costs by county?'' ``90-day readmission rate?'' ``Length of stay patterns?'' ``High-cost predictors?''
+
+\textbf{Quality Metrics:} \textbf{Good:} Readmission, LOS, utilization, mortality | \textbf{Bad:} BP/HbA1c control (need clinical data)
+
+\subsubsection{Electronic Health Records (EHR)}
+
+\textbf{Examples:} Hospital system EHR, Epic, Cerner
+
+\textbf{Advantages:} Rich clinical info (labs, vitals, meds, imaging), longitudinal visits, real-world data, unstructured notes, clinical decisions
+
+\textbf{Disadvantages:} Single system only (selection bias), variable quality, missing external visits, hard to standardize, local practice patterns (not generalizable)
+
+\textbf{Best for:} ``HbA1c control in our system?'' ``Real-world drug effectiveness?'' ``Clinical reminders impact?''
+
+\textbf{Quality Metrics:} \textbf{Good:} HbA1c/BP control, medication adherence | \textbf{Bad:} Cross-system readmissions
+
+\subsubsection{Text-based Data}
+
+\textbf{Examples:} Physician notes, chief complaints, radiology reports
+
+\textbf{Advantages:} Rich unstructured info, details not in structured fields, clinical context
+
+\textbf{Disadvantages:} Requires NLP, complex analysis, inconsistent quality, time-intensive
+
+\subsection{2. Core Regression Concepts}
+
+\subsubsection{Survey Weights}
+
+\textbf{Why?} (1) Design oversampling (minorities for adequate N), (2) Differential response rates by group, (3) Non-representative samples
+
+\textbf{Understanding:} Weight = how many people each respondent represents. Weight=1.5 means represents 1.5 people. Allows generalization to population. Adjusts for unequal selection \& non-response.
+
+\textbf{When:} Survey data (BRFSS, NHANES, MEPS) for population-representative results
+
+\textbf{Stata:} \texttt{svyset [pweight=wt]; svy: reg y x}
+
+\subsubsection{Categorical vs Continuous}
+
+\textbf{Categorical:} Use \texttt{i.} prefix, Stata creates dummies, first = reference (omitted), each coef = difference from reference. Examples: race, admission type, education
+
+\textbf{Continuous:} Use \texttt{c.} or direct name, coef = effect of 1-unit increase, assumes linearity. Examples: age, BMI, income, costs
+
+\textbf{Choose categorical when:} Want separate effects, non-linear relationship, meaningful groups, unequal intervals
+
+\subsubsection{Logistic vs Linear Regression}
+
+\textbf{For binary outcomes, both are acceptable but interpret differently!}
+
+\begin{center}
+\fontsize{6.5pt}{7.5pt}\selectfont
+\begin{tabular}{|p{2.2cm}|p{2.4cm}|p{2.4cm}|}
+\hline
+\textbf{Feature} & \textbf{Logistic} & \textbf{Linear} \\
+\hline
+Command & \texttt{logistic} or \texttt{logit} & \texttt{reg} \\
+\hline
+Output & Odds Ratios (OR) & Coefficients \\
+\hline
+Interpretation & Fold-change in odds & Percentage point diff. \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Logistic Interpretation Example:}\\
+OR = 1.5: ``Each \$1000 increase in county income is associated with 50\% increase in the \textit{odds} of expensive stay (odds multiply by 1.5)''
+
+\textbf{Linear Interpretation Example:}\\
+Coef = 0.04: ``Each \$1000 increase in county income is associated with 4 percentage point increase in \textit{probability} of expensive stay (e.g., from 10\% to 14\%)''
+
+\subsubsection{Interaction Terms}
+
+\textbf{Purpose:} Test whether the relationship between X and Y varies depending on the value of variable Z.
+
+\textbf{Research Question Examples:}
+\begin{itemize}
+\item Does the effect of income on health vary by sex?
+\item Does drug effectiveness vary by age group?
+\item Do hospitalization costs respond differently to county income depending on admission type?
+\end{itemize}
+
+\textbf{Stata syntax:}
+\begin{lstlisting}
+// ## includes main effects + interaction
+reg outcome var1##var2
+
+// Categorical x Continuous (MUST use c.!)
+reg outcome i.sex##c.age
+
+// Categorical x Categorical
+reg outcome i.sex##i.race
+\end{lstlisting}
+
+\subsubsection{Individual Fixed Effects}
+
+\textbf{When to use:}
+\begin{itemize}
+\item Have longitudinal/panel data (same person, multiple time points)
+\item Want to control for time-invariant individual factors
+\item Research question focuses on ``within-person changes''
+\item Concerned about unmeasured confounding from stable traits
+\end{itemize}
+
+\textbf{Advantages:}
+\begin{itemize}
+\item Controls for ALL time-invariant characteristics (observed or unobserved)
+\item Stronger foundation for causal inference
+\item Each person serves as their own control
+\item Eliminates selection bias from stable individual traits
+\end{itemize}
+
+\textbf{Example:} Does having a baby reduce sleep? Compare same person before vs after baby.
+
+\textbf{Stata commands:}
+\begin{lstlisting}
+// Set panel data structure
+xtset person_id time_var
+
+// Fixed effects regression
+xtreg outcome predictors, fe
+\end{lstlisting}
+
+\subsubsection{Robust Standard Errors}
+
+\textbf{Why use?}
+\begin{itemize}
+\item \textbf{Heteroskedasticity:} Error variance differs across observations
+\item Very common in large samples and cross-sectional data
+\item Makes standard errors more accurate and reliable
+\item Improves inference (p-values, confidence intervals)
+\end{itemize}
+
+\textbf{Stata syntax:}
+\begin{lstlisting}
+reg outcome predictors, robust
+// or shorthand:
+reg outcome predictors, r
+\end{lstlisting}
+
+\textbf{Disciplinary differences:}
+\begin{itemize}
+\item \textbf{Economics:} Almost always uses robust SE
+\item \textbf{Biostatistics:} Not always standard practice
+\item \textbf{Exam:} Won't lose points for not using, but understand why it's useful
+\end{itemize}
+
+\subsection{3. Statistical vs Practical Significance}
+
+\textbf{Key Distinction:}
+
+\begin{center}
+\fontsize{6.5pt}{7.5pt}\selectfont
+\begin{tabular}{|p{3.2cm}|p{3.2cm}|}
+\hline
+\textbf{Statistical Significance} & \textbf{Practical Significance} \\
+\hline
+$p < 0.05$ & Is difference large enough to matter? \\
+\hline
+Affected by sample size & NOT affected by sample size \\
+\hline
+Technical judgment & Substantive judgment \\
+\hline
+Can detect tiny effects in large samples & Focuses on real-world importance \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Detailed Example:}\\
+In BRFSS survey of 500,000 people, we find Gen Z and Millennials differ by 3 minutes in daily exercise (20 min vs 23 min), p=0.007.
+
+\textbf{Analysis:}
+\begin{itemize}
+\item \checkmark \textbf{Statistically significant:} p < 0.05
+\item ? \textbf{Practically significant:} Debatable
+  \begin{itemize}
+  \item 3 minutes may be too small for meaningful health benefits
+  \item But represents >10\% relative difference (15\%)
+  \item In large samples, even tiny differences achieve significance (``overpowered'')
+  \end{itemize}
+\end{itemize}
+
+\textbf{Key principle:} ALWAYS discuss BOTH statistical and practical significance in your interpretations! Don't just report p-values.
+
+\subsection{4. Variable Types \& Handling}
+
+\subsubsection{Binary/Dummy Variables (0/1)}
+
+\textbf{Definition:} Flag variable coded as 0 or 1
+
+\textbf{Common uses:}
+\begin{itemize}
+\item Calculate percentages (e.g., vaccination rate = mean of binary)
+\item As outcome variable (logistic or linear regression)
+\item As control variable in regression models
+\item Create subgroup indicators for analysis
+\end{itemize}
+
+\textbf{Creation method:}
+\begin{lstlisting}
+// Standard approach
+gen flag = 1 if condition
+replace flag = 0 if opposite_condition
+
+// Example: elderly patient flag
+gen elderly = 1 if age >= 65 & age != .
+replace elderly = 0 if age < 65
+\end{lstlisting}
+
+\textbf{Verification (CRITICAL):}
+\begin{lstlisting}
+summ flag
+// Check: mean 0-1, min=0, max=1
+
+tab original_var flag
+// Verify cross-tabulation is correct
+\end{lstlisting}
+
+\subsubsection{Categorical Variables}
+
+\textbf{Examples:} Race, education level, admission type, age groups
+
+\textbf{Handling methods:}
+\begin{lstlisting}
+// Method 1: encode (string to numeric)
+encode string_var, gen(categorical_var)
+
+// Method 2: Manual creation
+gen cat = 1 if condition1
+replace cat = 2 if condition2
+replace cat = 3 if condition3
+
+// Use with i. prefix in regression
+reg outcome i.categorical_var
+\end{lstlisting}
+
+\subsubsection{Continuous Variables}
+
+\textbf{Examples:} Age, BMI, income, length of stay
+
+\textbf{Common handling:}
+\begin{lstlisting}
+// Top-coding (cap extreme outliers)
+gen var_clean = var
+replace var_clean = 1000000 ///
+    if var > 1000000 & var != .
+
+// Log transformation (right-skewed data)
+gen log_var = log(var + 1)
+// +1 to avoid log(0)
+\end{lstlisting}
+
+\subsubsection{String Variables}
+
+\textbf{Common operations:}
+\begin{lstlisting}
+// Convert to numeric (force = ignore errors)
+destring string_var, gen(numeric_var) force
+
+// Check what couldn't be converted
+tab string_var if numeric_var == .
+
+// String matching/searching
+gen flag = strpos(string_var, "keyword") > 0
+\end{lstlisting}
+
+\subsubsection{Missing Values}
+
+\textbf{CRITICAL PRINCIPLE:} Always include \texttt{\& var != .} in conditions!
+
+\textbf{Why?} Stata treats missing (.) as very large number (infinity).
+
+\textbf{Correct approach:}
+\begin{lstlisting}
+// CORRECT - protects missing values
+replace var_clean = 100 if var > 100 & var != .
+
+// WRONG - will set missing to 100!
+replace var_clean = 100 if var > 100
+\end{lstlisting}
+
+\textbf{Identifying missing:}
+\begin{lstlisting}
+// Recode special values to missing
+replace var = . if var == 99
+replace var = . if var == 999
+replace var = . if var < 0
+\end{lstlisting}
+
+\subsection{5. Data Management Operations}
+
+\subsubsection{Merging Data}
+
+\textbf{Four merge types:}
+
+\textbf{1:1 Merge}
+\begin{itemize}
+\item \textbf{Scenario:} Both datasets have 1 row per ID
+\item \textbf{Example:} Merge NHANES questionnaire to demographics (both 1 row/person)
+\item \textbf{Syntax:} \texttt{merge 1:1 id using "file.dta"}
+\end{itemize}
+
+\textbf{1:M Merge}
+\begin{itemize}
+\item \textbf{Scenario:} Master has 1 row per ID, Using has many rows per ID
+\item \textbf{Example:} Merge visit data to medications per visit
+\item \textbf{Syntax:} \texttt{merge 1:m id using "file.dta"}
+\end{itemize}
+
+\textbf{M:1 Merge (MOST COMMON!)}
+\begin{itemize}
+\item \textbf{Scenario:} Master has many rows per ID, Using has 1 row per ID
+\item \textbf{Example:} Merge county income to hospital records (many admissions/county)
+\item \textbf{Syntax:} \texttt{merge m:1 county using "file.dta"}
+\end{itemize}
+
+\textbf{Post-merge check (CRITICAL):}
+\begin{lstlisting}
+tab _merge
+/*
+_merge == 1: master only (no match in using)
+_merge == 2: using only (no match in master)
+_merge == 3: matched successfully
+*/
+
+// Usually keep master records and matched
+keep if _merge == 1 | _merge == 3
+drop _merge
+\end{lstlisting}
+
+\subsubsection{Reshape/Transpose}
+
+\textbf{Wide to Long:}
+\begin{lstlisting}
+reshape long var_prefix, i(id) j(time)
+\end{lstlisting}
+
+\textbf{Long to Wide:}
+\begin{lstlisting}
+reshape wide var_name, i(id) j(time)
+\end{lstlisting}
+
+\subsubsection{Append}
+
+\textbf{Scenario:} Combine datasets with same structure (stack rows vertically)
+\begin{lstlisting}
+append using "second_dataset.dta"
+\end{lstlisting}
+
+\vspace{0.3cm}
+\noindent\rule{\linewidth}{1.5pt}
+\vspace{0.2cm}
+
+% -----------------------------------------------------------------------
+\section*{\Large\colorbox{mygreen!10}{\makebox[\linewidth][c]{\textcolor{mygreen}{PART 2: STATA CODING}}}}
+\vspace{0.15cm}
+
+\subsection*{\textbf{\textcolor{mygreen}{A. Data Management}}}
+
+\section{Setup \& Import}
+
+\subsection{Standard Setup}\vspace{0.1cm}
 \begin{lstlisting}
 // Clear memory and set options
 clear all
@@ -173,7 +572,7 @@ capture log close
 log using "analysis.log", replace
 \end{lstlisting}
 
-\subsection{Import Data}
+\subsection{Import Data}\vspace{0.1cm}
 \begin{lstlisting}
 // Example: Load hospital discharge data
 use "sparcs_hospital_data.dta", clear
@@ -193,13 +592,13 @@ save "sparcs_processed.dta", replace
 \end{lstlisting}
 
 \begin{warningbox}
-Always use \texttt{clear} or \texttt{, clear} option when loading new data to avoid "no; data in memory would be lost" error.
-\end{warningbox}
+Always use \texttt{clear} or \texttt{, clear} option to avoid "no; data in memory" error.
+\end{warningbox}\vspace{0.15cm}
 
 % -----------------------------------------------------------------------
-\section{2. Data Exploration}
+\section{Data Exploration}
 
-\subsection{Basic Viewing}
+\subsection{View \& Describe}
 \begin{lstlisting}
 // View first 10 hospital admissions
 list age los totalcosts county in 1/10
@@ -256,9 +655,9 @@ describe, short
 \end{lstlisting}
 
 % -----------------------------------------------------------------------
-\section{3. Variable Creation}
+\section{Variable Creation}
 
-\subsection{Generate New Variable}
+\subsection{Basic Generation}
 \begin{lstlisting}
 // Create empty variable
 gen newvar = .
@@ -280,10 +679,8 @@ replace var = value if condition
 \end{lstlisting}
 
 \begin{warningbox}
-\textbf{CRITICAL:} Always protect missing values!\\
-Use: \texttt{if var != .} in conditions\\
-Missing (.) is treated as infinity in Stata.
-\end{warningbox}
+\textbf{CRITICAL:} Use \texttt{if var != .} to protect missing values!
+\end{warningbox}\vspace{0.15cm}
 
 \subsection{Binary Variables (0/1 Flags)}
 \begin{lstlisting}
@@ -384,9 +781,9 @@ egen fullname = concat(first last), ///
 \end{lstlisting}
 
 % -----------------------------------------------------------------------
-\section{4. Missing Values}
+\section{Missing Values}
 
-\subsection{Identify Missing Values}
+\subsection{Identify \& Recode}
 \begin{lstlisting}
 // Count missing
 count if varname == .
@@ -412,12 +809,9 @@ replace height = . if height == 9999
 \end{lstlisting}
 
 \begin{warningbox}
-\textbf{Common Mistake:}\\
-\texttt{replace var = 100 if var > 100}\\
-This will set missing to 100!\\
-\textbf{Correct:}\\
-\texttt{replace var = 100 if var > 100 \& var != .}
-\end{warningbox}
+\textbf{Wrong:} \texttt{replace var = 100 if var > 100} (sets missing to 100!)\\
+\textbf{Right:} \texttt{replace var = 100 if var > 100 \& var != .}
+\end{warningbox}\vspace{0.15cm}
 
 \subsection{Create Missing Indicator}
 \begin{lstlisting}
@@ -430,9 +824,9 @@ replace miss_flag = 1 if varname == .
 \end{lstlisting}
 
 % -----------------------------------------------------------------------
-\section{5. String Variables}
+\section{String Variables}
 
-\subsection{String to Numeric}
+\subsection{Type Conversion}
 \begin{lstlisting}
 // Basic conversion (force ignores errors)
 destring string_var, gen(num_var) force
@@ -497,15 +891,13 @@ split string_var, gen(part) parse("_")
 \end{lstlisting}
 
 \begin{warningbox}
-\textbf{substr() position starts at 1!}\\
-\texttt{substr(str, 1, 2)} = first 2 chars\\
-\texttt{substr(str, 2, 1)} = 2nd char only
-\end{warningbox}
+\textbf{substr() starts at 1:} \texttt{substr(str, 1, 2)} = first 2 chars
+\end{warningbox}\vspace{0.15cm}
 
 % -----------------------------------------------------------------------
-\section{6. Data Merging}
+\section{Data Merging}
 
-\subsection{Merge Types}
+\subsection{Merge Types (1:1, 1:M, M:1)}
 \begin{lstlisting}
 // 1:1 - Both datasets: 1 row per ID
 merge 1:1 id_var using "file.dta"
@@ -587,12 +979,8 @@ drop _merge
 \end{lstlisting}
 
 \begin{tipbox}
-\textbf{Quick merge type decision:}\\
-Ask: "How many rows per ID?"\\
-Master(M) : Using(1) $\rightarrow$ M:1\\
-Master(1) : Using(M) $\rightarrow$ 1:M\\
-Master(1) : Using(1) $\rightarrow$ 1:1
-\end{tipbox}
+M:1 $\rightarrow$ Master(M):Using(1) | 1:M $\rightarrow$ Master(1):Using(M) | 1:1 $\rightarrow$ Master(1):Using(1)
+\end{tipbox}\vspace{0.15cm}
 
 \subsection{Append (Stack Datasets)}
 \begin{lstlisting}
@@ -605,9 +993,9 @@ append using "data2022.dta"
 \end{lstlisting}
 
 % -----------------------------------------------------------------------
-\section{7. Data Reshaping}
+\section{Data Reshaping}
 
-\subsection{Wide to Long}
+\subsection{Wide $\leftrightarrow$ Long}
 \begin{lstlisting}
 // Wide format:
 // id  bp1  bp2  bp3  hr1  hr2  hr3
@@ -637,12 +1025,11 @@ reshape wide bp hr, i(id) j(round)
 \end{lstlisting}
 
 \begin{warningbox}
-\textbf{reshape} permanently changes data.\\
-Always \texttt{save} before reshaping!
-\end{warningbox}
+Always \texttt{save} before \textbf{reshape}!
+\end{warningbox}\vspace{0.15cm}
 
 % -----------------------------------------------------------------------
-\section{8. Regression Analysis}
+\section{Regression Analysis}
 
 \subsection{Linear Regression}
 \begin{lstlisting}
@@ -701,11 +1088,8 @@ reg y i.var1#i.var2
 \end{lstlisting}
 
 \begin{warningbox}
-\textbf{Interaction with continuous:}\\
-MUST use \texttt{c.} prefix!\\
-Wrong: \texttt{i.sex\#\#age}\\
-Right: \texttt{i.sex\#\#c.age}
-\end{warningbox}
+MUST use \texttt{c.} for continuous: \texttt{i.sex\#\#c.age} (not \texttt{i.sex\#\#age})
+\end{warningbox}\vspace{0.15cm}
 
 \subsection{Logistic Regression}
 \begin{lstlisting}
@@ -797,7 +1181,7 @@ xtreg y x1 x2, fe
 \end{lstlisting}
 
 % -----------------------------------------------------------------------
-\section{9. Verification \& Validation}
+\section{Verification \& Validation}
 
 \subsection{Verify Binary Variables}
 \begin{lstlisting}
@@ -874,7 +1258,7 @@ summ merged_var if _merge == 3
 \end{lstlisting}
 
 % -----------------------------------------------------------------------
-\section{10. Common Workflows}
+\section{Common Workflows}
 
 \subsection{Clean Outcome Variable}
 \begin{lstlisting}
@@ -981,19 +1365,150 @@ reg cost_clean County_Income ///
 \end{lstlisting}
 
 % -----------------------------------------------------------------------
-\section{11. Important Reminders}
+\section{Additional Commands}
 
-\subsection{Critical Points}
+\subsection{Duplicates}
+\begin{lstlisting}
+// Check for duplicates
+duplicates report stay_id
+
+// List duplicate examples
+duplicates examples stay_id
+
+// Tag duplicates (create flag)
+duplicates tag stay_id, gen(dup_flag)
+
+// Drop exact duplicates (keep one)
+duplicates drop stay_id, force
+
+// Keep first observation per group
+bysort subject_id: keep if _n == 1
+\end{lstlisting}
+
+\subsection{Bysort Techniques}
+\begin{lstlisting}
+// _n = observation number within group
+// _N = total observations in group
+
+// Count admissions per patient
+bysort subject_id: gen n_admissions = _N
+
+// Sequence number within group
+bysort subject_id: gen admission_seq = _n
+
+// Keep first observation per group
+bysort subject_id: keep if _n == 1
+
+// Keep last observation per group
+bysort subject_id: keep if _n == _N
+
+// Flag first observation
+bysort county_name: gen first = (_n == 1)
+\end{lstlisting}
+
+\subsection{Date/Time Handling}
+\begin{lstlisting}
+// String to date
+gen date_var = date(date_string, "MDY")
+format date_var %td
+
+// String to datetime
+gen datetime_var = clock(dt_string, ///
+    "YMD hms")
+format datetime_var %tc
+
+// Date calculations (days)
+gen los = discharge_date - admit_date
+
+// Extract components
+gen year_num = year(date_var)
+gen month_num = month(date_var)
+gen day_num = day(date_var)
+
+// Common date formats:
+// "MDY" - Month/Day/Year (1/15/2023)
+// "YMD" - Year/Month/Day (2023-01-15)
+// "hms" - hours:minutes:seconds
+\end{lstlisting}
+
+\subsection{Test (Hypothesis Testing)}
+\begin{lstlisting}
+// After regression
+reg outcome x1 x2 i.category
+
+// Test single coefficient
+test x1
+
+// Test multiple coefficients jointly
+test x1 x2
+
+// Test categorical variable
+test 2.category 3.category
+
+// Test interaction term
+reg y i.sex##c.age
+test sex#c.age
+\end{lstlisting}
+
+\subsection{Tabstat}
+\begin{lstlisting}
+// Basic usage
+tabstat variable, stat(n mean sd)
+
+// By groups
+tabstat bmi, by(age_group) ///
+    stat(n mean sd min p50 max)
+
+// Multiple variables
+tabstat bmi weight height, ///
+    by(gender) stat(n mean sd)
+
+// Format output
+tabstat var, by(group) stat(n mean sd) ///
+    format(%9.2f)
+\end{lstlisting}
+
+\subsection{Preserve \& Restore}
+\begin{lstlisting}
+// Save current data state
+preserve
+
+// Make temporary changes
+keep if age >= 65
+collapse (mean) var, by(state)
+
+// Restore original data
+restore
+
+// Use for temporary exploration
+// without losing original dataset
+\end{lstlisting}
+
+\subsection{Collapse}
+\begin{lstlisting}
+// WARNING: Permanently changes data!
+// Save original first!
+save original_data, replace
+
+// Calculate mean by group
+collapse (mean) flu_shot, by(month_year)
+
+// Multiple statistics
+collapse (mean) mean_los=los ///
+         (sd) sd_los=los ///
+         (count) n=los, by(provider_group)
+
+// Restore original
+use original_data, clear
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Key Reminders \& Tips}
+
+\subsection{Common Mistakes}
 
 \begin{warningbox}
-\textbf{Top 5 Common Mistakes:}
-\begin{enumerate}
-\item \textbf{Missing values:} Always use \texttt{\& var != .}
-\item \textbf{substr():} Position starts at 1, not 0
-\item \textbf{Interaction:} Use \texttt{c.} for continuous
-\item \textbf{\_merge:} Always \texttt{tab \_merge} after merge
-\item \textbf{Binary range:} Check \texttt{summ} shows 0-1
-\end{enumerate}
+\small\textbf{Top Mistakes:} Missing values (\texttt{\& var != .}) | substr() starts at 1 | Use \texttt{c.} for continuous | Always \texttt{tab \_merge} | Binary: check \texttt{summ} shows 0-1
 \end{warningbox}
 
 \subsection{Statistical Significance vs Practical}
