@@ -1,0 +1,1615 @@
+﻿\documentclass[8pt,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{multicol}
+\usepackage{calc}
+\usepackage{ifthen}
+\usepackage[margin=0.5cm,top=0.5cm,bottom=0.8cm]{geometry}
+\usepackage{hyperref}
+\usepackage{color}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{fontawesome}
+
+% Page setup with page numbers
+\setlength{\footskip}{15pt}
+\pagestyle{fancy}
+\fancyhf{}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0.5pt}
+\fancyfoot[C]{\fontsize{7pt}{7pt}\selectfont \thepage}
+\fancyfoot[R]{\fontsize{6pt}{6pt}\selectfont Stata Cheat Sheet}
+
+% Colors
+\definecolor{myblue}{RGB}{0,82,155}
+\definecolor{mygreen}{RGB}{34,139,34}
+\definecolor{myred}{RGB}{200,0,0}
+\definecolor{mygray}{RGB}{150,150,150}
+\definecolor{codebg}{RGB}{248,248,248}
+\definecolor{codecomment}{RGB}{100,100,100}
+
+% Stata keywords
+\lstdefinelanguage{Stata}{
+    morekeywords={clear,all,set,more,off,cd,capture,log,close,using,replace,
+                  use,import,delimited,excel,sheet,firstrow,sasxport5,save,
+                  list,describe,browse,codebook,summ,d,tab,nolabel,m,row,col,
+                  gen,replace,destring,force,encode,decode,recode,max,min,
+                  drop,keep,if,in,not,by,bysort,gsort,sort,duplicates,
+                  append,merge,rename,reorder,reshape,long,wide,egen,rowtotal,
+                  rowmean,rowmax,rowmin,mean,count,substr,strlen,strpos,string,
+                  strupper,strlower,strproper,split,subinstr,concat,punct,
+                  reg,regress,logit,logistic,svy,svyset,predict,margins,test,
+                  xtset,xtreg,fe,pweight,vce,robust,r,cluster,
+                  label,define,values,count,display},
+    morekeywords=[2]{gen,replace,encode,decode,merge,reg,logit,logistic,summ,
+                     list,tab,describe,drop,keep,append,reshape,xtset,xtreg,
+                     predict,margins},
+    sensitive=false,
+    morecomment=[l]{//},
+    morecomment=[l]{*},
+    morestring=[b]"
+}
+
+% Stata code style - improved highlighting
+\lstdefinestyle{statastyle}{
+    language=Stata,
+    basicstyle=\ttfamily\tiny\color{black},
+    backgroundcolor=\color{codebg},
+    keywordstyle=[1]\color{myblue}\bfseries,
+    keywordstyle=[2]\color{myblue}\bfseries,
+    commentstyle=\color{codecomment}\itshape,
+    stringstyle=\color{myred},
+    numbers=none,
+    breaklines=true,
+    frame=lines,
+    framerule=0.5pt,
+    rulecolor=\color{mygray},
+    xleftmargin=2pt,
+    xrightmargin=2pt,
+    aboveskip=3pt,
+    belowskip=3pt,
+    showstringspaces=false,
+    tabsize=2,
+    columns=fixed,
+    keepspaces=true,
+    lineskip=0.5pt
+}
+
+\lstset{style=statastyle}
+
+% Section formatting - more compact
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{0mm}%
+                                {-0.4ex plus -.15ex minus -.08ex}%
+                                {0.2ex plus .08ex}%
+                                {\normalfont\fontsize{9.5pt}{9.5pt}\selectfont\bfseries\color{myblue}}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{0mm}%
+                                {-0.25ex plus -.12ex minus -.03ex}%
+                                {0.12ex plus .04ex}%
+                                {\normalfont\fontsize{8pt}{8pt}\selectfont\bfseries\color{myblue}}}
+\makeatother
+
+% Don't print section numbers
+\setcounter{secnumdepth}{0}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0pt}
+
+% Reduce list spacing
+\usepackage{enumitem}
+\setlist{nosep,topsep=1pt,partopsep=0pt,itemsep=1pt,parsep=0pt}
+\setlength{\leftmargin}{12pt}
+
+% Custom boxes - subtle style
+\newtcolorbox{warningbox}{
+    colback=white,
+    colframe=white,
+    colbacktitle=white,
+    coltitle=black,
+    fonttitle=\bfseries\fontsize{6.5pt}{6.5pt}\selectfont,
+    title=\faExclamationTriangle\ Warning,
+    left=4pt,right=2pt,top=1pt,bottom=1pt,
+    boxrule=0pt,
+    leftrule=1.5pt,
+    colframe=mygray,
+    boxsep=2pt
+}
+
+\newtcolorbox{tipbox}{
+    colback=white,
+    colframe=white,
+    colbacktitle=white,
+    coltitle=black,
+    fonttitle=\bfseries\fontsize{6.5pt}{6.5pt}\selectfont,
+    title=\faLightbulbO\ Tip,
+    left=4pt,right=2pt,top=1pt,bottom=1pt,
+    boxrule=0pt,
+    leftrule=1.5pt,
+    colframe=mygray,
+    boxsep=2pt
+}
+
+\begin{document}
+
+\raggedright
+\fontsize{7pt}{8.2pt}\selectfont
+\setlength{\columnsep}{0.8cm}
+\begin{multicols}{2}
+
+% Title
+\begin{center}
+     \fontsize{16pt}{18pt}\selectfont\textbf{Stata Cheat Sheet} \\
+     \fontsize{8pt}{9pt}\selectfont\textbf{Large Scale Data - Midterm Review}
+\end{center}
+
+\vspace{0.2cm}
+\noindent\rule{\linewidth}{1pt}
+\vspace{0.1cm}
+
+% -----------------------------------------------------------------------
+\section*{\Large Example: Hospital Discharge Data}
+
+\fontsize{6.5pt}{7pt}\selectfont
+This cheat sheet uses \textbf{SPARCS hospital discharge data} as the running example:
+\begin{itemize}
+\item \textbf{Observations:} Individual hospital admissions (e.g., 150,000 records)
+\item \textbf{Variables:} Age, sex, admission type, length of stay, total charges
+\item \textbf{Geographic:} Multiple counties with socioeconomic data
+\item \textbf{Outcome:} Total costs (continuous), expensive stay flag (binary)
+\item \textbf{Key challenges:} Missing values (999/9999), top-coding, strings
+\end{itemize}
+
+\vspace{0.3cm}
+\noindent\rule{\linewidth}{1.5pt}
+\vspace{0.2cm}
+
+% -----------------------------------------------------------------------
+\section*{\Large\colorbox{myblue!10}{\makebox[\linewidth][c]{\textcolor{myblue}{PART 1: CONCEPTS \& LOGIC}}}}
+\vspace{0.15cm}
+
+\subsection{1. Data Types: Pros, Cons, \& Use Cases}
+
+\subsubsection{Cross-sectional Surveys}
+
+\textbf{Examples:} BRFSS, NHANES, NHIS
+
+\textbf{Advantages:} Relatively low cost, quick large samples, ideal for prevalence estimates, nationally representative, population-level health estimates
+
+\textbf{Disadvantages:} Cannot track individual changes, difficult causality (associations only), compare different people not same person, declining response rates, cannot control unmeasured time-invariant characteristics
+
+\textbf{Best for:} ``What is diabetes prevalence?'' ``Insurance coverage by income?'' ``Physical activity guideline adherence?''
+
+\subsubsection{Longitudinal Surveys}
+
+\textbf{Examples:} MEPS, National Longitudinal Survey of Youth
+
+\textbf{Advantages:} Track same individuals (within-person), support fixed effects, stronger causal inference, observe temporal sequences, control time-invariant characteristics
+
+\textbf{Disadvantages:} High cost, attrition bias, long collection period, learning effects, complex analysis
+
+\textbf{Best for:} ``Does having baby reduce sleep?'' ``Does retirement improve mental health?'' ``Job loss effect on health?''
+
+\subsubsection{Claims/Hospital Discharge Data}
+
+\textbf{Examples:} SPARCS (NY), Medicare Claims
+
+\textbf{Advantages:} Very large samples (population-level), actual costs/utilization, tracks across providers, less missing data, readmission tracking, covers entire populations
+
+\textbf{Disadvantages:} No clinical details (labs, vitals), inaccurate diagnoses (billing focus), excludes non-users, limited socioeconomic info, coding errors, cannot capture out-of-network care
+
+\textbf{Best for:} ``Hospitalization costs by county?'' ``90-day readmission rate?'' ``Length of stay patterns?'' ``High-cost predictors?''
+
+\textbf{Quality Metrics:} \textbf{Good:} Readmission, LOS, utilization, mortality | \textbf{Bad:} BP/HbA1c control (need clinical data)
+
+\subsubsection{Electronic Health Records (EHR)}
+
+\textbf{Examples:} Hospital system EHR, Epic, Cerner
+
+\textbf{Advantages:} Rich clinical info (labs, vitals, meds, imaging), longitudinal visits, real-world data, unstructured notes, clinical decisions
+
+\textbf{Disadvantages:} Single system only (selection bias), variable quality, missing external visits, hard to standardize, local practice patterns (not generalizable)
+
+\textbf{Best for:} ``HbA1c control in our system?'' ``Real-world drug effectiveness?'' ``Clinical reminders impact?''
+
+\textbf{Quality Metrics:} \textbf{Good:} HbA1c/BP control, medication adherence | \textbf{Bad:} Cross-system readmissions
+
+\subsubsection{Text-based Data}
+
+\textbf{Examples:} Physician notes, chief complaints, radiology reports
+
+\textbf{Advantages:} Rich unstructured info, details not in structured fields, clinical context
+
+\textbf{Disadvantages:} Requires NLP, complex analysis, inconsistent quality, time-intensive
+
+\subsection{2. Core Regression Concepts}
+
+\subsubsection{Survey Weights}
+
+\textbf{Why?} (1) Design oversampling (minorities for adequate N), (2) Differential response rates by group, (3) Non-representative samples
+
+\textbf{Understanding:} Weight = how many people each respondent represents. Weight=1.5 means represents 1.5 people. Allows generalization to population. Adjusts for unequal selection \& non-response.
+
+\textbf{When:} Survey data (BRFSS, NHANES, MEPS) for population-representative results
+
+\textbf{Stata:} \texttt{svyset [pweight=wt]; svy: reg y x}
+
+\subsubsection{Categorical vs Continuous}
+
+\textbf{Categorical:} Use \texttt{i.} prefix, Stata creates dummies, first = reference (omitted), each coef = difference from reference. Examples: race, admission type, education
+
+\textbf{Continuous:} Use \texttt{c.} or direct name, coef = effect of 1-unit increase, assumes linearity. Examples: age, BMI, income, costs
+
+\textbf{Choose categorical when:} Want separate effects, non-linear relationship, meaningful groups, unequal intervals
+
+\subsubsection{Logistic vs Linear Regression}
+
+\textbf{For binary outcomes, both are acceptable but interpret differently!}
+
+\begin{center}
+\fontsize{6.5pt}{7.5pt}\selectfont
+\begin{tabular}{|p{2.2cm}|p{2.4cm}|p{2.4cm}|}
+\hline
+\textbf{Feature} & \textbf{Logistic} & \textbf{Linear} \\
+\hline
+Command & \texttt{logistic} or \texttt{logit} & \texttt{reg} \\
+\hline
+Output & Odds Ratios (OR) & Coefficients \\
+\hline
+Interpretation & Fold-change in odds & Percentage point diff. \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Logistic Interpretation Example:}\\
+OR = 1.5: ``Each \$1000 increase in county income is associated with 50\% increase in the \textit{odds} of expensive stay (odds multiply by 1.5)''
+
+\textbf{Linear Interpretation Example:}\\
+Coef = 0.04: ``Each \$1000 increase in county income is associated with 4 percentage point increase in \textit{probability} of expensive stay (e.g., from 10\% to 14\%)''
+
+\subsubsection{Interaction Terms}
+
+\textbf{Purpose:} Test whether the relationship between X and Y varies depending on the value of variable Z.
+
+\textbf{Research Question Examples:}
+\begin{itemize}
+\item Does the effect of income on health vary by sex?
+\item Does drug effectiveness vary by age group?
+\item Do hospitalization costs respond differently to county income depending on admission type?
+\end{itemize}
+
+\textbf{Stata syntax:}
+\begin{lstlisting}
+// ## includes main effects + interaction
+reg outcome var1##var2
+
+// Categorical x Continuous (MUST use c.!)
+reg outcome i.sex##c.age
+
+// Categorical x Categorical
+reg outcome i.sex##i.race
+\end{lstlisting}
+
+\subsubsection{Individual Fixed Effects}
+
+\textbf{When to use:}
+\begin{itemize}
+\item Have longitudinal/panel data (same person, multiple time points)
+\item Want to control for time-invariant individual factors
+\item Research question focuses on ``within-person changes''
+\item Concerned about unmeasured confounding from stable traits
+\end{itemize}
+
+\textbf{Advantages:}
+\begin{itemize}
+\item Controls for ALL time-invariant characteristics (observed or unobserved)
+\item Stronger foundation for causal inference
+\item Each person serves as their own control
+\item Eliminates selection bias from stable individual traits
+\end{itemize}
+
+\textbf{Example:} Does having a baby reduce sleep? Compare same person before vs after baby.
+
+\textbf{Stata commands:}
+\begin{lstlisting}
+// Set panel data structure
+xtset person_id time_var
+
+// Fixed effects regression
+xtreg outcome predictors, fe
+\end{lstlisting}
+
+\subsubsection{Robust Standard Errors}
+
+\textbf{Why use?}
+\begin{itemize}
+\item \textbf{Heteroskedasticity:} Error variance differs across observations
+\item Very common in large samples and cross-sectional data
+\item Makes standard errors more accurate and reliable
+\item Improves inference (p-values, confidence intervals)
+\end{itemize}
+
+\textbf{Stata syntax:}
+\begin{lstlisting}
+reg outcome predictors, robust
+// or shorthand:
+reg outcome predictors, r
+\end{lstlisting}
+
+\textbf{Disciplinary differences:}
+\begin{itemize}
+\item \textbf{Economics:} Almost always uses robust SE
+\item \textbf{Biostatistics:} Not always standard practice
+\item \textbf{Exam:} Won't lose points for not using, but understand why it's useful
+\end{itemize}
+
+\subsection{3. Statistical vs Practical Significance}
+
+\textbf{Key Distinction:}
+
+\begin{center}
+\fontsize{6.5pt}{7.5pt}\selectfont
+\begin{tabular}{|p{3.2cm}|p{3.2cm}|}
+\hline
+\textbf{Statistical Significance} & \textbf{Practical Significance} \\
+\hline
+$p < 0.05$ & Is difference large enough to matter? \\
+\hline
+Affected by sample size & NOT affected by sample size \\
+\hline
+Technical judgment & Substantive judgment \\
+\hline
+Can detect tiny effects in large samples & Focuses on real-world importance \\
+\hline
+\end{tabular}
+\end{center}
+
+\textbf{Detailed Example:}\\
+In BRFSS survey of 500,000 people, we find Gen Z and Millennials differ by 3 minutes in daily exercise (20 min vs 23 min), p=0.007.
+
+\textbf{Analysis:}
+\begin{itemize}
+\item \checkmark \textbf{Statistically significant:} p < 0.05
+\item ? \textbf{Practically significant:} Debatable
+  \begin{itemize}
+  \item 3 minutes may be too small for meaningful health benefits
+  \item But represents >10\% relative difference (15\%)
+  \item In large samples, even tiny differences achieve significance (``overpowered'')
+  \end{itemize}
+\end{itemize}
+
+\textbf{Key principle:} ALWAYS discuss BOTH statistical and practical significance in your interpretations! Don't just report p-values.
+
+\subsection{4. Variable Types \& Handling}
+
+\subsubsection{Binary/Dummy Variables (0/1)}
+
+\textbf{Definition:} Flag variable coded as 0 or 1
+
+\textbf{Common uses:}
+\begin{itemize}
+\item Calculate percentages (e.g., vaccination rate = mean of binary)
+\item As outcome variable (logistic or linear regression)
+\item As control variable in regression models
+\item Create subgroup indicators for analysis
+\end{itemize}
+
+\textbf{Creation method:}
+\begin{lstlisting}
+// Standard approach
+gen flag = 1 if condition
+replace flag = 0 if opposite_condition
+
+// Example: elderly patient flag
+gen elderly = 1 if age >= 65 & age != .
+replace elderly = 0 if age < 65
+\end{lstlisting}
+
+\textbf{Verification (CRITICAL):}
+\begin{lstlisting}
+summ flag
+// Check: mean 0-1, min=0, max=1
+
+tab original_var flag
+// Verify cross-tabulation is correct
+\end{lstlisting}
+
+\subsubsection{Categorical Variables}
+
+\textbf{Examples:} Race, education level, admission type, age groups
+
+\textbf{Handling methods:}
+\begin{lstlisting}
+// Method 1: encode (string to numeric)
+encode string_var, gen(categorical_var)
+
+// Method 2: Manual creation
+gen cat = 1 if condition1
+replace cat = 2 if condition2
+replace cat = 3 if condition3
+
+// Use with i. prefix in regression
+reg outcome i.categorical_var
+\end{lstlisting}
+
+\subsubsection{Continuous Variables}
+
+\textbf{Examples:} Age, BMI, income, length of stay
+
+\textbf{Common handling:}
+\begin{lstlisting}
+// Top-coding (cap extreme outliers)
+gen var_clean = var
+replace var_clean = 1000000 ///
+    if var > 1000000 & var != .
+
+// Log transformation (right-skewed data)
+gen log_var = log(var + 1)
+// +1 to avoid log(0)
+\end{lstlisting}
+
+\subsubsection{String Variables}
+
+\textbf{Common operations:}
+\begin{lstlisting}
+// Convert to numeric (force = ignore errors)
+destring string_var, gen(numeric_var) force
+
+// Check what couldn't be converted
+tab string_var if numeric_var == .
+
+// String matching/searching
+gen flag = strpos(string_var, "keyword") > 0
+\end{lstlisting}
+
+\subsubsection{Missing Values}
+
+\textbf{CRITICAL PRINCIPLE:} Always include \texttt{\& var != .} in conditions!
+
+\textbf{Why?} Stata treats missing (.) as very large number (infinity).
+
+\textbf{Correct approach:}
+\begin{lstlisting}
+// CORRECT - protects missing values
+replace var_clean = 100 if var > 100 & var != .
+
+// WRONG - will set missing to 100!
+replace var_clean = 100 if var > 100
+\end{lstlisting}
+
+\textbf{Identifying missing:}
+\begin{lstlisting}
+// Recode special values to missing
+replace var = . if var == 99
+replace var = . if var == 999
+replace var = . if var < 0
+\end{lstlisting}
+
+\subsection{5. Data Management Operations}
+
+\subsubsection{Merging Data}
+
+\textbf{Four merge types:}
+
+\textbf{1:1 Merge}
+\begin{itemize}
+\item \textbf{Scenario:} Both datasets have 1 row per ID
+\item \textbf{Example:} Merge NHANES questionnaire to demographics (both 1 row/person)
+\item \textbf{Syntax:} \texttt{merge 1:1 id using "file.dta"}
+\end{itemize}
+
+\textbf{1:M Merge}
+\begin{itemize}
+\item \textbf{Scenario:} Master has 1 row per ID, Using has many rows per ID
+\item \textbf{Example:} Merge visit data to medications per visit
+\item \textbf{Syntax:} \texttt{merge 1:m id using "file.dta"}
+\end{itemize}
+
+\textbf{M:1 Merge (MOST COMMON!)}
+\begin{itemize}
+\item \textbf{Scenario:} Master has many rows per ID, Using has 1 row per ID
+\item \textbf{Example:} Merge county income to hospital records (many admissions/county)
+\item \textbf{Syntax:} \texttt{merge m:1 county using "file.dta"}
+\end{itemize}
+
+\textbf{Post-merge check (CRITICAL):}
+\begin{lstlisting}
+tab _merge
+/*
+_merge == 1: master only (no match in using)
+_merge == 2: using only (no match in master)
+_merge == 3: matched successfully
+*/
+
+// Usually keep master records and matched
+keep if _merge == 1 | _merge == 3
+drop _merge
+\end{lstlisting}
+
+\subsubsection{Reshape/Transpose}
+
+\textbf{Wide to Long:}
+\begin{lstlisting}
+reshape long var_prefix, i(id) j(time)
+\end{lstlisting}
+
+\textbf{Long to Wide:}
+\begin{lstlisting}
+reshape wide var_name, i(id) j(time)
+\end{lstlisting}
+
+\subsubsection{Append}
+
+\textbf{Scenario:} Combine datasets with same structure (stack rows vertically)
+\begin{lstlisting}
+append using "second_dataset.dta"
+\end{lstlisting}
+
+\vspace{0.3cm}
+\noindent\rule{\linewidth}{1.5pt}
+\vspace{0.2cm}
+
+% -----------------------------------------------------------------------
+\section*{\Large\colorbox{mygreen!10}{\makebox[\linewidth][c]{\textcolor{mygreen}{PART 2: STATA CODING}}}}
+\vspace{0.15cm}
+
+\subsection*{\textbf{\textcolor{mygreen}{A. Data Management}}}
+
+\section{Setup \& Import}
+
+\subsection{Standard Setup}\vspace{0.1cm}
+\begin{lstlisting}
+// Clear memory and set options
+clear all
+set more off
+
+// Set working directory
+cd "path/to/folder"
+
+// Start logging
+capture log close
+log using "analysis.log", replace
+\end{lstlisting}
+
+\subsection{Import Data}\vspace{0.1cm}
+\begin{lstlisting}
+// Example: Load hospital discharge data
+use "sparcs_hospital_data.dta", clear
+
+// Load Stata file (general)
+use "filename.dta", clear
+
+// Import from SAS XPT (e.g., SPARCS source)
+import sasxport5 "sparcs_raw.xpt", clear
+
+// Import from CSV (hospital subset)
+import delimited "hospital_subset.csv", ///
+    clear firstrow
+
+// Save processed data
+save "sparcs_processed.dta", replace
+\end{lstlisting}
+
+\begin{warningbox}
+Always use \texttt{clear} or \texttt{, clear} option to avoid "no; data in memory" error.
+\end{warningbox}\vspace{0.15cm}
+
+% -----------------------------------------------------------------------
+\section{Data Exploration}
+
+\subsection{View \& Describe}
+\begin{lstlisting}
+// View first 10 hospital admissions
+list age los totalcosts county in 1/10
+
+// View high-cost stays (>$100k)
+list if totalcosts > 100000
+
+// Describe all variables
+describe
+
+// Explore age and admission type
+codebook age admission_type
+\end{lstlisting}
+
+\subsection{Summary Statistics}
+\begin{lstlisting}
+// Summarize hospital costs
+summ totalcosts
+
+// Detailed summary with percentiles
+summ totalcosts los age, d
+// Shows: min, max, mean, median, p25, p75
+
+// Summary by group (admission type)
+bysort admission_type: summ totalcosts
+\end{lstlisting}
+
+\subsection{Frequency Tables}
+\begin{lstlisting}
+// Admission type frequencies (show missing)
+tab admission_type, m
+
+// Age group distribution
+tab age_group
+
+// Cross-tabulation: admission type x sex
+tab admission_type sex, row
+
+// Expensive stay by admission type
+tab expensive_stay admission_type, col
+
+// Two-way table with both row & col %
+tab admission_type admission_source, ///
+    row col
+\end{lstlisting}
+
+\subsection{Check Data Size}
+\begin{lstlisting}
+// Number of observations
+display _N
+
+// Number of variables
+describe, short
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Variable Creation}
+
+\subsection{Basic Generation}
+\begin{lstlisting}
+// Create empty variable
+gen newvar = .
+
+// Create with value
+gen age_squared = age^2
+
+// Create constant
+gen constant = 1
+\end{lstlisting}
+
+\subsection{Replace Values}
+\begin{lstlisting}
+// Replace all values
+replace varname = new_value
+
+// Conditional replace
+replace var = value if condition
+\end{lstlisting}
+
+\begin{warningbox}
+\textbf{CRITICAL:} Use \texttt{if var != .} to protect missing values!
+\end{warningbox}\vspace{0.15cm}
+
+\subsection{Binary Variables (0/1 Flags)}
+\begin{lstlisting}
+// Method 1: Standard approach
+gen flag = 1 if condition
+replace flag = 0 if !condition
+
+// Method 2: One-liner
+gen flag = (condition) if var != .
+
+// Example: Elderly patient (age >= 65)
+gen elderly = 1 if age >= 65 & age != .
+replace elderly = 0 if age < 65
+
+// Example: Expensive stay (>$100,000)
+gen expensive_stay = 1 if totalcosts ///
+    > 100000 & totalcosts != .
+replace expensive_stay = 0 if ///
+    totalcosts <= 100000
+
+// VERIFY binary variable
+summ flag
+// mean should be 0-1, min=0, max=1
+\end{lstlisting}
+
+\subsection{Categorical Variables}
+\begin{lstlisting}
+// Method 1: Manual creation
+gen category = .
+replace category = 1 if condition1
+replace category = 2 if condition2
+replace category = 3 if condition3
+
+// Add value labels
+label define cat_lbl 1 "Low" ///
+    2 "Medium" 3 "High"
+label values category cat_lbl
+
+// Method 2: recode
+recode age (0/29=1) (30/49=2) ///
+    (50/max=3), gen(age_group)
+
+// Method 3: encode string variable
+encode string_var, gen(numeric_var)
+\end{lstlisting}
+
+\subsection{Top-coding (Capping Outliers)}
+\begin{lstlisting}
+// Create clean version
+gen cost_clean = cost
+
+// Top-code at $1,000,000
+replace cost_clean = 1000000 ///
+    if cost > 1000000 & cost != .
+
+// Verify
+summ cost, d
+summ cost_clean, d
+// Check: max of clean version = cap
+\end{lstlisting}
+
+\subsection{Logarithmic Transformation}
+\begin{lstlisting}
+// Handle right-skewed data
+// Step 1: Add small value to avoid log(0)
+gen cost_plus1 = cost + 1
+
+// Step 2: Take log
+gen log_cost = log(cost_plus1)
+
+// Alternative: only for positive values
+gen log_cost = log(cost) if cost > 0
+\end{lstlisting}
+
+\subsection{EGEN - Extended Generation}
+\begin{lstlisting}
+// Row operations
+egen total = rowtotal(var1 var2 var3)
+egen mean = rowmean(var1 var2 var3)
+egen max = rowmax(var1 var2 var3)
+egen min = rowmin(var1 var2 var3)
+
+// Grouped statistics
+egen mean_by_group = mean(var), ///
+    by(group_var)
+
+// Example: County-level averages
+egen avg_income_county = mean(income), ///
+    by(county_name)
+
+// Count non-missing
+egen count_nonmiss = count(var), ///
+    by(group)
+
+// String concatenation
+egen fullname = concat(first last), ///
+    punct(" ")
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Missing Values}
+
+\subsection{Identify \& Recode}
+\begin{lstlisting}
+// Count missing
+count if varname == .
+
+// Summary shows N
+summ varname
+// Total N vs variable N
+
+// Show missing in table
+tab varname, m
+\end{lstlisting}
+
+\subsection{Recode Missing Values}
+\begin{lstlisting}
+// Set specific values to missing
+replace var = . if var == 99
+replace var = . if var == 999
+replace var = . if var < 0
+
+// Example from BRFSS
+replace height = . if height == 7777
+replace height = . if height == 9999
+\end{lstlisting}
+
+\begin{warningbox}
+\textbf{Wrong:} \texttt{replace var = 100 if var > 100} (sets missing to 100!)\\
+\textbf{Right:} \texttt{replace var = 100 if var > 100 \& var != .}
+\end{warningbox}\vspace{0.15cm}
+
+\subsection{Create Missing Indicator}
+\begin{lstlisting}
+// Flag for missing
+gen miss_flag = (varname == .)
+
+// Or explicitly
+gen miss_flag = 0
+replace miss_flag = 1 if varname == .
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{String Variables}
+
+\subsection{Type Conversion}
+\begin{lstlisting}
+// Basic conversion (force ignores errors)
+destring string_var, gen(num_var) force
+
+// Check what couldn't be converted
+tab string_var if num_var == .
+
+// Example: Handle "120 +"
+destring lengthofstay, gen(los_num) force
+replace los_num = 120 ///
+    if lengthofstay == "120 +"
+\end{lstlisting}
+
+\subsection{Numeric to String}
+\begin{lstlisting}
+// Convert number to string
+gen str_var = string(numeric_var)
+
+// With formatting
+gen str_var = string(num_var, "%9.2f")
+\end{lstlisting}
+
+\subsection{String to Categorical (encode)}
+\begin{lstlisting}
+// Create numeric with labels
+encode string_var, gen(categorical_var)
+
+// Example: Admission type
+encode typeofadmission, ///
+    gen(admission_type_num)
+
+// Verify
+tab typeofadmission admission_type_num
+\end{lstlisting}
+
+\subsection{String Manipulation}
+\begin{lstlisting}
+// Case conversion
+gen upper = strupper(string_var)
+gen lower = strlower(string_var)
+gen proper = strproper(string_var)
+
+// Extract substring (pos starts at 1!)
+gen first5 = substr(string_var, 1, 5)
+gen char2to4 = substr(string_var, 2, 3)
+
+// Find substring position
+gen pos = strpos(string_var, "keyword")
+// Returns 0 if not found
+
+// String length
+gen length = strlen(string_var)
+
+// Replace text
+gen new = subinstr(string_var, ///
+    "old", "new", .)
+// Last argument: . = replace all
+
+// Split string
+split string_var, gen(part) parse("_")
+// Creates: part1, part2, part3, ...
+\end{lstlisting}
+
+\begin{warningbox}
+\textbf{substr() starts at 1:} \texttt{substr(str, 1, 2)} = first 2 chars
+\end{warningbox}\vspace{0.15cm}
+
+% -----------------------------------------------------------------------
+\section{Data Merging}
+
+\subsection{Merge Types (1:1, 1:M, M:1)}
+\begin{lstlisting}
+// 1:1 - Both datasets: 1 row per ID
+merge 1:1 id_var using "file.dta"
+
+// 1:M - Master: 1 row/ID, Using: many rows/ID
+merge 1:m id_var using "file.dta"
+
+// M:1 - Master: many rows/ID, Using: 1 row/ID
+merge m:1 id_var using "file.dta"
+
+// M:M - Both: many rows/ID (rare, avoid)
+// Use joinby instead if needed
+\end{lstlisting}
+
+\subsection{M:1 Merge Example (Most Common)}
+\begin{lstlisting}
+// Merge county data to individual records
+// Main: Individual hospitalizations
+//       (many records per county)
+// Using: County characteristics
+//        (one record per county)
+
+use "hospital_data.dta", clear
+
+// Rename if needed to match
+rename hospitalcounty County_Name
+
+// Perform M:1 merge
+merge m:1 County_Name ///
+    using "county_data.dta"
+
+// CHECK merge results
+tab _merge
+/*
+_merge values:
+  1 = master only (hospital records
+      with no county match)
+  2 = using only (counties with no
+      hospital records)
+  3 = matched successfully
+*/
+
+// Keep what you want
+keep if _merge == 1 | _merge == 3
+// Keeps all hospital records
+
+// Clean up
+drop _merge
+\end{lstlisting}
+
+\subsection{Merge Workflow}
+\begin{lstlisting}
+// Step 1: Check merge variable exists
+describe merge_var
+
+// Step 2: Check if unique (if "1" side)
+duplicates report merge_var
+// Should show 0 duplicates
+
+// Step 3: Ensure variable names match
+// If not, rename in one dataset
+rename old_name new_name
+
+// Step 4: Check variable types match
+describe merge_var
+// Both should be numeric or string
+
+// Step 5: Perform merge
+merge type merge_var using "file.dta"
+
+// Step 6: Always check _merge!
+tab _merge
+
+// Step 7: Keep desired records
+keep if _merge == 1 | _merge == 3
+
+// Step 8: Drop _merge
+drop _merge
+\end{lstlisting}
+
+\begin{tipbox}
+M:1 $\rightarrow$ Master(M):Using(1) | 1:M $\rightarrow$ Master(1):Using(M) | 1:1 $\rightarrow$ Master(1):Using(1)
+\end{tipbox}\vspace{0.15cm}
+
+\subsection{Append (Stack Datasets)}
+\begin{lstlisting}
+// Combine datasets with same structure
+use "data2020.dta", clear
+append using "data2021.dta"
+append using "data2022.dta"
+
+// All rows are kept, stacked vertically
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Data Reshaping}
+
+\subsection{Wide $\leftrightarrow$ Long}
+\begin{lstlisting}
+// Wide format:
+// id  bp1  bp2  bp3  hr1  hr2  hr3
+// 1   120  118  115  72   70   68
+
+reshape long bp hr, i(id) j(round)
+
+// Long format:
+// id  round  bp   hr
+// 1   1      120  72
+// 1   2      118  70
+// 1   3      115  68
+\end{lstlisting}
+
+\subsection{Long to Wide}
+\begin{lstlisting}
+// Long format:
+// id  round  bp   hr
+// 1   1      120  72
+// 1   2      118  70
+
+reshape wide bp hr, i(id) j(round)
+
+// Wide format:
+// id  bp1  bp2  hr1  hr2
+// 1   120  118  72   70
+\end{lstlisting}
+
+\begin{warningbox}
+Always \texttt{save} before \textbf{reshape}!
+\end{warningbox}\vspace{0.15cm}
+
+% -----------------------------------------------------------------------
+\section{Regression Analysis}
+
+\subsection{Linear Regression}
+\begin{lstlisting}
+// Simple regression
+reg outcome predictor
+
+// Multiple regression
+reg y x1 x2 x3
+
+// With robust standard errors
+reg y x1 x2, robust
+// or
+reg y x1 x2, r
+\end{lstlisting}
+
+\subsection{Categorical Variables in Regression}
+\begin{lstlisting}
+// Use i. prefix for categorical
+reg outcome continuous_var i.category
+
+// Example
+reg totalcosts lengthofstay ///
+    i.agegroup i.admission_type
+
+// Stata automatically:
+// - Creates dummy variables
+// - Omits first category (reference)
+// - Shows each category coefficient
+\end{lstlisting}
+
+\subsection{Continuous Variables}
+\begin{lstlisting}
+// Default: continuous
+reg y x1 x2
+
+// Explicit: c. prefix (optional)
+reg y c.x1 c.x2
+\end{lstlisting}
+
+\subsection{Interaction Terms}
+\begin{lstlisting}
+// Categorical x Categorical
+reg y i.var1##i.var2
+// ## includes main effects + interaction
+
+// Categorical x Continuous
+// IMPORTANT: Use c. for continuous!
+reg y i.category##c.continuous
+
+// Example: Do age effects vary by sex?
+reg totalcosts i.sex##c.age ///
+    i.admission_type, robust
+
+// Only interaction (no main effects)
+reg y i.var1#i.var2
+\end{lstlisting}
+
+\begin{warningbox}
+MUST use \texttt{c.} for continuous: \texttt{i.sex\#\#c.age} (not \texttt{i.sex\#\#age})
+\end{warningbox}\vspace{0.15cm}
+
+\subsection{Logistic Regression}
+\begin{lstlisting}
+// Binary outcome (0/1)
+logistic binary_y x1 x2 i.category
+// Reports Odds Ratios (OR)
+
+// Alternative: logit (reports log-odds)
+logit binary_y x1 x2 i.category
+
+// Example
+logistic expensive_stay ///
+    County_Income lengthofstay ///
+    i.agegroup i.ED_flag
+\end{lstlisting}
+
+\subsection{Linear vs Logistic Interpretation}
+\begin{lstlisting}
+// LINEAR regression on binary outcome
+reg expensive_stay County_Income, r
+// Coefficient: Percentage point difference
+// Example: coef = 0.04
+// Interpretation: "County income increase
+// of $1000 associated with 4 percentage
+// point increase in probability of
+// expensive stay (e.g., 10% to 14%)"
+
+// LOGISTIC regression
+logistic expensive_stay County_Income
+// Coefficient: Odds Ratio
+// Example: OR = 1.02
+// Interpretation: "County income increase
+// of $1000 associated with 2% increase
+// in the odds of expensive stay"
+\end{lstlisting}
+
+\subsection{Survey Weights}
+\begin{lstlisting}
+// Set survey design
+svyset [pweight = weight_var]
+
+// Weighted regression
+svy: reg y x1 x2 i.category
+
+// Weighted logistic
+svy: logistic binary_y x1 x2
+
+// Why use weights?
+// - Make results representative
+// - Account for survey design
+// - Adjust for non-response
+\end{lstlisting}
+
+\subsection{Post-Regression Commands}
+\begin{lstlisting}
+// Test joint significance
+reg y x1 x2 x3
+test x1 x2
+// Tests: x1 = x2 = 0
+
+// Predicted values
+predict yhat
+
+// Residuals
+predict resid, residuals
+
+// Margins (adjusted predictions)
+reg y x1 i.group
+margins group
+// Shows predicted y for each group
+\end{lstlisting}
+
+\subsection{Individual Fixed Effects}
+\begin{lstlisting}
+// For panel/longitudinal data
+// Controls for all time-invariant
+// individual characteristics
+
+// Set panel structure
+xtset person_id time_var
+
+// Fixed effects regression
+xtreg y x1 x2, fe
+
+// Why use FE?
+// - Within-person analysis
+// - Control for unmeasured confounders
+// - Stronger causal inference
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Verification \& Validation}
+
+\subsection{Verify Binary Variables}
+\begin{lstlisting}
+// Create binary flag
+gen flag = 1 if cost > 50000 & cost != .
+replace flag = 0 if cost <= 50000
+
+// CHECK 1: Summary statistics
+summ flag
+// mean: 0-1, min: 0, max: 1, N correct?
+
+// CHECK 2: Cross-tabulation
+tab flag, m
+// Should show: 0, 1, and . only
+
+// CHECK 3: Verify cutoff
+summ cost if flag == 1
+// min should be > 50000
+summ cost if flag == 0
+// max should be <= 50000
+\end{lstlisting}
+
+\subsection{Verify Categorical Variables}
+\begin{lstlisting}
+// After encoding or recoding
+tab old_var new_var
+// Check mapping is correct
+
+// With percentages
+tab old_var new_var, row col
+\end{lstlisting}
+
+\subsection{Verify Continuous Variables}
+\begin{lstlisting}
+// After transformation
+summ original_var, d
+summ clean_var, d
+// Compare: mean, min, max, N
+
+// Grouped summary
+bysort group: summ var
+// or
+summ var if group == 1
+summ var if group == 0
+\end{lstlisting}
+
+\subsection{Check for Missing}
+\begin{lstlisting}
+// Count missing
+count if var == .
+
+// Identify observations with missing
+list id var if var == .
+
+// Missing by group
+tab group, m
+bysort group: count if var == .
+\end{lstlisting}
+
+\subsection{Verify Merge Success}
+\begin{lstlisting}
+// After merge
+tab _merge
+
+// List unmatched from master
+list id if _merge == 1
+
+// List unmatched from using
+list id if _merge == 2
+
+// Check merged variable
+summ merged_var if _merge == 3
+// Should have valid values
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Common Workflows}
+
+\subsection{Clean Outcome Variable}
+\begin{lstlisting}
+// Step 1: Explore
+codebook outcome
+summ outcome, d
+tab outcome, m
+
+// Step 2: Identify issues
+// - Missing values?
+// - Outliers?
+// - Correct range?
+
+// Step 3: Create clean version
+gen outcome_clean = outcome
+
+// Step 4: Handle missing
+replace outcome_clean = . if outcome == 99
+replace outcome_clean = . if outcome < 0
+
+// Step 5: Handle outliers (top-code)
+replace outcome_clean = 1000000 ///
+    if outcome > 1000000 & outcome != .
+
+// Step 6: Verify
+summ outcome_clean, d
+tab outcome outcome_clean, m
+\end{lstlisting}
+
+\subsection{Prepare Covariates}
+\begin{lstlisting}
+// Continuous variable
+// - Check range
+summ age, d
+// - Handle missing
+replace age = . if age == 99
+// - Create squared term if needed
+gen age_squared = age^2
+
+// Categorical variable (numeric)
+// - Check values
+tab category, m
+// - Create labeled version
+label define cat_lbl 1 "A" 2 "B" 3 "C"
+label values category cat_lbl
+
+// Categorical variable (string)
+// - Encode to numeric
+encode string_var, gen(category_num)
+// - Verify
+tab string_var category_num
+
+// Binary flag
+// - Create 0/1
+gen flag = 1 if condition & var != .
+replace flag = 0 if !condition
+// - Verify
+summ flag
+tab flag, m
+\end{lstlisting}
+
+\subsection{Complete Analysis Example}
+\begin{lstlisting}
+// Research Q: County income effect on
+// hospitalization costs?
+
+// Step 1: Load and check data
+use "hospital_data.dta", clear
+describe
+summ totalcosts, d
+
+// Step 2: Clean outcome
+gen cost_clean = totalcosts
+replace cost_clean = 1000000 ///
+    if totalcosts > 1000000 & totalcosts != .
+
+// Step 3: Clean covariates
+encode agegroup, gen(age_num)
+gen ED_flag = (ed_indicator == "Y") ///
+    if ed_indicator != ""
+
+// Step 4: Merge county data
+rename county County_Name
+merge m:1 County_Name ///
+    using "county_income.dta"
+keep if _merge == 1 | _merge == 3
+drop _merge
+
+// Step 5: Check merged data
+summ County_Income, d
+// Report min and max
+
+// Step 6: Run regression
+reg cost_clean County_Income ///
+    lengthofstay i.age_num i.ED_flag, r
+
+// Step 7: Interpret
+// "Controlling for length of stay, age,
+// and ED status, each $1000 increase in
+// county income is associated with
+// $XX increase in hospital costs.
+// This is statistically significant
+// (p<0.05)."
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Additional Commands}
+
+\subsection{Duplicates}
+\begin{lstlisting}
+// Check for duplicates
+duplicates report stay_id
+
+// List duplicate examples
+duplicates examples stay_id
+
+// Tag duplicates (create flag)
+duplicates tag stay_id, gen(dup_flag)
+
+// Drop exact duplicates (keep one)
+duplicates drop stay_id, force
+
+// Keep first observation per group
+bysort subject_id: keep if _n == 1
+\end{lstlisting}
+
+\subsection{Bysort Techniques}
+\begin{lstlisting}
+// _n = observation number within group
+// _N = total observations in group
+
+// Count admissions per patient
+bysort subject_id: gen n_admissions = _N
+
+// Sequence number within group
+bysort subject_id: gen admission_seq = _n
+
+// Keep first observation per group
+bysort subject_id: keep if _n == 1
+
+// Keep last observation per group
+bysort subject_id: keep if _n == _N
+
+// Flag first observation
+bysort county_name: gen first = (_n == 1)
+\end{lstlisting}
+
+\subsection{Date/Time Handling}
+\begin{lstlisting}
+// String to date
+gen date_var = date(date_string, "MDY")
+format date_var %td
+
+// String to datetime
+gen datetime_var = clock(dt_string, ///
+    "YMD hms")
+format datetime_var %tc
+
+// Date calculations (days)
+gen los = discharge_date - admit_date
+
+// Extract components
+gen year_num = year(date_var)
+gen month_num = month(date_var)
+gen day_num = day(date_var)
+
+// Common date formats:
+// "MDY" - Month/Day/Year (1/15/2023)
+// "YMD" - Year/Month/Day (2023-01-15)
+// "hms" - hours:minutes:seconds
+\end{lstlisting}
+
+\subsection{Test (Hypothesis Testing)}
+\begin{lstlisting}
+// After regression
+reg outcome x1 x2 i.category
+
+// Test single coefficient
+test x1
+
+// Test multiple coefficients jointly
+test x1 x2
+
+// Test categorical variable
+test 2.category 3.category
+
+// Test interaction term
+reg y i.sex##c.age
+test sex#c.age
+\end{lstlisting}
+
+\subsection{Tabstat}
+\begin{lstlisting}
+// Basic usage
+tabstat variable, stat(n mean sd)
+
+// By groups
+tabstat bmi, by(age_group) ///
+    stat(n mean sd min p50 max)
+
+// Multiple variables
+tabstat bmi weight height, ///
+    by(gender) stat(n mean sd)
+
+// Format output
+tabstat var, by(group) stat(n mean sd) ///
+    format(%9.2f)
+\end{lstlisting}
+
+\subsection{Preserve \& Restore}
+\begin{lstlisting}
+// Save current data state
+preserve
+
+// Make temporary changes
+keep if age >= 65
+collapse (mean) var, by(state)
+
+// Restore original data
+restore
+
+// Use for temporary exploration
+// without losing original dataset
+\end{lstlisting}
+
+\subsection{Collapse}
+\begin{lstlisting}
+// WARNING: Permanently changes data!
+// Save original first!
+save original_data, replace
+
+// Calculate mean by group
+collapse (mean) flu_shot, by(month_year)
+
+// Multiple statistics
+collapse (mean) mean_los=los ///
+         (sd) sd_los=los ///
+         (count) n=los, by(provider_group)
+
+// Restore original
+use original_data, clear
+\end{lstlisting}
+
+% -----------------------------------------------------------------------
+\section{Key Reminders \& Tips}
+
+\subsection{Common Mistakes}
+
+\begin{warningbox}
+\small\textbf{Top Mistakes:} Missing values (\texttt{\& var != .}) | substr() starts at 1 | Use \texttt{c.} for continuous | Always \texttt{tab \_merge} | Binary: check \texttt{summ} shows 0-1
+\end{warningbox}
+
+\subsection{Statistical Significance vs Practical}
+\begin{lstlisting}
+// Example: p=0.007, diff=3 minutes
+// Statistical: YES (p<0.05)
+// Practical: MAYBE
+// - 3 min might be too small
+// - But >10% relative difference
+// - Large sample = "overpowered"
+//   (can detect tiny differences)
+
+// Always discuss BOTH in interpretation
+\end{lstlisting}
+
+\subsection{Regression Interpretation}
+\begin{lstlisting}
+// Linear regression coefficient:
+// "Each 1-unit increase in X is
+// associated with beta-unit change in Y,
+// controlling for other variables."
+
+// Logistic regression OR:
+// "Each 1-unit increase in X is
+// associated with ORx change in the
+// odds of Y, controlling for others."
+
+// Binary outcome + linear regression:
+// "Each 1-unit increase in X is
+// associated with beta percentage point
+// change in probability of Y."
+\end{lstlisting}
+
+\subsection{When to Use What}
+
+\textbf{Data Types:}
+\begin{itemize}
+\item Cross-sectional survey: Prevalence, associations
+\item Longitudinal survey: Within-person changes, causality
+\item Claims data: Utilization, costs, readmission
+\item EHR data: Clinical details, single system
+\end{itemize}
+
+\textbf{Merge Types:}
+\begin{itemize}
+\item M:1: Individual records + area-level data
+\item 1:M: Visits + medications per visit
+\item 1:1: Same IDs in both datasets
+\end{itemize}
+
+\textbf{Regression Types:}
+\begin{itemize}
+\item Linear: Continuous outcome
+\item Linear: Binary outcome (percentage points)
+\item Logistic: Binary outcome (odds ratios)
+\item Fixed effects: Panel data, within-person
+\end{itemize}
+
+\subsection{Cheat Sheet Usage Tips}
+\begin{tipbox}
+\textbf{During the exam:}
+\begin{enumerate}
+\item Start with exploration (summ, tab, describe)
+\item Create clean versions of variables
+\item Verify each step before moving on
+\item Check merge with \texttt{tab \_merge}
+\item Verify binary variables with \texttt{summ}
+\item Write complete interpretations
+\end{enumerate}
+\end{tipbox}
+
+\subsection{Quick Reference}
+
+\fontsize{6pt}{6.5pt}\selectfont
+\noindent
+\begin{tabular*}{\linewidth}{@{\extracolsep{\fill}}cc@{}}
+\hline\textbf{Task} & \textbf{Command} \\
+\hline
+Load data & use "file.dta", clear \\
+Import CSV & import delimited "file.csv" \\
+Summary stats & summ var, d \\
+Frequency & tab var, m \\
+Create var & gen newvar = expr \\
+Binary flag & gen flag = (condition) \\
+Top-code & replace var = cap if var > cap \& var != . \\
+Encode string & encode str, gen(num) \\
+String to num & destring str, gen(num) force \\
+M:1 merge & merge m:1 id using "file.dta" \\
+Check merge & tab \_merge \\
+Linear reg & reg y x1 x2, r \\
+With category & reg y x1 i.cat \\
+Interaction & reg y i.cat1\#\#c.cont \\
+Logistic & logistic binary\_y x1 x2 \\
+Verify binary & summ flag (should be 0-1) \\
+Cross-check & tab oldvar newvar \\
+\hline
+\end{tabular*}
+\normalsize
+
+\vspace{0.1cm}
+{\fontsize{5pt}{6pt}\selectfont \textbf{Stata Cheat Sheet v1.0 | October 2025}}
+
+\end{multicols}
+\end{document}

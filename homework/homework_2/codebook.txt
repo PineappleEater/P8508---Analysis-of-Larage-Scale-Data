@@ -1,0 +1,496 @@
+Samples selected:
+      1997 NHIS
+      1998 NHIS
+      1999 NHIS
+      2000 NHIS
+      2001 NHIS
+      2002 NHIS
+      2003 NHIS
+      2004 NHIS
+      2005 NHIS
+      2006 NHIS
+      2007 NHIS
+      2008 NHIS
+      2009 NHIS
+      2010 NHIS
+      2011 NHIS
+      2012 NHIS
+      2013 NHIS
+      2014 NHIS
+      2015 NHIS
+      2016 NHIS
+      2017 NHIS
+      2018 NHIS
+      2019 NHIS
+      2020 NHIS
+      2021 NHIS
+      2022 NHIS
+      2023 NHIS
+      2024 NHIS
+File Type:                    rectangular
+Case Selection:               No
+  Variable                         Columns        Len   1997    1998    1999    2000    2001    2002    2003    2004    2005    2006    2007    2008    2009    2010    2011    2012    2013    2014    2015    2016    2017    2018    2019    2020    2021    2022    2023    2024    
+  YEAR                         H   1-4            4     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  SERIAL                       H   5-10           6     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  STRATA                       H  11-14           4     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  PSU                          H  15-17           3     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  NHISHID                      H  18-31          14     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  HHWEIGHT                     H  32-37           6     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       .       .       .       .       .       
+  PERNUM                       P  38-39           2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  NHISPID                      P  40-55          16     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  HHX                          P  56-62           7     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  FMX                          P  63-64           2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       .       .       .       .       .       
+  PX                           P  65-66           2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       .       .       .       .       .       
+  PERWEIGHT                    P  67-78          12     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       .       .       .       .       .       
+  SAMPWEIGHT                   P  79-90          12     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  LONGWEIGHT                   P  91-101         11     .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       X       .       .       .       .       
+  PARTWEIGHT                   P 102-112         11     .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       .       X       .       .       .       .       
+  FWEIGHT                      P 113-124         12     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       .       .       .       .       .       
+  ASTATFLG                     P 125              1     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  CSTATFLG                     P 126              1     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  AGE                          P 127-129          3     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  SEX                          P 130              1     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  HEALTH                       P 131              1     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  SMOKEV                       P 132-133          2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  CIGDAYMO                     P 134-135          2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  CIGSDAY1                     P 136-137          2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  CIGSDAY2                     P 138-139          2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  SMOKESTATUS2                 P 140-141          2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  SMOKFREQNOW                  P 142              1     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       
+  QUITNO                       P 143-145          3     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       X       .       X       .       X       
+  QUITTP                       P 146              1     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       X       .       X       .       X       
+  QUITYRS                      P 147-148          2     X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       X       .       X       .       X       .       X       
+
+Variable Availability Key:
+All Years X - available in this sample
+All Years . - not available in this sample
+
+RECTYPE   Record type
+H         Household
+P         Person
+I         Injury
+X         Condition
+D         Dr. visits
+A         Hospital record
+M         Prescribed medicine
+O         Non-prescribed medicine
+S         X-ray record
+Z         Poison record
+V         Motor vehicle person accident
+G         Pregnancy
+Y         Soa/condtion
+L         Vitamin/mineral
+B         Disability condition
+
+ASTATFLG            Sample adult flag
+0                   NIU
+1                   Sample adult, has record
+2                   Sample adult, no record
+3                   Not selected as sample adult
+4                   No one selected as sample adult
+5                   Armed forces member
+6                   AF member, selected as sample adult
+
+CSTATFLG            Sample child flag
+0                   NIU
+1                   Sample child-has record
+2                   Sample child-no record
+3                   Not selected as sample child
+4                   No one selected as sample child
+5                   Emancipated minor
+
+SEX                 Sex
+1                   Male
+2                   Female
+7                   Unknown-refused
+8                   Unknown-not ascertained
+9                   Unknown-don't know
+
+HEALTH              Health status
+1                   Excellent
+2                   Very Good
+3                   Good
+4                   Fair
+5                   Poor
+7                   Unknown-refused
+8                   Unknown-not ascertained
+9                   Unknown-don't know
+
+SMOKEV              Ever smoked 100 cigarettes in life
+00                  NIU
+01                  No
+02                  Yes
+07                  Unknown-refused
+08                  Unknown-not ascertained
+09                  Unknown-don't know
+
+CIGDAYMO            Number days smoked in past 30 days (some day smokers)
+00                  None
+01                  1 day
+02                  2 days
+03                  3 days
+04                  4 days
+05                  5 days
+06                  6 days
+07                  7 days
+08                  8 days
+09                  9 days
+10                  10 days
+11                  11 days
+12                  12 days
+13                  13 days
+14                  14 days
+15                  15 days
+16                  16 days
+17                  17 days
+18                  18 days
+19                  19 days
+20                  20 days
+21                  21 days
+22                  22 days
+23                  23 days
+24                  24 days
+25                  25 days
+26                  26 days
+27                  27 days
+28                  28 days
+29                  29 days
+30                  30 days
+96                  NIU
+97                  Unknown-refused
+98                  Unknown-not ascertained
+99                  Unknown-don't know
+
+CIGSDAY1            Number cigarettes per day (daily smokers)
+00                  NIU
+01                  1 cigarette
+02                  2 cigarettes
+03                  3 cigarettes
+04                  4 cigarettes
+05                  5 cigarettes
+06                  6 cigarettes
+07                  7 cigarettes
+08                  8 cigarettes
+09                  9 cigarettes
+10                  10 cigarettes
+11                  11 cigarettes
+12                  12 cigarettes
+13                  13 cigarettes
+14                  14 cigarettes
+15                  15 cigarettes
+16                  16 cigarettes
+17                  17 cigarettes
+18                  18 cigarettes
+19                  19 cigarettes
+20                  20 cigarettes
+21                  21 cigarettes
+22                  22 cigarettes
+23                  23 cigarettes
+24                  24 cigarettes
+25                  25 cigarettes
+26                  26 cigarettes
+27                  27 cigarettes
+28                  28 cigarettes
+29                  29 cigarettes
+30                  30 cigarettes
+31                  31 cigarettes
+32                  32 cigarettes
+33                  33 cigarettes
+34                  34 cigarettes
+35                  35 cigarettes
+36                  36 cigarettes
+37                  37 cigarettes
+38                  38 cigarettes
+39                  39 cigarettes
+40                  40 cigarettes
+41                  41 cigarettes
+42                  42 cigarettes
+43                  43 cigarettes
+44                  44 cigarettes
+45                  45 cigarettes
+46                  46 cigarettes
+47                  47 cigarettes
+48                  48 cigarettes
+49                  49 cigarettes
+50                  50 cigarettes
+51                  51 cigarettes
+52                  52 cigarettes
+53                  53 cigarettes
+54                  54 cigarettes
+55                  55 cigarettes
+56                  56 cigarettes
+57                  57 cigarettes
+58                  58 cigarettes
+59                  59 cigarettes
+60                  60 cigarettes
+61                  61 cigarettes
+62                  62 cigarettes
+63                  63 cigarettes
+64                  64 cigarettes
+65                  65 cigarettes
+66                  66 cigarettes
+67                  67 cigarettes
+68                  68 cigarettes
+69                  69 cigarettes
+70                  70 cigarettes
+71                  71 cigarettes
+72                  72 cigarettes
+73                  73 cigarettes
+74                  74 cigarettes
+75                  75 cigarettes
+76                  76 cigarettes
+77                  77 cigarettes
+78                  78 cigarettes
+79                  79 cigarettes
+80                  80 cigarettes
+81                  81 cigarettes
+82                  82 cigarettes
+83                  83 cigarettes
+84                  84 cigarettes
+85                  85 cigarettes
+86                  86 cigarettes
+87                  87 cigarettes
+88                  88 cigarettes
+89                  89 cigarettes
+90                  90 cigarettes
+91                  91 cigarettes
+92                  92 cigarettes
+93                  93 cigarettes
+94                  94 cigarettes
+95                  95+ cigarettes
+97                  Unknown-refused
+98                  Unknown-not ascertained
+99                  Unknown-don't know
+
+CIGSDAY2            Number cigarettes per day (some day smokers)
+00                  NIU
+01                  1 cigarette
+02                  2 cigarettes
+03                  3 cigarettes
+04                  4 cigarettes
+05                  5 cigarettes
+06                  6 cigarettes
+07                  7 cigarettes
+08                  8 cigarettes
+09                  9 cigarettes
+10                  10 cigarettes
+11                  11 cigarettes
+12                  12 cigarettes
+13                  13 cigarettes
+14                  14 cigarettes
+15                  15 cigarettes
+16                  16 cigarettes
+17                  17 cigarettes
+18                  18 cigarettes
+19                  19 cigarettes
+20                  20 cigarettes
+21                  21 cigarettes
+22                  22 cigarettes
+23                  23 cigarettes
+24                  24 cigarettes
+25                  25 cigarettes
+26                  26 cigarettes
+27                  27 cigarettes
+28                  28 cigarettes
+29                  29 cigarettes
+30                  30 cigarettes
+31                  31 cigarettes
+32                  32 cigarettes
+33                  33 cigarettes
+34                  34 cigarettes
+35                  35 cigarettes
+36                  36 cigarettes
+37                  37 cigarettes
+38                  38 cigarettes
+39                  39 cigarettes
+40                  40 cigarettes
+41                  41 cigarettes
+42                  42 cigarettes
+43                  43 cigarettes
+44                  44 cigarettes
+45                  45 cigarettes
+46                  46 cigarettes
+47                  47 cigarettes
+48                  48 cigarettes
+49                  49 cigarettes
+50                  50 cigarettes
+51                  51 cigarettes
+52                  52 cigarettes
+53                  53 cigarettes
+54                  54 cigarettes
+55                  55 cigarettes
+56                  56 cigarettes
+57                  57 cigarettes
+58                  58 cigarettes
+59                  59 cigarettes
+60                  60 cigarettes
+61                  61 cigarettes
+62                  62 cigarettes
+63                  63 cigarettes
+64                  64 cigarettes
+65                  65 cigarettes
+66                  66 cigarettes
+67                  67 cigarettes
+68                  68 cigarettes
+69                  69 cigarettes
+70                  70 cigarettes
+71                  71 cigarettes
+72                  72 cigarettes
+73                  73 cigarettes
+74                  74 cigarettes
+75                  75 cigarettes
+76                  76 cigarettes
+77                  77 cigarettes
+78                  78 cigarettes
+79                  79 cigarettes
+80                  80 cigarettes
+81                  81 cigarettes
+82                  82 cigarettes
+83                  83 cigarettes
+84                  84 cigarettes
+85                  85 cigarettes
+86                  86 cigarettes
+87                  87 cigarettes
+88                  88 cigarettes
+89                  89 cigarettes
+90                  90 cigarettes
+91                  91 cigarettes
+92                  92 cigarettes
+93                  93 cigarettes
+94                  94 cigarettes
+95                  95+ cigarettes
+97                  Unknown-refused
+98                  Unknown-not ascertained
+99                  Unknown-don't know
+
+SMOKESTATUS2        Cigarette smoking recode 2: Current detailed/former/never
+00                  NIU
+10                  Current smoker
+11                  Current every day smoker
+12                  Current some day smoker
+13                  Current smoker, unknown how often smokes
+20                  Former smoker
+30                  Never smoked
+40                  Has smoked, current smoking status unknown
+90                  Unknown if ever smoked
+
+SMOKFREQNOW         Smoke every day, some days, or not at all
+0                   NIU
+1                   Not at all
+2                   Some days
+3                   Every day
+7                   Unknown-refused
+8                   Unknown-not ascertained
+9                   Unknown-don't know
+
+QUITTP              Time since quit smoking: Time period
+0                   NIU
+1                   Days
+2                   Weeks
+3                   Months
+4                   Years
+7                   Unknown-refused
+8                   Unknown-not ascertained
+9                   Unknown-don't know
+
+QUITYRS             Time since quit smoking: Years
+00                  Less than 1 year
+01                  1 year
+02                  2 years
+03                  3 years
+04                  4 years
+05                  5 years
+06                  6 years
+07                  7 years
+08                  8 years
+09                  9 years
+10                  10 years
+11                  11 years
+12                  12 years
+13                  13 years
+14                  14 years
+15                  15 years
+16                  16 years
+17                  17 years
+18                  18 years
+19                  19 years
+20                  20 years
+21                  21 years
+22                  22 years
+23                  23 years
+24                  24 years
+25                  25 years
+26                  26 years
+27                  27 years
+28                  28 years
+29                  29 years
+30                  30 years
+31                  31 years
+32                  32 years
+33                  33 years
+34                  34 years
+35                  35 years
+36                  36 years
+37                  37 years
+38                  38 years
+39                  39 years
+40                  40 years
+41                  41 years
+42                  42 years
+43                  43 years
+44                  44 years
+45                  45 years
+46                  46 years
+47                  47 years
+48                  48 years
+49                  49 years
+50                  50 years
+51                  51 years
+52                  52 years
+53                  53 years
+54                  54 years
+55                  55 years
+56                  56 years
+57                  57 years
+58                  58 years
+59                  59 years
+60                  60 years
+61                  61 years
+62                  62 years
+63                  63 years
+64                  64 years
+65                  65 years
+66                  66 years
+67                  67 years
+68                  68 years
+69                  69 years
+70                  70 years (1997 and 1999 forward: 70+ years)
+71                  71 years
+72                  72 years
+73                  73 years
+74                  74 years
+75                  75 years
+76                  76 years
+77                  77 years
+78                  78 years
+79                  79 years
+80                  80 years
+81                  81 years
+82                  82 years
+83                  83 years
+84                  84 years
+85                  85 years (1998: 85+ years)
+86                  86 years
+87                  87 years
+88                  88 years
+89                  89 years
+90                  90 years
+91                  91 years
+92                  92 years
+93                  93 years
+94                  94 years
+95                  95+ years
+96                  NIU
+97                  Unknown-refused
+98                  Unknown-not ascertained
+99                  Unknown-don't know

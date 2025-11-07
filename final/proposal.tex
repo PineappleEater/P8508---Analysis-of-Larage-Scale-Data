@@ -1,0 +1,71 @@
+
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{setspace}
+\setlist{nosep}
+\setstretch{1.05}
+\titleformat{\section}{\large\bfseries}{\thesection}{0.5em}{}
+\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\begin{document}
+\begin{center}
+{\LARGE \textbf{1-Page Proposal}}\\[0.5em]
+{\large \textbf{Medicaid Expansion and Adult Smoking Behaviors:}\\
+A Reproducible, Survey-Weighted Logistic Regression Study Using BRFSS 2003--2015}
+\end{center}
+
+\section*{Article to Replicate}
+Valvi, Vin-Raviv, \& Akinyemiju (2019), \textit{Preventive Medicine Reports}: analyzes how the Affordable Care Act's Medicaid expansion relates to adult smoking outcomes using the Behavioral Risk Factor Surveillance System (BRFSS). The paper uses repeated cross-sections with survey-weighted \textbf{logistic regression} to study (i) current smoking and (ii) past-year quit attempts.
+
+\section*{Why This Paper Fits the Course Project}
+\begin{itemize}
+\item \textbf{Public data \& clear design}: BRFSS microdata (2003--2015) are public with documented weights/strata/PSUs.
+\item \textbf{Regression-centered}: multivariable logit models with transparent covariates and policy indicators---ideal for replication and extension.
+\item \textbf{Feasible scope}: single data source; no proprietary linkages; methods covered in class (survey weighting, regression with interactions).
+\item \textbf{Pedagogical value}: illustrates ``repeated cross-section'' inference and handling the \textbf{2011 BRFSS methodology change} (cell-phone frame + raking).
+\end{itemize}
+
+\section*{Data, Outcomes, and Key Variables}
+\textbf{Data}: BRFSS adult respondents, pooled 2003--2015 (excluding 2010 as a washout if needed).\\
+\textbf{Outcomes (binary)}: (1) current smoking (constructed from standard BRFSS items), (2) any quit attempt in past 12 months among smokers.\\
+\textbf{Exposures}: state-level \textit{Medicaid expansion} status by year; policy ``barriers to cessation coverage'' (e.g., prior authorization/copay).\\
+\textbf{Covariates}: age, sex, race/ethnicity, education, income, employment, insurance, usual source of care, region/state indicators.\\
+\textbf{Survey design}: BRFSS final weights, strata, cluster PSUs; variance via Taylor linearization; cluster at state level as appropriate.
+
+\section*{Replication Plan (Main Analysis)}
+\begin{enumerate}
+\item \textbf{Reconstruct sample \& codebook parity}: replicate inclusion/exclusion, recodes, and descriptives (weighted prevalence) to match baselines.
+\item \textbf{Modeling}: estimate survey-weighted logistic regressions for both outcomes with expansion $\times$ post-period interactions, adjusting for covariates.
+\item \textbf{2011 discontinuity}: include an indicator for 2011+ (or fit segmented trends); run separate analyses for 2003--2010 vs.\ 2011--2015.
+\item \textbf{Reporting}: present odds ratios (ORs) and average marginal effects (risk differences) with 95\% CIs; show original and replicated estimates side-by-side.
+\end{enumerate}
+
+\section*{Proposed Extensions}
+\begin{itemize}
+\item \textbf{Policy Mechanism}: triple interaction \textit{expansion $\times$ post $\times$ ``no barriers''} to test whether states without cessation-coverage barriers realize larger increases in quit attempts.
+\item \textbf{Equity/Heterogeneity}: stratify by \textbf{income} (e.g., $\leq\$20$k vs $>\$20$k) and \textbf{age} (18--49 vs 50+) to test distributional impacts.
+\item \textbf{Outcome Re-expression}: complement ORs with \textbf{average marginal effects} to improve interpretability.
+\item \textbf{Robustness}: add year and state fixed effects; cluster at state level; omit low-response states; multiple imputation for key covariates.
+\end{itemize}
+
+\section*{Anticipated Challenges \& Mitigation}
+\begin{itemize}
+\item \textbf{2011 method change} may affect comparability $\rightarrow$ segmentation and explicit 2011+ indicator, sensitivity analyses.
+\item \textbf{Policy timing/definitions} must match the article's coding $\rightarrow$ follow appendix definitions; alternate codings as checks.
+\item \textbf{Survey design fidelity} is crucial $\rightarrow$ implement with R \texttt{survey/srvyr} (or Stata \texttt{svy}); verify effective sample sizes and SEs.
+\item \textbf{Residual discrepancies} in recodes $\rightarrow$ document diffs; assess coefficient sensitivity via leave-one-rule-out tests.
+\end{itemize}
+
+\section*{Deliverables \& Timeline}
+\textbf{Deliverables}: Proposal (this file), replicated tables/figures, reproducible scripts, slide deck.\\
+\textbf{Timeline}: Weeks 1--2 data \& descriptives; Week 3 main logits \& side-by-side table; Week 4 extensions, finalize code/docs.
+
+\section*{Tools}
+R: \texttt{tidyverse}, \texttt{survey/srvyr}, \texttt{marginaleffects}, \texttt{fixest}, \texttt{geepack} (optional).\\
+Stata (alt.): \texttt{svyset}, \texttt{margins}, \texttt{vce(cluster state)}.
+
+\section*{Expected Contribution}
+A transparent, fully reproducible replication of a policy-relevant smoking study, plus mechanism and equity extensions that clarify where Medicaid expansion most improves quit behavior---and by how much in absolute terms.
+\end{document}
