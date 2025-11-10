@@ -1,71 +1,39 @@
 
-\documentclass[11pt]{article}
-\usepackage[margin=1in]{geometry}
+\documentclass[10pt]{article}
+\usepackage[margin=0.65in]{geometry}
 \usepackage{hyperref}
 \usepackage{enumitem}
 \usepackage{titlesec}
-\usepackage{setspace}
-\setlist{nosep}
-\setstretch{1.05}
-\titleformat{\section}{\large\bfseries}{\thesection}{0.5em}{}
-\titleformat{\subsection}{\normalsize\bfseries}{\thesubsection}{0.5em}{}
+\setlist{nosep,leftmargin=1em}
+\titleformat{\section}{\normalsize\bfseries}{\thesection}{0.3em}{}[\vspace{-0.5ex}]
+\setlength{\parskip}{2pt}
+\setlength{\parindent}{0pt}
 \begin{document}
 \begin{center}
-{\LARGE \textbf{1-Page Proposal}}\\[0.5em]
-{\large \textbf{Medicaid Expansion and Adult Smoking Behaviors:}\\
-A Reproducible, Survey-Weighted Logistic Regression Study Using BRFSS 2003--2015}
+\vspace{-2em}
+{\large \textbf{Final Project Proposal: Medicaid Expansion and Adult Smoking}\\
+\normalsize A Reproducible BRFSS Study (2003--2015)}\\[0.5em]
+\small Xuange Liang (xl3493), Zexuan Yan (zy2654)
+\vspace{-0.8em}
 \end{center}
 
 \section*{Article to Replicate}
-Valvi, Vin-Raviv, \& Akinyemiju (2019), \textit{Preventive Medicine Reports}: analyzes how the Affordable Care Act's Medicaid expansion relates to adult smoking outcomes using the Behavioral Risk Factor Surveillance System (BRFSS). The paper uses repeated cross-sections with survey-weighted \textbf{logistic regression} to study (i) current smoking and (ii) past-year quit attempts.
+\textbf{Citation}: Valvi NR, Vin-Raviv N, Akinyemiju T. (2019). The association of smoking and quit attempts with Medicaid expansion: Findings from the 2003--2015 BRFSS. \textit{Preventive Medicine Reports}, 16:100973.
 
-\section*{Why This Paper Fits the Course Project}
-\begin{itemize}
-\item \textbf{Public data \& clear design}: BRFSS microdata (2003--2015) are public with documented weights/strata/PSUs.
-\item \textbf{Regression-centered}: multivariable logit models with transparent covariates and policy indicators---ideal for replication and extension.
-\item \textbf{Feasible scope}: single data source; no proprietary linkages; methods covered in class (survey weighting, regression with interactions).
-\item \textbf{Pedagogical value}: illustrates ``repeated cross-section'' inference and handling the \textbf{2011 BRFSS methodology change} (cell-phone frame + raking).
-\end{itemize}
+\textbf{Study design}: The article examines ACA Medicaid expansion effects on adult smoking using BRFSS data (sample $n>$4 million adults) and survey-weighted \textbf{logistic regression} with repeated cross-sections to analyze (1) current smoking and (2) past-year quit attempts among smokers. \textbf{Why chosen}: public data with documented complex survey design; regression-centered methods covered in class; feasible scope with single data source; pedagogical value in handling 2011 BRFSS methodology change (cell-phone sampling + raking weights).
 
-\section*{Data, Outcomes, and Key Variables}
-\textbf{Data}: BRFSS adult respondents, pooled 2003--2015 (excluding 2010 as a washout if needed).\\
-\textbf{Outcomes (binary)}: (1) current smoking (constructed from standard BRFSS items), (2) any quit attempt in past 12 months among smokers.\\
-\textbf{Exposures}: state-level \textit{Medicaid expansion} status by year; policy ``barriers to cessation coverage'' (e.g., prior authorization/copay).\\
-\textbf{Covariates}: age, sex, race/ethnicity, education, income, employment, insurance, usual source of care, region/state indicators.\\
-\textbf{Survey design}: BRFSS final weights, strata, cluster PSUs; variance via Taylor linearization; cluster at state level as appropriate.
+\section*{Data Sources \& Variables}
+\textbf{Data source}: BRFSS (Behavioral Risk Factor Surveillance System) adults, 2003--2015 (CDC; $>$4 million observations, 50 states + DC). \textbf{Outcomes}: (1) Current smoking (yes/no), (2) past-year quit attempts among smokers. \textbf{Exposures}: State Medicaid expansion status by year; cessation-coverage barriers (prior authorization, copays). \textbf{Covariates}: Age, sex, race/ethnicity, education, income, employment, insurance, care access, state, year. \textbf{Survey design}: Sampling weights, strata, PSUs; Taylor-linearized variance; state clustering.
 
-\section*{Replication Plan (Main Analysis)}
-\begin{enumerate}
-\item \textbf{Reconstruct sample \& codebook parity}: replicate inclusion/exclusion, recodes, and descriptives (weighted prevalence) to match baselines.
-\item \textbf{Modeling}: estimate survey-weighted logistic regressions for both outcomes with expansion $\times$ post-period interactions, adjusting for covariates.
-\item \textbf{2011 discontinuity}: include an indicator for 2011+ (or fit segmented trends); run separate analyses for 2003--2010 vs.\ 2011--2015.
-\item \textbf{Reporting}: present odds ratios (ORs) and average marginal effects (risk differences) with 95\% CIs; show original and replicated estimates side-by-side.
-\end{enumerate}
+\section*{Analysis Plan}
+\textbf{Replication}: (1) Download/merge BRFSS 2003--2015 data; apply sample restrictions to match original study. (2) Recode variables per article codebook; verify weighted descriptives. (3) Specify survey design with weights/strata/PSUs. (4) Estimate survey-weighted logistic regressions for both outcomes using difference-in-differences (expansion$\times$post-ACA interactions) with full covariate adjustment. (5) Include 2011+ indicator for methodology change; conduct sensitivity analyses. (6) Report ORs, AMEs, and 95\% CIs; compare with published results.
 
-\section*{Proposed Extensions}
-\begin{itemize}
-\item \textbf{Policy Mechanism}: triple interaction \textit{expansion $\times$ post $\times$ ``no barriers''} to test whether states without cessation-coverage barriers realize larger increases in quit attempts.
-\item \textbf{Equity/Heterogeneity}: stratify by \textbf{income} (e.g., $\leq\$20$k vs $>\$20$k) and \textbf{age} (18--49 vs 50+) to test distributional impacts.
-\item \textbf{Outcome Re-expression}: complement ORs with \textbf{average marginal effects} to improve interpretability.
-\item \textbf{Robustness}: add year and state fixed effects; cluster at state level; omit low-response states; multiple imputation for key covariates.
-\end{itemize}
+\textbf{Extensions}: (1) \textbf{Mechanism}: Triple interaction (expansion$\times$post$\times$"no barriers") to test policy pathways. (2) \textbf{Equity}: Stratify by income ($\leq$\$20k vs $>$\$20k) and age (18--49 vs 50+). (3) \textbf{Interpretability}: Report AMEs alongside ORs. (4) \textbf{Robustness}: Year/state FEs; alternative clustering; exclude low-response states.
 
 \section*{Anticipated Challenges \& Mitigation}
-\begin{itemize}
-\item \textbf{2011 method change} may affect comparability $\rightarrow$ segmentation and explicit 2011+ indicator, sensitivity analyses.
-\item \textbf{Policy timing/definitions} must match the article's coding $\rightarrow$ follow appendix definitions; alternate codings as checks.
-\item \textbf{Survey design fidelity} is crucial $\rightarrow$ implement with R \texttt{survey/srvyr} (or Stata \texttt{svy}); verify effective sample sizes and SEs.
-\item \textbf{Residual discrepancies} in recodes $\rightarrow$ document diffs; assess coefficient sensitivity via leave-one-rule-out tests.
-\end{itemize}
+\textbf{2011 methodology change}: BRFSS introduced cell-phone sampling/raking in 2011. \textit{Mitigation}: Include 2011+ indicator; separate pre/post-2011 analyses. \textbf{Policy definitions}: Expansion and barrier coding vary. \textit{Mitigation}: Follow article appendix; test alternates. \textbf{Survey design}: Complex weights critical. \textit{Mitigation}: Use R \texttt{survey}; verify effective $n$ and SEs. \textbf{Recoding diffs}: May vary from original. \textit{Mitigation}: Document; test robustness.
 
-\section*{Deliverables \& Timeline}
-\textbf{Deliverables}: Proposal (this file), replicated tables/figures, reproducible scripts, slide deck.\\
-\textbf{Timeline}: Weeks 1--2 data \& descriptives; Week 3 main logits \& side-by-side table; Week 4 extensions, finalize code/docs.
+\section*{Timeline, Tools \& Deliverables}
+\textbf{Timeline}: Wks 1--2: download/merge BRFSS data; apply sample restrictions; construct variables; weighted descriptives. Wk 3: estimate main replication models; compare with original results. Wk 4: extension analyses; finalize code/documentation; prepare slides. \textbf{Software}: R (\texttt{tidyverse}, \texttt{survey/srvyr}, \texttt{marginaleffects}) or Stata (\texttt{svyset}, \texttt{margins}). \textbf{Deliverables}: Replicated tables/figures, reproducible scripts, presentation deck.
 
-\section*{Tools}
-R: \texttt{tidyverse}, \texttt{survey/srvyr}, \texttt{marginaleffects}, \texttt{fixest}, \texttt{geepack} (optional).\\
-Stata (alt.): \texttt{svyset}, \texttt{margins}, \texttt{vce(cluster state)}.
-
-\section*{Expected Contribution}
-A transparent, fully reproducible replication of a policy-relevant smoking study, plus mechanism and equity extensions that clarify where Medicaid expansion most improves quit behavior---and by how much in absolute terms.
 \end{document}
