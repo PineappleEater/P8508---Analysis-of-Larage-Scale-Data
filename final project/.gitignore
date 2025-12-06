@@ -12,7 +12,8 @@ log/*.txt
 
 # Graph outputs (can be regenerated)
 *.png
-*.pdf
+# Keep PDF documents (paper.pdf, requirements) - only ignore generated ones
+figure*.pdf
 
 # Python cache
 __pycache__/
