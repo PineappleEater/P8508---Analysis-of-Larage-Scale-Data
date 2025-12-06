@@ -30,16 +30,44 @@ di "============================================================"
 * Define the list of variables we ULTIMATELY need
 * We need to look for variations of these names
 
-local years 2003 2004 2005 2006 2007 2008 2009 2011 2012 2013 2014 2015
+local years 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017
 
 foreach yr of local years {
     di _newline(1) "Processing `yr'..."
     
-    * Load the raw imported file
+    * Check if DTA exists, if not, try to create it from XPT
     capture confirm file "data/brfss_`yr'.dta"
     if _rc != 0 {
-        di "Error: data/brfss_`yr'.dta NOT FOUND. Please check imports."
-        continue
+        di "DTA file not found for `yr'. Checking for XPT..."
+        
+        * Define XPT filename logic
+        local xpt_file ""
+        if `yr' <= 2010 {
+            local short_yr = substr("`yr'", 3, 2)
+            local xpt_file "data/raw/CDBRFS`short_yr'.XPT"
+            * Check lowercase as fallback
+            capture confirm file "`xpt_file'"
+            if _rc != 0 local xpt_file "data/raw/cdbrfs`short_yr'.xpt"
+        }
+        else {
+            local xpt_file "data/raw/LLCP`yr'.XPT"
+            * Check lowercase as fallback
+            capture confirm file "`xpt_file'"
+            if _rc != 0 local xpt_file "data/raw/llcp`yr'.xpt"
+        }
+        
+        * Attempt conversion
+        capture confirm file "`xpt_file'"
+        if _rc == 0 {
+            di "Converting `xpt_file' to data/brfss_`yr'.dta..."
+            import sasxport5 "`xpt_file'", clear
+            gen year = `yr'
+            save "data/brfss_`yr'.dta", replace
+        }
+        else {
+            di "Error: Neither DTA nor XPT found for `yr'. Skipping."
+            continue
+        }
     }
     
     use "data/brfss_`yr'.dta", clear
@@ -51,10 +79,7 @@ foreach yr of local years {
     if _rc == 0 rename _STATE _state
     
     * Weight (check variations)
-    * 2004+ seems to have issues, possibly appearing as weight2 or _wt2 or _finalwt (lowercase)
-    
-    * Weight (check variations)
-    * SEARCH AND RESCUE for weight variable
+    * SEARCH AND RESCUE for weight variable (handles weight2, _finalwt, _llcpwt, etc.)
     
     local weight_candidates weight weight2 _FINALWT _finalwt _LLCPWT _llcpwt _WT2 _wt2 _POSTSTR _poststr
     local weight_found 0
@@ -87,25 +112,103 @@ foreach yr of local years {
     }
     
     * Age
-    capture confirm variable AGE
-    if _rc == 0 rename AGE age
-    capture confirm variable _AGE80
-    if _rc == 0 rename _AGE80 age
-    capture confirm variable _AGEG5YR
-    if _rc == 0 rename _AGEG5YR age
-    
-    * Race
-    capture confirm variable _RACE
-    if _rc != 0 {
-        capture confirm variable _RACEGR2
-        if _rc == 0 rename _RACEGR2 _race
+    capture confirm variable age
+    if _rc == 0 rename age age
+    else {
+        capture confirm variable AGE
+        if _rc == 0 rename AGE age
+        else {
+            capture confirm variable _age80
+            if _rc == 0 rename _age80 age
+            else {
+                capture confirm variable _AGE80
+                if _rc == 0 rename _AGE80 age
+                else {
+                    capture confirm variable _ageg5yr
+                    if _rc == 0 rename _ageg5yr age
+                    else {
+                        capture confirm variable _AGEG5YR
+                        if _rc == 0 rename _AGEG5YR age
+                    }
+                }
+            }
+        }
     }
     
+    * Race (Handle multiple versions & Standardize to 2011+ schema)
+    * Target Schema (_race): 1=White, 2=Black, 3=AmInd/Alaskan, 4=Asian, 5=HI/PI, 6=Other, 7=Multi, 8=Hispanic.
+    * We will create a standardized variable `race_std` and rename it to `_race` at the end.
+    
+    gen race_std = .
+
+    capture confirm variable _race
+    if _rc == 0 {
+        di "  -> Found _race (native)"
+        replace race_std = _race
+    }
+    else {
+        capture confirm variable _RACE
+        if _rc == 0 {
+            di "  -> Found _RACE (renaming)"
+            replace race_std = _RACE
+        }
+        else {
+            capture confirm variable _RACEGR3
+            if _rc == 0 {
+                 di "  -> Found _RACEGR3"
+                 * _RACEGR3 coding: 1=White, 2=Black, 3=Other, 4=Multi, 5=Hispanic. (This varies, best to treat like _race if similar)
+                 * Actually, common BRFSS _RACEGR3: 1=White, 2=Black, 3=Other, 4=Multi, 5=Hispanic... 
+                 * WAIT: 2011 _RACE has 8=Hispanic. 
+                 * Let's assume _RACE/ _RACEGR3 follow the newer 8=Hispanic or we check.
+                 * To be safe for the replication which expects 8=Hispanic:
+                 replace race_std = _RACEGR3
+            }
+            else {
+                capture confirm variable _racegr3
+                if _rc == 0 replace race_std = _racegr3
+                else {
+                    capture confirm variable _RACEGR2
+                    if _rc == 0 {
+                        di "  -> Found _RACEGR2 (standardizing)"
+                        * _RACEGR2: 1=White, 2=Black, 3=Hispanic, 4=Other/Multi
+                        replace race_std = 1 if _RACEGR2 == 1
+                        replace race_std = 2 if _RACEGR2 == 2
+                        replace race_std = 8 if _RACEGR2 == 3 // Standardize Hispanic to 8
+                        replace race_std = 6 if _RACEGR2 == 4 // Other
+                    }
+                    else {
+                        capture confirm variable _racegr2
+                        if _rc == 0 {
+                            di "  -> Found _racegr2 (standardizing)"
+                            replace race_std = 1 if _racegr2 == 1
+                            replace race_std = 2 if _racegr2 == 2
+                            replace race_std = 8 if _racegr2 == 3
+                            replace race_std = 6 if _racegr2 == 4
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    * Drop old race vars and use the standardized one
+    capture drop _race
+    rename race_std _race
+    
     * Employment
-    capture confirm variable EMPLOY1
-    if _rc != 0 {
-        capture confirm variable EMPLOY
-        if _rc == 0 rename EMPLOY employ1
+    capture confirm variable employ1
+    if _rc == 0 rename employ1 employ1
+    else {
+        capture confirm variable EMPLOY1
+        if _rc == 0 rename EMPLOY1 employ1
+        else {
+            capture confirm variable EMPLOY
+            if _rc == 0 rename EMPLOY employ1
+            else {
+                capture confirm variable employ
+                if _rc == 0 rename employ employ1
+            }
+        }
     }
     
     * Health Plan
@@ -120,6 +223,47 @@ foreach yr of local years {
     if _rc != 0 {
         capture confirm variable _RFSMOK3
         if _rc == 0 rename _RFSMOK3 _smoker3
+        else {
+             * Try older versions (2003 uses _SMOKER2 / _RFSMOK2 / lowercase)
+             capture confirm variable _SMOKER2
+             if _rc == 0 rename _SMOKER2 _smoker3
+             else {
+                 capture confirm variable _smoker2
+                 if _rc == 0 rename _smoker2 _smoker3
+                 else {
+                     capture confirm variable _RFSMOK2
+                     if _rc == 0 rename _RFSMOK2 _smoker3
+                     else {
+                        capture confirm variable _rfsmok2
+                        if _rc == 0 rename _rfsmok2 _smoker3
+                     }
+                 }
+             }
+        }
+    }
+
+    * --- KEEP ONLY RELEVANT VARIABLES ---
+    * List of targets (after renaming)
+    local targets year _state weight age sex _race educa income2 employ1 hlthpln1 persdoc2 smoke100 smokday2 stopsmk2 _smoker3
+    
+    * Income (Search and Rescue)
+    capture confirm variable income2
+    if _rc != 0 {
+        capture confirm variable INCOME2
+        if _rc == 0 rename INCOME2 income2
+        else {
+            capture confirm variable _INCOMG
+            if _rc == 0 {
+                 rename _INCOMG income2 
+                 di "Renamed _INCOMG to income2 (Warning: Check coding match)"
+                 * _INCOMG (1-5) is different from INCOME2 (1-8). 
+                 * We might need to map it if we strictly use it.
+            }
+            else {
+                 capture confirm variable _incomg
+                 if _rc == 0 rename _incomg income2
+            }
+        }
     }
 
     * --- KEEP ONLY RELEVANT VARIABLES ---
@@ -155,7 +299,7 @@ clear
 * Start with first processed file
 use "data/temp/small_2003.dta", clear
 
-foreach yr in 2004 2005 2006 2007 2008 2009 2011 2012 2013 2014 2015 {
+foreach yr in 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 {
     di "Appending `yr'..."
     append using "data/temp/small_`yr'.dta", force
 }

@@ -38,6 +38,14 @@ di "Started at: $S_DATE $S_TIME"
 * Load processed data
 use "data/brfss_analysis.dta", clear
 
+* --- NO AGE RESTRICTION (Paper includes all adults 18+) ---
+* Paper Table 1 includes age groups: 18-34, 35-49, 50-64, 65-79, 80+
+di "Sample includes all adults 18+..."
+
+* --- YEAR RESTRICTION (Match Paper's Primary Analysis N=5,311,872) ---
+* Paper analysis is 2003-2015. (2011-2017 is supplemental only).
+keep if year <= 2015
+
 * Declare survey design (must do before any svy: commands)
 capture confirm variable weight
 if _rc != 0 {
@@ -122,11 +130,6 @@ di "========== FIGURES: TRENDS OVER TIME =========="
 * Calculate yearly prevalence by expansion status
 preserve
 
-* Generate year variable if not already present
-capture confirm variable year
-if _rc != 0 {
-    gen year = IYEAR
-}
 
 * Collapse to get weighted means by year and expansion status
 collapse (mean) smoke_prev = current_smoker ///
@@ -179,26 +182,26 @@ di _newline(2)
 di "========== TABLE 3: DiD REGRESSION - CURRENT SMOKING =========="
 di "Comparing Pre (2003-2009) vs Post (2011-2015) by Expansion Status"
 
-* Model 1: Unadjusted DiD
-di _newline(1) "Model 1: Unadjusted DiD"
-logit current_smoker i.expanded_state##i.post [pw=weight], cluster(_state)
+* Model 1: Unadjusted (Using Poisson for Relative Risk, matching paper's GEE approach)
+di _newline(1) "Model 1: Unadjusted (Poisson for RR)"
+poisson current_smoker i.expanded_state##i.post [pw=weight], cluster(_state) irr
 estimates store model1_unadj
 
-di _newline(1) "Odds Ratios:"
-logit current_smoker i.expanded_state##i.post [pw=weight], cluster(_state) or
+di _newline(1) "Incidence Rate Ratios (≈ Relative Risk):"
+poisson current_smoker i.expanded_state##i.post [pw=weight], cluster(_state) irr
 
-* Model 2: Adjusted DiD (with covariates)
-di _newline(1) "Model 2: Adjusted DiD (with demographic covariates)"
-logit current_smoker i.expanded_state##i.post ///
+* Model 2: Adjusted (with covariates)
+di _newline(1) "Model 2: Adjusted (with demographic covariates)"
+poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.income i.employed ///
-    [pw=weight], cluster(_state)
+    [pw=weight], cluster(_state) irr
 
 estimates store model2_adj
 
-di _newline(1) "Adjusted Odds Ratios:"
-logit current_smoker i.expanded_state##i.post ///
+di _newline(1) "Adjusted Relative Risks:"
+poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.income i.employed ///
-    [pw=weight], cluster(_state) or
+    [pw=weight], cluster(_state) irr
 
 * Key coefficient interpretation
 di _newline(1)
@@ -219,27 +222,27 @@ di "Among Current Smokers Only"
 preserve
 keep if current_smoker == 1
 
-* Model 1: Unadjusted DiD
-di _newline(1) "Model 1: Unadjusted DiD (Current Smokers Only)"
-logit quit_attempt i.expanded_state##i.post [pw=weight], cluster(_state)
+* Model 1: Unadjusted (Poisson for RR)
+di _newline(1) "Model 1: Unadjusted (Current Smokers Only)"
+poisson quit_attempt i.expanded_state##i.post [pw=weight], cluster(_state) irr
 
 estimates store model3_unadj
 
-di _newline(1) "Odds Ratios:"
-logit quit_attempt i.expanded_state##i.post [pw=weight], cluster(_state) or
+di _newline(1) "Relative Risk:"
+poisson quit_attempt i.expanded_state##i.post [pw=weight], cluster(_state) irr
 
-* Model 2: Adjusted DiD
-di _newline(1) "Model 2: Adjusted DiD (Current Smokers Only)"
-logit quit_attempt i.expanded_state##i.post ///
+* Model 2: Adjusted
+di _newline(1) "Model 2: Adjusted (Current Smokers Only)"
+poisson quit_attempt i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.income i.employed ///
-    [pw=weight], cluster(_state)
+    [pw=weight], cluster(_state) irr
 
 estimates store model4_adj
 
-di _newline(1) "Adjusted Odds Ratios:"
-logit quit_attempt i.expanded_state##i.post ///
+di _newline(1) "Adjusted Relative Risks:"
+poisson quit_attempt i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.income i.employed ///
-    [pw=weight], cluster(_state) or
+    [pw=weight], cluster(_state) irr
 
 restore
 
@@ -253,45 +256,45 @@ di "Does Medicaid Expansion have differential effects by race?"
 
 * Stratified DiD for Current Smoking
 
-di _newline(1) "DiD for Current Smoking - WHITE POPULATION:"
-logit current_smoker i.expanded_state##i.post ///
+di _newline(1) "RR for Current Smoking - WHITE POPULATION:"
+capture noisily poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.education i.income i.employed ///
-    if race == 1 [pw=weight], cluster(_state) or
-estimates store smoke_white
+    if race == 1 [pw=weight], cluster(_state) irr
+capture estimates store smoke_white
 
-di _newline(1) "DiD for Current Smoking - BLACK POPULATION:"
-logit current_smoker i.expanded_state##i.post ///
+di _newline(1) "RR for Current Smoking - BLACK POPULATION:"
+capture noisily poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.education i.income i.employed ///
-    if race == 2 [pw=weight], cluster(_state) or
-estimates store smoke_black
+    if race == 2 [pw=weight], cluster(_state) irr
+capture estimates store smoke_black
 
-di _newline(1) "DiD for Current Smoking - HISPANIC POPULATION:"
-logit current_smoker i.expanded_state##i.post ///
+di _newline(1) "RR for Current Smoking - HISPANIC POPULATION:"
+capture noisily poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.education i.income i.employed ///
-    if race == 3 [pw=weight], cluster(_state) or
-estimates store smoke_hispanic
+    if race == 3 [pw=weight], cluster(_state) irr
+capture estimates store smoke_hispanic
 
 * Stratified DiD for Quit Attempts (among smokers)
 preserve
 keep if current_smoker == 1
 
-di _newline(1) "DiD for Quit Attempts - WHITE SMOKERS:"
-logit quit_attempt i.expanded_state##i.post ///
+di _newline(1) "RR for Quit Attempts - WHITE SMOKERS:"
+capture noisily poisson quit_attempt i.expanded_state##i.post ///
     i.age_cat i.female i.education i.income i.employed ///
-    if race == 1 [pw=weight], cluster(_state) or
-estimates store quit_white
+    if race == 1 [pw=weight], cluster(_state) irr
+capture estimates store quit_white
 
-di _newline(1) "DiD for Quit Attempts - BLACK SMOKERS:"
-logit quit_attempt i.expanded_state##i.post ///
+di _newline(1) "RR for Quit Attempts - BLACK SMOKERS:"
+capture noisily poisson quit_attempt i.expanded_state##i.post ///
     i.age_cat i.female i.education i.income i.employed ///
-    if race == 2 [pw=weight], cluster(_state) or
-estimates store quit_black
+    if race == 2 [pw=weight], cluster(_state) irr
+capture estimates store quit_black
 
-di _newline(1) "DiD for Quit Attempts - HISPANIC SMOKERS:"
-logit quit_attempt i.expanded_state##i.post ///
+di _newline(1) "RR for Quit Attempts - HISPANIC SMOKERS:"
+capture noisily poisson quit_attempt i.expanded_state##i.post ///
     i.age_cat i.female i.education i.income i.employed ///
-    if race == 3 [pw=weight], cluster(_state) or
-estimates store quit_hispanic
+    if race == 3 [pw=weight], cluster(_state) irr
+capture estimates store quit_hispanic
 
 restore
 
@@ -304,18 +307,18 @@ di "========== EXTENSION: STRATIFIED ANALYSIS BY INCOME =========="
 di "Does Medicaid Expansion have differential effects by income level?"
 
 * Low income (< $20,000) - more likely to be Medicaid eligible
-di _newline(1) "DiD for Current Smoking - LOW INCOME (<$20k):"
-logit current_smoker i.expanded_state##i.post ///
+di _newline(1) "RR for Current Smoking - LOW INCOME (<$20k):"
+capture noisily poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.employed ///
-    if income <= 2 [pw=weight], cluster(_state) or
-estimates store smoke_lowinc
+    if income <= 2 [pw=weight], cluster(_state) irr
+capture estimates store smoke_lowinc
 
 * Higher income (>= $20,000)
-di _newline(1) "DiD for Current Smoking - HIGHER INCOME (>=$20k):"
-logit current_smoker i.expanded_state##i.post ///
+di _newline(1) "RR for Current Smoking - HIGHER INCOME (>=$20k):"
+capture noisily poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.employed ///
-    if income >= 3 & income != . [pw=weight], cluster(_state) or
-estimates store smoke_highinc
+    if income >= 3 & income != . [pw=weight], cluster(_state) irr
+capture estimates store smoke_highinc
 
 ********************************************************************************
 * SUMMARY TABLE: COMPARE REPLICATION VS EXTENSION
@@ -325,14 +328,14 @@ di _newline(2)
 di "========== SUMMARY: COMPARISON OF RESULTS =========="
 
 * Create comparison table
-di _newline(1) "CURRENT SMOKING - DiD COEFFICIENTS (Odds Ratios):"
+di _newline(1) "CURRENT SMOKING - DiD COEFFICIENTS (Relative Risks):"
 di "-----------------------------------------------------"
-estimates table model2_adj smoke_white smoke_black smoke_hispanic, ///
+capture noisily estimates table model2_adj smoke_white smoke_black smoke_hispanic, ///
     keep(1.expanded_state#1.post) b se stats(N)
 
-di _newline(1) "QUIT ATTEMPTS - DiD COEFFICIENTS (Odds Ratios):"
+di _newline(1) "QUIT ATTEMPTS - DiD COEFFICIENTS (Relative Risks):"
 di "-----------------------------------------------------"
-estimates table model4_adj quit_white quit_black quit_hispanic, ///
+capture noisily estimates table model4_adj quit_white quit_black quit_hispanic, ///
     keep(1.expanded_state#1.post) b se stats(N)
 
 ********************************************************************************

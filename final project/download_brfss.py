@@ -47,6 +47,8 @@ BRFSS_URLS = {
     2013: "https://www.cdc.gov/brfss/annual_data/2013/files/LLCP2013XPT.zip",
     2014: "https://www.cdc.gov/brfss/annual_data/2014/files/LLCP2014XPT.zip",
     2015: "https://www.cdc.gov/brfss/annual_data/2015/files/LLCP2015XPT.zip",
+    2016: "https://www.cdc.gov/brfss/annual_data/2016/files/LLCP2016XPT.zip",
+    2017: "https://www.cdc.gov/brfss/annual_data/2017/files/LLCP2017XPT.zip",
 }
 
 
