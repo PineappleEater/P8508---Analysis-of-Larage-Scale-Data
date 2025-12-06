@@ -22,7 +22,7 @@ ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE
 
 # Define paths
-PROJECT_DIR = "/home/liang/desktop/P8508---Analysis-of-Larage-Scale-Data/final project"
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 RAW_DATA_DIR = os.path.join(PROJECT_DIR, "data", "raw")
 
 # Create directories if they don't exist

@@ -18,8 +18,8 @@ set more off
 ********************************************************************************
 
 * Set working directory
-* For Windows Stata accessing WSL files:
-global projdir "\\wsl.localhost\Ubuntu-24.04\home\liang\desktop\P8508---Analysis-of-Larage-Scale-Data\final project"
+* Windows path:
+global projdir "d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\final project"
 * For Linux Stata, use: 
 * global projdir "/home/liang/desktop/P8508---Analysis-of-Larage-Scale-Data/final project"
 cd "$projdir"
@@ -38,7 +38,15 @@ di "Started at: $S_DATE $S_TIME"
 use "data/brfss_analysis.dta", clear
 
 * Declare survey design (must do before any svy: commands)
+capture confirm variable weight
+if _rc != 0 {
+    di "ERROR: Variable 'weight' is missing!"
+}
 svyset [pw=weight]
+
+* Diagnose missing values
+di _newline(1) "Checking for missing values in key variables:"
+misstable patterns current_smoker post expanded_state weight
 
 * Display sample size
 di _newline(1)
