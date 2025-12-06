@@ -1,0 +1,23 @@
+# BRFSS Data files (too large for GitHub)
+data/raw/*.XPT
+data/raw/*.xpt
+data/*.dta
+
+# Stata log files
+log/*.txt
+*.log
+
+# Stata temporary files
+*.smcl
+
+# Graph outputs (can be regenerated)
+*.png
+*.pdf
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
+Thumbs.db
