@@ -25,8 +25,9 @@ global projdir "d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\
 cd "$projdir"
 
 * Log file for documentation
+capture mkdir "log"
 capture log close
-log using "log/analysis_log.txt", text replace
+log using "log/analysis.log", text replace
 
 di "============================================================"
 di "FINAL PROJECT: STATISTICAL ANALYSIS"
@@ -147,8 +148,8 @@ twoway (connected smoke_prev year if expanded_state == 1, ///
        scheme(s2color) ///
        xline(2010.5, lpattern(dash) lcolor(gray))
 
-graph export "figure1_smoking_trends.png", replace width(1000) height(600)
-di "Figure 1 saved as: figure1_smoking_trends.png"
+graph export "output/figure1_smoking_trends.png", replace width(1000) height(600)
+di "Figure 1 saved as: output/figure1_smoking_trends.png"
 
 * Figure 2: Quit Attempt Trends
 di _newline(1) "Creating Figure 2: Quit Attempt Trends..."
@@ -165,8 +166,8 @@ twoway (connected quit_prev year if expanded_state == 1, ///
        scheme(s2color) ///
        xline(2010.5, lpattern(dash) lcolor(gray))
 
-graph export "figure2_quit_trends.png", replace width(1000) height(600)
-di "Figure 2 saved as: figure2_quit_trends.png"
+graph export "output/figure2_quit_trends.png", replace width(1000) height(600)
+di "Figure 2 saved as: output/figure2_quit_trends.png"
 
 restore
 
@@ -180,25 +181,24 @@ di "Comparing Pre (2003-2009) vs Post (2011-2015) by Expansion Status"
 
 * Model 1: Unadjusted DiD
 di _newline(1) "Model 1: Unadjusted DiD"
-svy: logistic current_smoker i.expanded_state##i.post
-
-* Store results for comparison
+logit current_smoker i.expanded_state##i.post [pw=weight], cluster(_state)
 estimates store model1_unadj
 
-* Display odds ratios
 di _newline(1) "Odds Ratios:"
-svy: logistic current_smoker i.expanded_state##i.post, or
+logit current_smoker i.expanded_state##i.post [pw=weight], cluster(_state) or
 
 * Model 2: Adjusted DiD (with covariates)
 di _newline(1) "Model 2: Adjusted DiD (with demographic covariates)"
-svy: logistic current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.race i.education i.income i.employed
+logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    [pw=weight], cluster(_state)
 
 estimates store model2_adj
 
 di _newline(1) "Adjusted Odds Ratios:"
-svy: logistic current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.race i.education i.income i.employed, or
+logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    [pw=weight], cluster(_state) or
 
 * Key coefficient interpretation
 di _newline(1)
@@ -221,23 +221,25 @@ keep if current_smoker == 1
 
 * Model 1: Unadjusted DiD
 di _newline(1) "Model 1: Unadjusted DiD (Current Smokers Only)"
-svy: logistic quit_attempt i.expanded_state##i.post
+logit quit_attempt i.expanded_state##i.post [pw=weight], cluster(_state)
 
 estimates store model3_unadj
 
 di _newline(1) "Odds Ratios:"
-svy: logistic quit_attempt i.expanded_state##i.post, or
+logit quit_attempt i.expanded_state##i.post [pw=weight], cluster(_state) or
 
 * Model 2: Adjusted DiD
 di _newline(1) "Model 2: Adjusted DiD (Current Smokers Only)"
-svy: logistic quit_attempt i.expanded_state##i.post ///
-    i.age_cat i.female i.race i.education i.income i.employed
+logit quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    [pw=weight], cluster(_state)
 
 estimates store model4_adj
 
 di _newline(1) "Adjusted Odds Ratios:"
-svy: logistic quit_attempt i.expanded_state##i.post ///
-    i.age_cat i.female i.race i.education i.income i.employed, or
+logit quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    [pw=weight], cluster(_state) or
 
 restore
 
@@ -252,18 +254,21 @@ di "Does Medicaid Expansion have differential effects by race?"
 * Stratified DiD for Current Smoking
 
 di _newline(1) "DiD for Current Smoking - WHITE POPULATION:"
-svy, subpop(if race == 1): logistic current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.education i.income i.employed, or
+logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.education i.income i.employed ///
+    if race == 1 [pw=weight], cluster(_state) or
 estimates store smoke_white
 
 di _newline(1) "DiD for Current Smoking - BLACK POPULATION:"
-svy, subpop(if race == 2): logistic current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.education i.income i.employed, or
+logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.education i.income i.employed ///
+    if race == 2 [pw=weight], cluster(_state) or
 estimates store smoke_black
 
 di _newline(1) "DiD for Current Smoking - HISPANIC POPULATION:"
-svy, subpop(if race == 3): logistic current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.education i.income i.employed, or
+logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.education i.income i.employed ///
+    if race == 3 [pw=weight], cluster(_state) or
 estimates store smoke_hispanic
 
 * Stratified DiD for Quit Attempts (among smokers)
@@ -271,18 +276,21 @@ preserve
 keep if current_smoker == 1
 
 di _newline(1) "DiD for Quit Attempts - WHITE SMOKERS:"
-svy, subpop(if race == 1): logistic quit_attempt i.expanded_state##i.post ///
-    i.age_cat i.female i.education i.income i.employed, or
+logit quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.education i.income i.employed ///
+    if race == 1 [pw=weight], cluster(_state) or
 estimates store quit_white
 
 di _newline(1) "DiD for Quit Attempts - BLACK SMOKERS:"
-svy, subpop(if race == 2): logistic quit_attempt i.expanded_state##i.post ///
-    i.age_cat i.female i.education i.income i.employed, or
+logit quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.education i.income i.employed ///
+    if race == 2 [pw=weight], cluster(_state) or
 estimates store quit_black
 
 di _newline(1) "DiD for Quit Attempts - HISPANIC SMOKERS:"
-svy, subpop(if race == 3): logistic quit_attempt i.expanded_state##i.post ///
-    i.age_cat i.female i.education i.income i.employed, or
+logit quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.education i.income i.employed ///
+    if race == 3 [pw=weight], cluster(_state) or
 estimates store quit_hispanic
 
 restore
@@ -297,14 +305,16 @@ di "Does Medicaid Expansion have differential effects by income level?"
 
 * Low income (< $20,000) - more likely to be Medicaid eligible
 di _newline(1) "DiD for Current Smoking - LOW INCOME (<$20k):"
-svy, subpop(if income <= 2): logistic current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.race i.education i.employed, or
+logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.employed ///
+    if income <= 2 [pw=weight], cluster(_state) or
 estimates store smoke_lowinc
 
 * Higher income (>= $20,000)
 di _newline(1) "DiD for Current Smoking - HIGHER INCOME (>=$20k):"
-svy, subpop(if income >= 3 & income != .): logistic current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.race i.education i.employed, or
+logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.employed ///
+    if income >= 3 & income != . [pw=weight], cluster(_state) or
 estimates store smoke_highinc
 
 ********************************************************************************
@@ -334,8 +344,9 @@ di "========== SENSITIVITY ANALYSIS =========="
 
 * Linear probability model (for comparison with logit)
 di _newline(1) "Linear Probability Model for Current Smoking:"
-svy: regress current_smoker i.expanded_state##i.post ///
-    i.age_cat i.female i.race i.education i.income i.employed
+regress current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    [pw=weight], cluster(_state)
 
 di _newline(1) "Interpretation: Coefficient on expanded_state#post represents"
 di "the percentage point change in smoking probability due to expansion"

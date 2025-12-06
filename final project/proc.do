@@ -6,6 +6,7 @@
 clear all
 set more off
 set maxvar 10000
+set varabbrev off
 
 * Set working directory
 * Windows path:
@@ -15,7 +16,8 @@ cd "$projdir"
 capture mkdir "data/temp"
 capture mkdir "log"
 
-log using "log/proc_log_v2.txt", text replace
+capture log close
+log using "log/proc.log", text replace
 
 di "============================================================"
 di "Memory Optimization Run"
@@ -52,23 +54,36 @@ foreach yr of local years {
     * 2004+ seems to have issues, possibly appearing as weight2 or _wt2 or _finalwt (lowercase)
     
     * Weight (check variations)
-    * Only attempt rename if 'weight' does not already exist
-    capture confirm variable weight
-    if _rc != 0 {
-        * Target 'weight' missing. Try candidates in order.
-        capture rename weight2 weight
-        capture rename _FINALWT weight
-        capture rename _finalwt weight
-        capture rename _LLCPWT weight
-        capture rename _llcpwt weight
-        capture rename _WT2 weight
-        
-        * Final check
-        capture confirm variable weight
-        if _rc != 0 {
-            di "WARNING: No weight variable found for year `yr'!"
-            describe
+    * SEARCH AND RESCUE for weight variable
+    
+    local weight_candidates weight weight2 _FINALWT _finalwt _LLCPWT _llcpwt _WT2 _wt2 _POSTSTR _poststr
+    local weight_found 0
+    
+    foreach wvar of local weight_candidates {
+        capture confirm variable `wvar'
+        if _rc == 0 {
+            di "Found weight variable: `wvar'"
+            if "`wvar'" != "weight" {
+                capture rename `wvar' weight
+                if _rc == 0 {
+                     di "Successfully renamed `wvar' to weight"
+                     local weight_found 1
+                     continue, break 
+                }
+                else {
+                     di "Failed to rename `wvar' to weight"
+                }
+            }
+            else {
+                local weight_found 1
+                continue, break
+            }
         }
+    }
+    
+    if `weight_found' == 0 {
+        di "WARNING: FATAL - No weight variable found for year `yr'!"
+        describe
     }
     
     * Age
