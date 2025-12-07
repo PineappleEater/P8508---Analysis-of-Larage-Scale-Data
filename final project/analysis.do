@@ -345,40 +345,29 @@ capture noisily estimates table model4_adj quit_white quit_black quit_hispanic, 
 di _newline(2)
 di "========== SENSITIVITY ANALYSIS =========="
 
-* Linear probability model (for comparison with logit)
-di _newline(1) "Linear Probability Model for Current Smoking:"
-regress current_smoker i.expanded_state##i.post ///
+* 1. Sensitivity Analysis: No Clustering (Test if this matches Paper's small p-values)
+di _newline(1) "Sensitivity 1: Poisson GEE *WITHOUT* State Clustering (Naive SEs):"
+capture noisily poisson current_smoker i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.income i.employed ///
-    [pw=weight], cluster(_state)
+    [pw=weight], irr
+capture estimates store sensitivity_no_cluster
 
-di _newline(1) "Interpretation: Coefficient on expanded_state#post represents"
-di "the percentage point change in smoking probability due to expansion"
+* 2. Innovation: Logistic Regression (Methods Comparison)
+di _newline(1) "Innovation 2: Logistic Regression (Odds Ratios) instead of RR:"
+capture noisily logit current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    [pw=weight], cluster(_state) or
+capture estimates store innovation_logit
 
-********************************************************************************
-* FINAL SUMMARY AND CONCLUSIONS
-********************************************************************************
+di _newline(1) "Interpretation: Odds Ratios (OR) will invariably be further from 1 than RR"
+di "because smoking is a common outcome (>10%). This highlights why RR is preferred,"
+di "but OR is often used in older studies."
 
-di _newline(2)
-di "============================================================"
-di "ANALYSIS COMPLETE"
-di "============================================================"
-di ""
-di "KEY FINDINGS TO REPORT:"
-di "1. Compare Table 1 demographics with Valvi et al. Table 1"
-di "2. Compare DiD estimates with Valvi et al. main results"
-di "3. Report extension findings (stratified analysis)"
-di ""
-di "FILES CREATED:"
-di "- figure1_smoking_trends.png"
-di "- figure2_quit_trends.png"
-di "- analysis_log.txt (this log file)"
-di ""
-di "NOTES FOR PRESENTATION:"
-di "- Show original paper results alongside our replication"
-di "- Discuss any discrepancies and attempted corrections"
-di "- Present extension analysis and interpretation"
-di ""
-di "Ended at: $S_DATE $S_TIME"
+di _newline(2) "========== FINAL COMPARISON =========="
+di "Comparing Adjusted RR (Clustered) vs RR (Unclustered) vs OR (Logit)"
+capture noisily estimates table model2_adj sensitivity_no_cluster innovation_logit, ///
+    keep(1.expanded_state#1.post) b se p stats(N) modelwidth(20)
+
 
 log close
 
