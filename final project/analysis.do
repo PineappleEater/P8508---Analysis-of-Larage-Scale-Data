@@ -352,6 +352,7 @@ capture noisily poisson current_smoker i.expanded_state##i.post ///
     [pw=weight], irr
 capture estimates store sensitivity_no_cluster
 
+
 * 2. Innovation: Logistic Regression (Methods Comparison)
 di _newline(1) "Innovation 2: Logistic Regression (Odds Ratios) instead of RR:"
 capture noisily logit current_smoker i.expanded_state##i.post ///
@@ -363,10 +364,32 @@ di _newline(1) "Interpretation: Odds Ratios (OR) will invariably be further from
 di "because smoking is a common outcome (>10%). This highlights why RR is preferred,"
 di "but OR is often used in older studies."
 
+
+* 3. Innovation: Handling Missing Data (Missing Indicator Method)
+di _newline(2) "========== INNOVATION 3: HANDLING MISSING DATA (MISSING INDICATOR) =========="
+di "Problem: Listwise deletion removed ~1.5 million people (mostly missing income)."
+di "Solution: Recode missing income as 'Unknown' category to restore sample size."
+
+* Create new imputed income variable
+gen income_imp = income
+replace income_imp = 5 if income == .
+label define income_lbl 1 "<$10k" 2 "$10k-<$20k" 3 "$20k-<$50k" 4 "$50k+" 5 "Unknown"
+label values income_imp income_lbl
+
+di _newline(1) "Running Poisson Model with 'Unknown' Income Category:"
+capture noisily poisson current_smoker i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income_imp i.employed ///
+    [pw=weight], cluster(_state) irr
+capture estimates store innovation_missing_ind
+
+* Also run Low Income (imputed) if user wants? 
+* Note: 'Unknown' group is distinct from 'Low Income'.
+* But we can check if N is restored.
+
 di _newline(2) "========== FINAL COMPARISON =========="
-di "Comparing Adjusted RR (Clustered) vs RR (Unclustered) vs OR (Logit)"
-capture noisily estimates table model2_adj sensitivity_no_cluster innovation_logit, ///
-    keep(1.expanded_state#1.post) b se p stats(N) modelwidth(20)
+di "Comparing Adjusted RR (Clustered) vs Unclustered vs Logit vs Missing Indicator"
+capture noisily estimates table model2_adj sensitivity_no_cluster innovation_logit innovation_missing_ind, ///
+    keep(1.expanded_state#1.post) b se p stats(N) modelwidth(15)
 
 
 log close
