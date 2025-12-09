@@ -1,0 +1,1244 @@
+------------------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\l1697\OneDrive\Desktop\Biostats Courses\Larage Scale Data\session3.log
+  log type:  text
+ opened on:  17 Sep 2025, 14:23:25
+
+. 
+. 
+. * BRFSS files *
+. 
+. *******************
+. *IMPORTING THE DATA
+. ********************
+. 
+. *BRFSS data is stored all in one file, unlike NHANES
+. import sasxport5 LLCP2023.xpt, clear
+
+. 
+. *That import might have been a little slow! (Was the wheel in the bottom right of your stata window 
+> spinning for a few minutes?) Why? What is the file size?
+. 
+. *NEW COMMAND: compress is a nice way to reduce file size when opening a file that originated from a 
+> different software into Stata. Stata can reduce the size of variables and store them more efficientl
+> y. This is especially true when pulling in from SAS versions
+. compress
+  variable _state was double now byte
+  variable fmonth was double now byte
+  variable dispcode was double now int
+  variable _psu was double now long
+  variable ctelenm1 was double now byte
+  variable pvtresd1 was double now byte
+  variable colghous was double now byte
+  variable statere1 was double now byte
+  variable celphon1 was double now byte
+  variable ladult1 was double now byte
+  variable numadult was double now byte
+  variable respslc1 was double now byte
+  variable landsex2 was double now byte
+  variable lndsxbrt was double now byte
+  variable safetime was double now byte
+  variable ctelnum1 was double now byte
+  variable cellfon5 was double now byte
+  variable cadult1 was double now byte
+  variable cellsex2 was double now byte
+  variable celsxbrt was double now byte
+  variable pvtresd3 was double now byte
+  variable cclghous was double now byte
+  variable cstate1 was double now byte
+  variable landline was double now byte
+  variable hhadult was double now byte
+  variable sexvar was double now byte
+  variable genhlth was double now byte
+  variable physhlth was double now byte
+  variable menthlth was double now byte
+  variable poorhlth was double now byte
+  variable primins1 was double now byte
+  variable persdoc3 was double now byte
+  variable medcost1 was double now byte
+  variable checkup1 was double now byte
+  variable exerany2 was double now byte
+  variable exract12 was double now byte
+  variable exeroft1 was double now int
+  variable exerhmm1 was double now int
+  variable exract22 was double now byte
+  variable exeroft2 was double now int
+  variable exerhmm2 was double now int
+  variable strength was double now int
+  variable bphigh6 was double now byte
+  variable bpmeds1 was double now byte
+  variable cholchk3 was double now byte
+  variable toldhi3 was double now byte
+  variable cholmed3 was double now byte
+  variable cvdinfr4 was double now byte
+  variable cvdcrhd4 was double now byte
+  variable cvdstrk3 was double now byte
+  variable asthma3 was double now byte
+  variable asthnow was double now byte
+  variable chcscnc1 was double now byte
+  variable chcocnc1 was double now byte
+  variable chccopd3 was double now byte
+  variable addepev3 was double now byte
+  variable chckdny2 was double now byte
+  variable havarth4 was double now byte
+  variable diabete4 was double now byte
+  variable diabage4 was double now byte
+  variable marital was double now byte
+  variable educa was double now byte
+  variable renthom1 was double now byte
+  variable numhhol4 was double now byte
+  variable numphon4 was double now byte
+  variable cpdemo1c was double now byte
+  variable veteran3 was double now byte
+  variable employ1 was double now byte
+  variable children was double now byte
+  variable income3 was double now byte
+  variable pregnant was double now byte
+  variable weight2 was double now int
+  variable height3 was double now int
+  variable deaf was double now byte
+  variable blind was double now byte
+  variable decide was double now byte
+  variable diffwalk was double now byte
+  variable diffdres was double now byte
+  variable diffalon was double now byte
+  variable fall12mn was double now byte
+  variable fallinj5 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable usenow3 was double now byte
+  variable ecignow2 was double now byte
+  variable alcday4 was double now int
+  variable avedrnk3 was double now byte
+  variable drnk3ge5 was double now byte
+  variable maxdrnks was double now byte
+  variable flushot7 was double now byte
+  variable flshtmy3 was double now long
+  variable pneuvac4 was double now byte
+  variable shingle2 was double now byte
+  variable hivtst7 was double now byte
+  variable hivtstd3 was double now long
+  variable seatbelt was double now byte
+  variable drnkdri2 was double now byte
+  variable covidpo1 was double now byte
+  variable covidsm1 was double now byte
+  variable covidact was double now byte
+  variable pdiabts1 was double now byte
+  variable prediab2 was double now byte
+  variable diabtype was double now byte
+  variable insulin1 was double now byte
+  variable chkhemo3 was double now byte
+  variable eyeexam1 was double now byte
+  variable diabeye1 was double now byte
+  variable diabedu1 was double now byte
+  variable feetsore was double now byte
+  variable arthexer was double now byte
+  variable arthedu was double now byte
+  variable lmtjoin3 was double now byte
+  variable arthdis2 was double now byte
+  variable joinpai2 was double now byte
+  variable lcsfirst was double now int
+  variable lcslast was double now int
+  variable lcsnumcg was double now int
+  variable lcsctsc1 was double now byte
+  variable lcsscncr was double now byte
+  variable lcsctwhn was double now byte
+  variable hadmam was double now byte
+  variable howlong was double now byte
+  variable cervscrn was double now byte
+  variable crvclcnc was double now byte
+  variable crvclpap was double now byte
+  variable crvclhpv was double now byte
+  variable hadhyst2 was double now byte
+  variable psatest1 was double now byte
+  variable psatime1 was double now byte
+  variable pcpsars2 was double now byte
+  variable psasugs1 was double now byte
+  variable pcstalk2 was double now byte
+  variable hadsigm4 was double now byte
+  variable colnsigm was double now byte
+  variable colntes1 was double now byte
+  variable sigmtes1 was double now byte
+  variable lastsig4 was double now byte
+  variable colncncr was double now byte
+  variable vircolo1 was double now byte
+  variable vclntes2 was double now byte
+  variable smalstol was double now byte
+  variable stoltest was double now byte
+  variable stooldn2 was double now byte
+  variable bldstfit was double now byte
+  variable sdnates1 was double now byte
+  variable cncrdiff was double now byte
+  variable cncrage was double now byte
+  variable cncrtyp2 was double now byte
+  variable csrvtrt3 was double now byte
+  variable csrvdoc1 was double now byte
+  variable csrvsum was double now byte
+  variable csrvrtrn was double now byte
+  variable csrvinst was double now byte
+  variable csrvinsr was double now byte
+  variable csrvdein was double now byte
+  variable csrvclin was double now byte
+  variable csrvpain was double now byte
+  variable csrvctl2 was double now byte
+  variable indortan was double now byte
+  variable numburn3 was double now byte
+  variable sunprtct was double now byte
+  variable wkdayout was double now byte
+  variable wkendout was double now byte
+  variable cimemlo1 was double now byte
+  variable cdworry was double now byte
+  variable cddiscu1 was double now byte
+  variable cdhous1 was double now byte
+  variable cdsocia1 was double now byte
+  variable caregiv1 was double now byte
+  variable crgvrel4 was double now byte
+  variable crgvlng1 was double now byte
+  variable crgvhrs1 was double now byte
+  variable crgvprb3 was double now byte
+  variable crgvalzd was double now byte
+  variable crgvper1 was double now byte
+  variable crgvhou1 was double now byte
+  variable crgvexpt was double now byte
+  variable lastsmk2 was double now byte
+  variable stopsmk2 was double now byte
+  variable mentcigs was double now byte
+  variable mentecig was double now byte
+  variable heattbco was double now byte
+  variable firearm5 was double now byte
+  variable gunload was double now byte
+  variable loadulk2 was double now byte
+  variable hasymp1 was double now byte
+  variable hasymp2 was double now byte
+  variable hasymp3 was double now byte
+  variable hasymp4 was double now byte
+  variable hasymp5 was double now byte
+  variable hasymp6 was double now byte
+  variable strsymp1 was double now byte
+  variable strsymp2 was double now byte
+  variable strsymp3 was double now byte
+  variable strsymp4 was double now byte
+  variable strsymp5 was double now byte
+  variable strsymp6 was double now byte
+  variable firstaid was double now byte
+  variable aspirin was double now byte
+  variable birthsex was double now byte
+  variable somale was double now byte
+  variable sofemale was double now byte
+  variable trnsgndr was double now byte
+  variable marijan1 was double now byte
+  variable marjsmok was double now byte
+  variable marjeat was double now byte
+  variable marjvape was double now byte
+  variable marjdab was double now byte
+  variable marjothr was double now byte
+  variable usemrjn4 was double now byte
+  variable acedeprs was double now byte
+  variable acedrink was double now byte
+  variable acedrugs was double now byte
+  variable aceprisn was double now byte
+  variable acedivrc was double now byte
+  variable acepunch was double now byte
+  variable acehurt1 was double now byte
+  variable aceswear was double now byte
+  variable acetouch was double now byte
+  variable acetthem was double now byte
+  variable acehvsex was double now byte
+  variable aceadsaf was double now byte
+  variable aceadned was double now byte
+  variable imfvpla4 was double now byte
+  variable hpvadvc4 was double now byte
+  variable hpvadsht was double now byte
+  variable tetanus1 was double now byte
+  variable covidva1 was double now byte
+  variable covacge1 was double now byte
+  variable covidnu2 was double now byte
+  variable lsatisfy was double now byte
+  variable emtsuprt was double now byte
+  variable sdlonely was double now byte
+  variable sdhemply was double now byte
+  variable foodstmp was double now byte
+  variable sdhfood1 was double now byte
+  variable sdhbills was double now byte
+  variable sdhutils was double now byte
+  variable sdhtrnsp was double now byte
+  variable sdhstre1 was double now byte
+  variable rrclass3 was double now byte
+  variable rrcognt2 was double now byte
+  variable rrtreat was double now byte
+  variable rratwrk2 was double now byte
+  variable rrhcare4 was double now byte
+  variable rrphysm2 was double now byte
+  variable rcsgend1 was double now byte
+  variable rcsxbrth was double now byte
+  variable rcsrltn2 was double now byte
+  variable casthdx2 was double now byte
+  variable casthno2 was double now byte
+  variable qstver was double now byte
+  variable qstlang was double now byte
+  variable _metstat was double now byte
+  variable _urbstat was double now byte
+  variable mscode was double now byte
+  variable _ststr was double now long
+  variable _imprace was double now byte
+  variable _chispnc was double now byte
+  variable _crace1 was double now byte
+  variable cageg was double now byte
+  variable _dualuse was double now byte
+  variable _rfhlth was double now byte
+  variable _phys14d was double now byte
+  variable _ment14d was double now byte
+  variable _hlthpl1 was double now byte
+  variable _hcvu653 was double now byte
+  variable _totinda was double now byte
+  variable metvl12_ was double now byte
+  variable metvl22_ was double now byte
+  variable actin13_ was double now byte
+  variable actin23_ was double now byte
+  variable padur1_ was double now int
+  variable padur2_ was double now int
+  variable _minac12 was double now long
+  variable _minac22 was double now long
+  variable pamiss3_ was double now byte
+  variable pamin13_ was double now long
+  variable pamin23_ was double now long
+  variable pa3min_ was double now long
+  variable pavig13_ was double now long
+  variable pavig23_ was double now long
+  variable pa3vigm_ was double now long
+  variable _pacat3 was double now byte
+  variable _paindx3 was double now byte
+  variable _pa150r4 was double now byte
+  variable _pa300r4 was double now byte
+  variable _pa30023 was double now byte
+  variable _pastrng was double now byte
+  variable _parec3 was double now byte
+  variable _pastae3 was double now byte
+  variable _rfhype6 was double now byte
+  variable _cholch3 was double now byte
+  variable _rfchol3 was double now byte
+  variable _michd was double now byte
+  variable _ltasth1 was double now byte
+  variable _casthm1 was double now byte
+  variable _asthms1 was double now byte
+  variable _drdxar2 was double now byte
+  variable _mrace1 was double now byte
+  variable _hispanc was double now byte
+  variable _race was double now byte
+  variable _raceg21 was double now byte
+  variable _racegr3 was double now byte
+  variable _raceprv was double now byte
+  variable _sex was double now byte
+  variable _ageg5yr was double now byte
+  variable _age65yr was double now byte
+  variable _age80 was double now byte
+  variable _age_g was double now byte
+  variable htin4 was double now byte
+  variable htm4 was double now int
+  variable wtkg3 was double now int
+  variable _bmi5 was double now int
+  variable _bmi5cat was double now byte
+  variable _rfbmi5 was double now byte
+  variable _chldcnt was double now byte
+  variable _educag was double now byte
+  variable _incomg1 was double now byte
+  variable _smoker3 was double now byte
+  variable _rfsmok3 was double now byte
+  variable _cureci2 was double now byte
+  variable drnkany6 was double now byte
+  variable drocdy4_ was double now int
+  variable _rfbing6 was double now byte
+  variable _drnkwk2 was double now long
+  variable _rfdrhv8 was double now byte
+  variable _flshot7 was double now byte
+  variable _pneumo3 was double now byte
+  variable _aidtst4 was double now byte
+  variable _rfseat2 was double now byte
+  variable _rfseat3 was double now byte
+  variable _drnkdrv was double now byte
+  (985,376,502 bytes saved)
+
+. save BRFSS2023, replace
+file BRFSS2023.dta saved
+
+. *use BRFSS2023, replace
+. 
+. *What is the file size now??
+. 
+. 
+. 
+. 
+. 
+. *******************************
+. *GETTING FAMILIAR WITH THE DATA
+. *******************************
+. 
+. 
+. /* Identify and run basic summary statistics on the following variables:
+> - "Number of Days Physical Health Not Good"
+> - "Length of time since last routine checkup"
+> - "Currently Taking Prescription Blood Pressure Medication"
+> 
+> Be prepared to answer questions about what you've found and how to interpret these variables
+> 
+> */
+. 
+. 
+. 
+. 
+. 
+. ****************************************
+. *CREATING AND HANDLING COMPLEX VARIABLES
+. ****************************************
+. 
+. 
+. /*Let's learn how to quickly read across multiple variables to create a new variable that draws info
+> rmation from other fields 
+> 
+> */
+. 
+. /*there are 3 fields that capture difficulty with "Activities of daily living":
+> - diffwalk
+> - diffdres
+> - diffalon
+> 
+> */
+. tab diffwalk, m
+
+ DIFFICULTY |
+ WALKING OR |
+   CLIMBING |
+     STAIRS |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     67,021       15.47       15.47
+          2 |    348,452       80.41       95.88
+          7 |      1,206        0.28       96.16
+          9 |        498        0.11       96.27
+          . |     16,146        3.73      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. tab diffdres, m
+
+ DIFFICULTY |
+DRESSING OR |
+    BATHING |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     16,539        3.82        3.82
+          2 |    399,108       92.10       95.92
+          7 |        424        0.10       96.02
+          9 |        383        0.09       96.11
+          . |     16,869        3.89      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. tab diffalon, m
+
+ DIFFICULTY |
+      DOING |
+    ERRANDS |
+      ALONE |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     31,964        7.38        7.38
+          2 |    381,959       88.15       95.52
+          7 |      1,011        0.23       95.76
+          9 |        529        0.12       95.88
+          . |     17,860        4.12      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. 
+. /*one easy way to create a flag for people who report difficulty with ANY of these tasks is to use e
+> gen*/
+. 
+. egen atleast1_adl=rowmin(diffwalk diffdres diffalon)
+(16,146 missing values generated)
+
+. tab atleast1_adl, m
+
+atleast1_ad |
+          l |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     79,478       18.34       18.34
+          2 |    337,435       77.87       96.21
+          7 |         32        0.01       96.22
+          9 |        232        0.05       96.27
+          . |     16,146        3.73      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. *anyone who has a min of 1 has at least 1 ADL
+. 
+. /*we can also use egen to create summaries by particular groups*/
+. gen diffwalk_binary=.
+(433,323 missing values generated)
+
+. replace diffwalk_binary=1 if diffwalk==1
+(67,021 real changes made)
+
+. replace diffwalk_binary=0 if diffwalk==2
+(348,452 real changes made)
+
+. 
+. tab diffwalk diffwalk_binary, m
+
+DIFFICULTY |
+WALKING OR |
+  CLIMBING |         diffwalk_binary
+    STAIRS |         0          1          . |     Total
+-----------+---------------------------------+----------
+         1 |         0     67,021          0 |    67,021 
+         2 |   348,452          0          0 |   348,452 
+         7 |         0          0      1,206 |     1,206 
+         9 |         0          0        498 |       498 
+         . |         0          0     16,146 |    16,146 
+-----------+---------------------------------+----------
+     Total |   348,452     67,021     17,850 |   433,323 
+
+. 
+. egen share_diffwalk_byState=mean(diffwalk_binary), by(_state)
+
+. tabstat share_diffwalk_byState, by(_state) stats(n mean sd)
+
+Summary for variables: share_diffwalk_byState
+Group variable: _state (STATE FIPS CODE)
+
+  _state |         N      Mean        SD
+---------+------------------------------
+       1 |      4362  .2258824         0
+       2 |      5525  .1355332         0
+       4 |     12036  .1777012         0
+       5 |      5351  .2414667         0
+       6 |     11976  .1614437         0
+       8 |      8783  .1124718         0
+       9 |      9501  .1154189         0
+      10 |      4282  .1782396         0
+      11 |      3207  .1271958         0
+      12 |     13255  .1931719         0
+      13 |      8227  .1847503         0
+      15 |      7832  .1459816         0
+      16 |      6895  .1725159         0
+      17 |      5279  .1321386         0
+      18 |     10993  .1747169         0
+      19 |      8876  .1484792         0
+      20 |      9884   .162182         0
+      22 |      5388  .2113534         0
+      23 |     12255  .1784961         0
+      24 |     17255  .1554392         0
+      25 |      9528  .1219377         0
+      26 |      9978  .1669968         0
+      27 |     16170  .1333377         0
+      28 |      4069  .2034197         0
+      29 |      7219  .2017606         0
+      30 |      7143  .1607117         0
+      31 |     12886  .1456778         0
+      32 |      2650  .1786271         0
+      33 |      6960  .1591449         0
+      34 |      9328  .1203588         0
+      35 |      3220  .1870781         0
+      36 |     17349  .1379709         0
+      37 |      4088  .1648628         0
+      38 |      5745  .1382861         0
+      39 |     13384  .1725327         0
+      40 |      6727  .2018363         0
+      41 |      6234  .1423352         0
+      44 |      5781  .1361417         0
+      45 |     10038  .1945582         0
+      46 |      5886  .1648255         0
+      47 |      5645  .2021909         0
+      48 |     10059  .1741211         0
+      49 |     11154  .1291523         0
+      50 |      7636  .1154472         0
+      51 |      6981   .191346         0
+      53 |     26444  .1310857         0
+      54 |      4339  .2326569         0
+      55 |     12819  .1823534         0
+      56 |      4484   .179422         0
+      66 |      1559  .1881322         0
+      72 |      4594  .2221247         0
+      78 |      2064  .1757301         0
+---------+------------------------------
+   Total |    433323  .1612797  .0295945
+----------------------------------------
+
+. 
+. 
+. 
+. 
+. /* Now, we want to create a numeric variable that tells us the interview date*/
+. 
+. 
+. /*first, list the following variables for the first 10 observations:
+> - idate
+> - imonth 
+> - iday 
+> - iyear
+> 
+> */
+. 
+. 
+. list idate imonth iday iyear in 1/10
+
+     +----------------------------------+
+     |    idate   imonth   iday   iyear |
+     |----------------------------------|
+  1. | 03012023       03     01    2023 |
+  2. | 01062023       01     06    2023 |
+  3. | 03082023       03     08    2023 |
+  4. | 03062023       03     06    2023 |
+  5. | 01062023       01     06    2023 |
+     |----------------------------------|
+  6. | 01092023       01     09    2023 |
+  7. | 03212023       03     21    2023 |
+  8. | 01062023       01     06    2023 |
+  9. | 03152023       03     15    2023 |
+ 10. | 01082023       01     08    2023 |
+     +----------------------------------+
+
+. describe idate imonth iday iyear 
+
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+------------------------------------------------------------------------------------------------------
+idate           str8    %9s                   INTERVIEW DATE
+imonth          str2    %9s                   INTERVIEW MONTH
+iday            str2    %9s                   INTERVIEW DAY
+iyear           str4    %9s                   INTERVIEW YEAR
+
+. *describe tells us what type of variable it is
+. *"Str" indicates it is a string (or character variable)
+. 
+. 
+. /*try running the mean of one of these fields*/
+. /*what happens?*/
+. 
+. /*the first thing we can try is to convert these string fields to numeric ones*/
+. destring imonth, gen(month_num)
+imonth: all characters numeric; month_num generated as byte
+
+. sum month_num, d
+
+                       INTERVIEW MONTH
+-------------------------------------------------------------
+      Percentiles      Smallest
+ 1%            1              1
+ 5%            1              1
+10%            2              1       Obs             433,323
+25%            4              1       Sum of wgt.     433,323
+
+50%            7                      Mean           6.652947
+                        Largest       Std. dev.      3.428158
+75%           10             12
+90%           11             12       Variance       11.75227
+95%           12             12       Skewness      -.0191041
+99%           12             12       Kurtosis       1.770369
+
+. 
+. 
+. /*that works!
+> but we can also just directly convert the string date to a full numeric date*/
+. gen date_numeric = date(idate, "MDY")
+
+. list idate imonth iday iyear date_numeric in 1/10
+
+     +---------------------------------------------+
+     |    idate   imonth   iday   iyear   date_n~c |
+     |---------------------------------------------|
+  1. | 03012023       03     01    2023      23070 |
+  2. | 01062023       01     06    2023      23016 |
+  3. | 03082023       03     08    2023      23077 |
+  4. | 03062023       03     06    2023      23075 |
+  5. | 01062023       01     06    2023      23016 |
+     |---------------------------------------------|
+  6. | 01092023       01     09    2023      23019 |
+  7. | 03212023       03     21    2023      23090 |
+  8. | 01062023       01     06    2023      23016 |
+  9. | 03152023       03     15    2023      23084 |
+ 10. | 01082023       01     08    2023      23018 |
+     +---------------------------------------------+
+
+. *this converted it to a numeric date! But why does it look funny?
+. 
+. format date_numeric %td
+
+. list idate imonth iday iyear date_numeric in 1/10
+
+     +----------------------------------------------+
+     |    idate   imonth   iday   iyear   date_nu~c |
+     |----------------------------------------------|
+  1. | 03012023       03     01    2023   01mar2023 |
+  2. | 01062023       01     06    2023   06jan2023 |
+  3. | 03082023       03     08    2023   08mar2023 |
+  4. | 03062023       03     06    2023   06mar2023 |
+  5. | 01062023       01     06    2023   06jan2023 |
+     |----------------------------------------------|
+  6. | 01092023       01     09    2023   09jan2023 |
+  7. | 03212023       03     21    2023   21mar2023 |
+  8. | 01062023       01     06    2023   06jan2023 |
+  9. | 03152023       03     15    2023   15mar2023 |
+ 10. | 01082023       01     08    2023   08jan2023 |
+     +----------------------------------------------+
+
+. *now we have it formatted as a human readable date
+. 
+. 
+. /*let's try concatenating a variable.*/
+. 
+. /*Maybe we want an identifier that is composed of the State of the interview concatenated with the m
+> onth of the interview*/
+. egen state_month=concat(_state imonth), punct("_")
+
+. list _state idate imonth iday iyear date_numeric state_month in 1/10
+
+     +------------------------------------------------------------------+
+     | _state      idate   imonth   iday   iyear   date_nu~c   state_~h |
+     |------------------------------------------------------------------|
+  1. |      1   03012023       03     01    2023   01mar2023       1_03 |
+  2. |      1   01062023       01     06    2023   06jan2023       1_01 |
+  3. |      1   03082023       03     08    2023   08mar2023       1_03 |
+  4. |      1   03062023       03     06    2023   06mar2023       1_03 |
+  5. |      1   01062023       01     06    2023   06jan2023       1_01 |
+     |------------------------------------------------------------------|
+  6. |      1   01092023       01     09    2023   09jan2023       1_01 |
+  7. |      1   03212023       03     21    2023   21mar2023       1_03 |
+  8. |      1   01062023       01     06    2023   06jan2023       1_01 |
+  9. |      1   03152023       03     15    2023   15mar2023       1_03 |
+ 10. |      1   01082023       01     08    2023   08jan2023       1_01 |
+     +------------------------------------------------------------------+
+
+. 
+. /*and then what if we want to split it apart again?*/
+. split state_month, gen(state_month_part) parse("_")
+variables created as string: 
+state_mont~1  state_mont~2
+
+. 
+. 
+. 
+. ****************************************
+. *BASIC VISUALIZATION
+. ****************************************
+.  
+. /*LET'S CLEAN THE "# OF DAYS IN POOR PHYSICAL HEALTH" VARIABLE
+> variable name is physhlth
+> 
+> take a few minutes to try to clean it on your own*/
+. 
+. 
+. 
+. 
+. 
+. /*Let's try to look at this variable over time*/
+. 
+. /*Our goal: to group everyone who was interviewed in the same month together
+> 
+> There are a few ways to do this -- we could concatenate month and year together, for example
+> 
+> However, if we want to plot it in a graph, we need it to be a numeric value
+> 
+> So the best way to do this, is to assign everyone interviewed in a given month the the first day of 
+> that month. For example, if I was interviewed March 13, 2023, My month group variable would be March
+>  1, 2023.*/
+. destring iyear, gen(year_num)
+iyear: all characters numeric; year_num generated as int
+
+. 
+. gen month_year=mdy(month_num, 1, year_num)
+
+. 
+. format month_year %td
+
+. 
+. 
+. /*let's look at flu shots over time 
+> (question: did you get a flu shot in the last 12 months?
+> variable name: flushot7*/
+. gen flu_shot=.
+(433,323 missing values generated)
+
+. replace flu_shot=1 if flushot7==1
+(197,294 real changes made)
+
+. replace flu_shot=0 if flushot7==2
+(204,711 real changes made)
+
+. 
+.  
+. tabstat flu_shot, by(month_year) stat(n mean sd )
+
+Summary for variables: flu_shot
+Group variable: month_year 
+
+month_y~r |         N      Mean        SD
+----------+------------------------------
+01jan2023 |      5794  .5745599  .4944522
+01feb2023 |     30253  .5676792  .4954065
+01mar2023 |     38171  .5312934  .4990263
+01apr2023 |     32444   .505209  .4999806
+01may2023 |     31971  .4950737  .4999835
+01jun2023 |     33944    .48144  .4996628
+01jul2023 |     32567  .4616022  .4985311
+01aug2023 |     35145  .4498222  .4974829
+01sep2023 |     32160   .424005  .4941987
+01oct2023 |     34693  .4523103  .4977277
+01nov2023 |     35801   .484344  .4997618
+01dec2023 |     36372  .5220224  .4995216
+01jan2024 |     19495   .509464  .4999232
+01feb2024 |      3162  .4756483  .4994856
+01mar2024 |        33  .5151515  .5075192
+----------+------------------------------
+    Total |    402005   .490775  .4999155
+-----------------------------------------
+
+. 
+. save BRFSS2023_class, replace/*lets save our data set we've worked on! the next step will alter our 
+> data set in a major way, so we want to keep a version of the data we've been working with before we 
+> do that*/
+file BRFSS2023_class.dta saved
+
+. 
+. collapse flu_shot, by(month_year) /*this is useful when you want to create and save a summary data s
+> et -- for example, for graphing something*/
+
+. 
+. help twoway
+
+. 
+. 
+. 
+. 
+. ****************************************
+. *CUSTOMIZING REGRESSION OPTIONS
+. ****************************************
+. 
+. /*merge in coffee data*/
+. import excel "CoffeeData.xlsx", clear 
+(3 vars, 53 obs)
+
+. list in 1/10
+
+     +---------------------------------------+
+     |     A                        B      C |
+     |---------------------------------------|
+  1. | State   Dunkin_Starbucks_Ratio   FIPS |
+  2. |    AK                        0      2 |
+  3. |    AL        .5447154471544715      1 |
+  4. |    AR        .1891891891891892      5 |
+  5. |    AZ        .1908931698774081      4 |
+     |---------------------------------------|
+  6. |    CA        .0456163054027823      6 |
+  7. |    CO        .0928853754940712      8 |
+  8. |    CT        3.326241134751773      9 |
+  9. |    DC        .2698412698412698     11 |
+ 10. |    DE        1.558139534883721     10 |
+     +---------------------------------------+
+
+. /*uh oh! what's happening with the first row??*/
+. 
+. import excel "CoffeeData.xlsx", clear firstrow
+(3 vars, 52 obs)
+
+. list in 1/10
+
+     +-------------------------+
+     | State   Dunkin~o   FIPS |
+     |-------------------------|
+  1. |    AK       0.00      2 |
+  2. |    AL       0.54      1 |
+  3. |    AR       0.19      5 |
+  4. |    AZ       0.19      4 |
+  5. |    CA       0.05      6 |
+     |-------------------------|
+  6. |    CO       0.09      8 |
+  7. |    CT       3.33      9 |
+  8. |    DC       0.27     11 |
+  9. |    DE       1.56     10 |
+ 10. |    FL       1.06     12 |
+     +-------------------------+
+
+. /*the "firstrow" option fixes this for us*/
+. 
+. rename FIPS  _state
+
+. 
+. *what type of merge do we want to do?
+. 
+. 
+. 
+. *what does the merge table tell us? 
+. *what states are we missing from each data set?
+. 
+. /*let's create a variable that indicates if there are EQUAL OR MORE DUNKINs than starbucks in a stat
+> e*/
+. gen more_dunkins=1 if Dunkin_Starbucks_Ratio>=1 & Dunkin_Starbucks_Ratio !=.
+(39 missing values generated)
+
+. replace more_dunkins=0 if Dunkin_Starbucks_Ratio<1  & Dunkin_Starbucks_Ratio !=.
+(39 real changes made)
+
+. tab more_dunkins, m
+
+more_dunkin |
+          s |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |         39       75.00       75.00
+          1 |         13       25.00      100.00
+------------+-----------------------------------
+      Total |         52      100.00
+
+. 
+. tabstat physhlth_clean, by(more_dunkins) stats(n mean sd p50)
+variable physhlth_clean not found
+r(111);
+
+end of do-file
+
+r(111);
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. use BRFSS2023, replace
+
+. 
+end of do-file
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. compress
+  (0 bytes saved)
+
+. save BRFSS2023, replace
+file BRFSS2023.dta saved
+
+. use BRFSS2023, replace
+
+. 
+end of do-file
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. 
+. tab physhlth, m
+
+  NUMBER OF |
+       DAYS |
+   PHYSICAL |
+ HEALTH NOT |
+       GOOD |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     17,457        4.03        4.03
+          2 |     25,849        5.97        9.99
+          3 |     15,877        3.66       13.66
+          4 |      8,404        1.94       15.60
+          5 |     15,063        3.48       19.07
+          6 |      2,386        0.55       19.62
+          7 |      8,698        2.01       21.63
+          8 |      1,642        0.38       22.01
+          9 |        378        0.09       22.10
+         10 |     10,452        2.41       24.51
+         11 |        143        0.03       24.54
+         12 |        995        0.23       24.77
+         13 |        165        0.04       24.81
+         14 |      4,468        1.03       25.84
+         15 |      8,730        2.01       27.86
+         16 |        240        0.06       27.91
+         17 |        206        0.05       27.96
+         18 |        317        0.07       28.03
+         19 |         53        0.01       28.04
+         20 |      5,843        1.35       29.39
+         21 |        996        0.23       29.62
+         22 |        157        0.04       29.66
+         23 |        128        0.03       29.69
+         24 |        140        0.03       29.72
+         25 |      2,224        0.51       30.23
+         26 |        110        0.03       30.26
+         27 |        211        0.05       30.31
+         28 |        831        0.19       30.50
+         29 |        386        0.09       30.59
+         30 |     33,424        7.71       38.30
+         77 |      9,072        2.09       40.40
+         88 |    256,565       59.21       99.60
+         99 |      1,710        0.39      100.00
+          . |          3        0.00      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. 
+end of do-file
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. tab physhlth, m
+
+  NUMBER OF |
+       DAYS |
+   PHYSICAL |
+ HEALTH NOT |
+       GOOD |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     17,457        4.03        4.03
+          2 |     25,849        5.97        9.99
+          3 |     15,877        3.66       13.66
+          4 |      8,404        1.94       15.60
+          5 |     15,063        3.48       19.07
+          6 |      2,386        0.55       19.62
+          7 |      8,698        2.01       21.63
+          8 |      1,642        0.38       22.01
+          9 |        378        0.09       22.10
+         10 |     10,452        2.41       24.51
+         11 |        143        0.03       24.54
+         12 |        995        0.23       24.77
+         13 |        165        0.04       24.81
+         14 |      4,468        1.03       25.84
+         15 |      8,730        2.01       27.86
+         16 |        240        0.06       27.91
+         17 |        206        0.05       27.96
+         18 |        317        0.07       28.03
+         19 |         53        0.01       28.04
+         20 |      5,843        1.35       29.39
+         21 |        996        0.23       29.62
+         22 |        157        0.04       29.66
+         23 |        128        0.03       29.69
+         24 |        140        0.03       29.72
+         25 |      2,224        0.51       30.23
+         26 |        110        0.03       30.26
+         27 |        211        0.05       30.31
+         28 |        831        0.19       30.50
+         29 |        386        0.09       30.59
+         30 |     33,424        7.71       38.30
+         77 |      9,072        2.09       40.40
+         88 |    256,565       59.21       99.60
+         99 |      1,710        0.39      100.00
+          . |          3        0.00      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. tab bpmeds1, m
+
+  CURRENTLY |
+     TAKING |
+PRESCRIPTIO |
+    N BLOOD |
+       PRES |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |    144,089       33.25       33.25
+          2 |     31,631        7.30       40.55
+          7 |        344        0.08       40.63
+          9 |        158        0.04       40.67
+          . |    257,101       59.33      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. 
+end of do-file
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. tab diffwalk diffwalk_binary, m
+variable diffwalk_binary not found
+r(111);
+
+end of do-file
+
+r(111);
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. egen atleast1_adl=rowmin(diffwalk diffdres diffalon)
+(16,146 missing values generated)
+
+. tab atleast1_adl, m
+
+atleast1_ad |
+          l |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          1 |     79,478       18.34       18.34
+          2 |    337,435       77.87       96.21
+          7 |         32        0.01       96.22
+          9 |        232        0.05       96.27
+          . |     16,146        3.73      100.00
+------------+-----------------------------------
+      Total |    433,323      100.00
+
+. *anyone who has a min of 1 has at least 1 ADL
+. 
+. /*we can also use egen to create summaries by particular groups*/
+. gen diffwalk_binary=.
+(433,323 missing values generated)
+
+. replace diffwalk_binary=1 if diffwalk==1
+(67,021 real changes made)
+
+. replace diffwalk_binary=0 if diffwalk==2
+(348,452 real changes made)
+
+. 
+. tab diffwalk diffwalk_binary, m
+
+DIFFICULTY |
+WALKING OR |
+  CLIMBING |         diffwalk_binary
+    STAIRS |         0          1          . |     Total
+-----------+---------------------------------+----------
+         1 |         0     67,021          0 |    67,021 
+         2 |   348,452          0          0 |   348,452 
+         7 |         0          0      1,206 |     1,206 
+         9 |         0          0        498 |       498 
+         . |         0          0     16,146 |    16,146 
+-----------+---------------------------------+----------
+     Total |   348,452     67,021     17,850 |   433,323 
+
+. 
+end of do-file
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. egen share_diffwalk_byState=mean(diffwalk_binary), by(_state)
+
+. tabstat share_diffwalk_byState, by(_state) stats(n mean sd)
+
+Summary for variables: share_diffwalk_byState
+Group variable: _state (STATE FIPS CODE)
+
+  _state |         N      Mean        SD
+---------+------------------------------
+       1 |      4362  .2258824         0
+       2 |      5525  .1355332         0
+       4 |     12036  .1777012         0
+       5 |      5351  .2414667         0
+       6 |     11976  .1614437         0
+       8 |      8783  .1124718         0
+       9 |      9501  .1154189         0
+      10 |      4282  .1782396         0
+      11 |      3207  .1271958         0
+      12 |     13255  .1931719         0
+      13 |      8227  .1847503         0
+      15 |      7832  .1459816         0
+      16 |      6895  .1725159         0
+      17 |      5279  .1321386         0
+      18 |     10993  .1747169         0
+      19 |      8876  .1484792         0
+      20 |      9884   .162182         0
+      22 |      5388  .2113534         0
+      23 |     12255  .1784961         0
+      24 |     17255  .1554392         0
+      25 |      9528  .1219377         0
+      26 |      9978  .1669968         0
+      27 |     16170  .1333377         0
+      28 |      4069  .2034197         0
+      29 |      7219  .2017606         0
+      30 |      7143  .1607117         0
+      31 |     12886  .1456778         0
+      32 |      2650  .1786271         0
+      33 |      6960  .1591449         0
+      34 |      9328  .1203588         0
+      35 |      3220  .1870781         0
+      36 |     17349  .1379709         0
+      37 |      4088  .1648628         0
+      38 |      5745  .1382861         0
+      39 |     13384  .1725327         0
+      40 |      6727  .2018363         0
+      41 |      6234  .1423352         0
+      44 |      5781  .1361417         0
+      45 |     10038  .1945582         0
+      46 |      5886  .1648255         0
+      47 |      5645  .2021909         0
+      48 |     10059  .1741211         0
+      49 |     11154  .1291523         0
+      50 |      7636  .1154472         0
+      51 |      6981   .191346         0
+      53 |     26444  .1310857         0
+      54 |      4339  .2326569         0
+      55 |     12819  .1823534         0
+      56 |      4484   .179422         0
+      66 |      1559  .1881322         0
+      72 |      4594  .2221247         0
+      78 |      2064  .1757301         0
+---------+------------------------------
+   Total |    433323  .1612797  .0295945
+----------------------------------------
+
+. 
+. 
+. 
+. 
+. /* Now, we want to create a numeric variable that tells us the interview date*/
+. 
+. 
+. /*first, list the following variables for the first 10 observations:
+> - idate
+> - imonth 
+> - iday 
+> - iyear
+> 
+> */
+. 
+. 
+. list idate imonth iday iyear in 1/10
+
+     +----------------------------------+
+     |    idate   imonth   iday   iyear |
+     |----------------------------------|
+  1. | 03012023       03     01    2023 |
+  2. | 01062023       01     06    2023 |
+  3. | 03082023       03     08    2023 |
+  4. | 03062023       03     06    2023 |
+  5. | 01062023       01     06    2023 |
+     |----------------------------------|
+  6. | 01092023       01     09    2023 |
+  7. | 03212023       03     21    2023 |
+  8. | 01062023       01     06    2023 |
+  9. | 03152023       03     15    2023 |
+ 10. | 01082023       01     08    2023 |
+     +----------------------------------+
+
+. describe idate imonth iday iyear 
+
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+------------------------------------------------------------------------------------------------------
+idate           str8    %9s                   INTERVIEW DATE
+imonth          str2    %9s                   INTERVIEW MONTH
+iday            str2    %9s                   INTERVIEW DAY
+iyear           str4    %9s                   INTERVIEW YEAR
+
+. 
+end of do-file
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. collapse flu_shot, by(month_year) /*this is useful when you want to create and save a summary data s
+> et -- for example, for graphing something*/
+variable month_year not found
+(error in option by())
+r(111);
+
+end of do-file
+
+r(111);
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. destring iyear, gen(year_num)
+iyear: all characters numeric; year_num generated as int
+
+. 
+. gen month_year=mdy(month_num, 1, year_num)
+month_num not found
+r(111);
+
+end of do-file
+
+r(111);
+
+. do "C:\Users\l1697\AppData\Local\Temp\STD883c_000000.tmp"
+
+. gen month_year=mdy(month_num, 1, year_num)
+month_num not found
+r(111);
+
+end of do-file
+
+r(111);
+
+. exit, clear

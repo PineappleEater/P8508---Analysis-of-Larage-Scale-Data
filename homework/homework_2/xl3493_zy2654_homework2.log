@@ -1,0 +1,1279 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      18.0
+___/   /   /___/   /   /___/       MP—Parallel Edition
+
+ Statistics and Data Science       Copyright 1985-2023 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-STATA-PC        https://www.stata.com
+                                   979-696-4600        stata@stata.com
+
+Stata license: Single-user 2-core , expiring 18 Feb 2027
+Serial number: 501809418514
+  Licensed to: xxx
+               xxx
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. More than 2 billion observations are allowed; see help obs_advice.
+      4. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+. do xl2493_zy2654_homework_2.do 
+
+. *****************************************************************************
+> ***
+. * Assignment 2 - NHIS Smoking Trends Analysis
+. * Analysis of Large-Scale Data 2025  
+. * Name(s): Xuange Liang [xl2493], Zexuan Yan [zy2654]
+. *****************************************************************************
+> ***
+. * 
+. * IMPORTANT NOTE: This analysis uses comprehensive NHIS data with smoking 
+. * trends from 1997-2018. The dataset includes general health status (1-5 scal
+> e)
+. * enabling complete analysis as specified in the assignment requirements.
+. *
+. *****************************************************************************
+> ***
+. 
+. clear all
+
+. set more off
+
+. 
+. di "=== NHIS SMOKING TRENDS ANALYSIS ==="
+=== NHIS SMOKING TRENDS ANALYSIS ===
+
+. di "Topic: Ever smoked 100+ cigarettes (10+ year trend analysis)"
+Topic: Ever smoked 100+ cigarettes (10+ year trend analysis)
+
+. 
+. *****************************************************************************
+> ***
+. * Data Import and Preparation
+. *****************************************************************************
+> ***
+. di _newline "=== LOADING REAL NHIS DATA ==="
+
+=== LOADING REAL NHIS DATA ===
+
+. * Import the NHIS data first
+. do "Import_nhis_00003.do"
+
+. * Import script for NHIS complete data with demographics, health status, and 
+> smoking
+. * File: nhis_00003.dat.gz contains sex, age, health status, and smoking statu
+> s
+. 
+. set more off
+
+. clear
+
+. 
+. * Import from new comprehensive dataset
+. quietly infix                  ///
+>   int     year        1-4      ///
+>   long    serial      5-10     ///
+>   int     strata      11-14    ///
+>   int     psu         15-17    ///
+>   str     nhishid     18-31    ///
+>   long    hhweight    32-37    ///
+>   byte    pernum      38-39    ///
+>   str     nhispid     40-55    ///
+>   str     hhx         56-62    ///
+>   str     fmx         63-64    ///
+>   str     px          65-66    ///
+>   double  perweight   67-78    ///
+>   double  sampweight  79-90    ///
+>   double  longweight  91-101   ///
+>   double  partweight 102-112   ///
+>   double  fweight    113-124   ///
+>   byte    astatflg    125-125  ///
+>   byte    cstatflg    126-126  ///
+>   int     age        127-129   ///
+>   byte    sex        130-130   ///
+>   byte    health     131-131   ///
+>   byte    smokev     132-133   ///
+>   using `"nhis_00003.dat"'
+
+. 
+. * Adjust weights as per IPUMS specifications
+. replace sampweight = sampweight / 1000
+(1,162,204 real changes made)
+
+. replace fweight    = fweight    / 1000000
+(2,061,980 real changes made)
+
+. 
+. * Format weights
+. format perweight  %12.0f
+
+. format sampweight %12.3f
+
+. format fweight    %12.6f
+
+. 
+. * Variable labels
+. label var year       `"Survey year"'
+
+. label var serial     `"Sequential Serial Number, Household Record"'
+
+. label var strata     `"Stratum for variance estimation"'
+
+. label var psu        `"Primary sampling unit (PSU) for variance estimation"'
+
+. label var nhishid    `"NHIS Unique identifier, household"'
+
+. label var hhweight   `"Household weight, final annual"'
+
+. label var pernum     `"Person number within family/household"'
+
+. label var nhispid    `"NHIS Unique Identifier, person"'
+
+. label var hhx        `"Household number (from NHIS)"'
+
+. label var fmx        `"Family number (from NHIS)"'
+
+. label var px         `"Person number of respondent (from NHIS)"'
+
+. label var perweight  `"Final basic annual weight"'
+
+. label var sampweight `"Sample Person Weight"'
+
+. label var fweight    `"Final annual family weight"'
+
+. label var astatflg   `"Sample adult flag"'
+
+. label var cstatflg   `"Sample child flag"'
+
+. label var age        `"Age"'
+
+. label var sex        `"Sex"'
+
+. label var health     `"General health status"'
+
+. label var smokev     `"Ever smoked 100 cigarettes in life"'
+
+. 
+. * Value labels
+. label define sex_lbl 1 "Male" 2 "Female"
+
+. label values sex sex_lbl
+
+. 
+. label define smokev_lbl 00 `"NIU"' 01 `"No"' 02 `"Yes"' 07 `"Unknown-refused"
+> ' ///
+>                         08 `"Unknown-not ascertained"' 09 `"Unknown-don't kno
+> w"'
+
+. label values smokev smokev_lbl
+
+. 
+. * Display data overview
+. di "Data import completed for NHIS demographics and smoking dataset"
+Data import completed for NHIS demographics and smoking dataset
+
+. di "Total observations imported: " _N
+Total observations imported: 2291589
+
+. summarize year age
+
+    Variable |        Obs        Mean    Std. dev.       Min        Max
+-------------+---------------------------------------------------------
+        year |  2,291,589    2008.787    7.409588       1997       2024
+         age |  2,291,589    36.96872    26.24529          0        999
+
+. di "Year range:"
+Year range:
+
+. tab year if year >= 1997 & year <= 2018, missing
+
+Survey year |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       1997 |    103,477        5.02        5.02
+       1998 |     98,785        4.79        9.81
+       1999 |     97,059        4.71       14.52
+       2000 |    100,618        4.88       19.40
+       2001 |    100,760        4.89       24.28
+       2002 |     93,386        4.53       28.81
+       2003 |     92,148        4.47       33.28
+       2004 |     94,460        4.58       37.86
+       2005 |     98,649        4.78       42.65
+       2006 |     75,716        3.67       46.32
+       2007 |     75,764        3.67       49.99
+       2008 |     74,236        3.60       53.59
+       2009 |     88,446        4.29       57.88
+       2010 |     89,976        4.36       62.25
+       2011 |    101,875        4.94       67.19
+       2012 |    108,131        5.24       72.43
+       2013 |    104,520        5.07       77.50
+       2014 |    112,053        5.43       82.93
+       2015 |    103,789        5.03       87.97
+       2016 |     97,169        4.71       92.68
+       2017 |     78,132        3.79       96.47
+       2018 |     72,831        3.53      100.00
+------------+-----------------------------------
+      Total |  2,061,980      100.00
+
+. di "Sex distribution:"
+Sex distribution:
+
+. tab sex, missing
+
+        Sex |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       Male |  1,104,518       48.20       48.20
+     Female |  1,187,029       51.80      100.00
+          7 |         28        0.00      100.00
+          9 |         14        0.00      100.00
+------------+-----------------------------------
+      Total |  2,291,589      100.00
+
+. di "Smoking status distribution:"
+Smoking status distribution:
+
+. tab smokev, missing
+
+        Ever smoked 100 |
+     cigarettes in life |      Freq.     Percent        Cum.
+------------------------+-----------------------------------
+                    NIU |  1,437,044       62.71       62.71
+                     No |    495,500       21.62       84.33
+                    Yes |    349,314       15.24       99.58
+        Unknown-refused |      2,508        0.11       99.68
+Unknown-not ascertained |      6,059        0.26       99.95
+     Unknown-don't know |      1,164        0.05      100.00
+------------------------+-----------------------------------
+                  Total |  2,291,589      100.00
+
+. 
+. * Check for data quality
+. count if !missing(year) & !missing(age) & !missing(sex) & !missing(smokev)
+  2,291,589
+
+. di "Complete observations: " r(N)
+Complete observations: 2291589
+
+. 
+. * Save the dataset
+. save "nhis_00002_imported.dta", replace
+file nhis_00002_imported.dta saved
+
+. 
+end of do-file
+
+. 
+. * Focus on analysis sample as specified in assignment
+. di _newline "=== PREPARING ANALYSIS SAMPLE ==="
+
+=== PREPARING ANALYSIS SAMPLE ===
+
+. * Keep data from 1997-2018 (22 years > 10 year requirement)
+. keep if year >= 1997 & year <= 2018
+(229,609 observations deleted)
+
+. * Keep adults only (standard for smoking questions)
+. keep if age >= 18
+(549,383 observations deleted)
+
+. * Keep valid sex responses
+. keep if inlist(sex, 1, 2)
+(0 observations deleted)
+
+. * Keep valid smoking responses, treat refused/unknown as missing per assignme
+> nt
+. keep if inlist(smokev, 1, 2)
+(845,889 observations deleted)
+
+. 
+. di "Final analysis sample: " _N " observations"
+Final analysis sample: 666708 observations
+
+. di "Years: 1997-2018 (22 years, exceeds 10+ year requirement)"
+Years: 1997-2018 (22 years, exceeds 10+ year requirement)
+
+. tab year, missing
+
+Survey year |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       1997 |     35,831        5.37        5.37
+       1998 |     32,167        4.82       10.20
+       1999 |     30,541        4.58       14.78
+       2000 |     32,097        4.81       19.59
+       2001 |     33,036        4.96       24.55
+       2002 |     30,714        4.61       29.16
+       2003 |     30,475        4.57       33.73
+       2004 |     30,995        4.65       38.38
+       2005 |     31,151        4.67       43.05
+       2006 |     23,971        3.60       46.64
+       2007 |     23,000        3.45       50.09
+       2008 |     21,531        3.23       53.32
+       2009 |     27,616        4.14       57.47
+       2010 |     26,972        4.05       61.51
+       2011 |     32,934        4.94       66.45
+       2012 |     34,267        5.14       71.59
+       2013 |     34,446        5.17       76.76
+       2014 |     36,510        5.48       82.23
+       2015 |     33,548        5.03       87.26
+       2016 |     32,924        4.94       92.20
+       2017 |     26,643        4.00       96.20
+       2018 |     25,339        3.80      100.00
+------------+-----------------------------------
+      Total |    666,708      100.00
+
+. 
+. *****************************************************************************
+> ***
+. * Variable Creation  
+. *****************************************************************************
+> ***
+. di _newline "=== CREATING ANALYSIS VARIABLES ==="
+
+=== CREATING ANALYSIS VARIABLES ===
+
+. 
+. * Core variables as required by assignment
+. gen female = (sex == 2)                    // Gender dummy
+
+. gen ever_smoked = (smokev == 2)            // Health outcome
+
+. gen year_centered = year - 1997            // Linear time trend
+
+. 
+. * Use real health status variable from NHIS data  
+. * HEALTH: 1=Excellent, 2=Very good, 3=Good, 4=Fair, 5=Poor
+. * Create binary variable: excellent/very good (1-2) vs good/fair/poor (3-5)
+. 
+. gen excellent_health = (health == 1 | health == 2)  // Real health variable 
+
+. label var excellent_health "Excellent/Very Good Health (from NHIS health stat
+> us)"
+
+. 
+. * Variable labels
+. label var female "Female indicator (1=Female, 0=Male)"
+
+. label var ever_smoked "Ever smoked 100+ cigarettes (1=Yes, 0=No)"
+
+. label var year_centered "Years since 1997 (linear time trend)"
+
+. 
+. * Value labels (avoid conflicts)
+. capture label drop sex_lbl smokev_lbl
+
+. label define sex_lbl 1 "Male" 2 "Female"
+
+. label values sex sex_lbl
+
+. label define smokev_lbl 1 "No" 2 "Yes"  
+
+. label values smokev smokev_lbl
+
+. 
+. di "Dataset ready for analysis"
+Dataset ready for analysis
+
+. di "Key variables created: female, ever_smoked, year_centered, excellent_heal
+> th (from NHIS)"
+Key variables created: female, ever_smoked, year_centered, excellent_health (fr
+> om NHIS)
+
+. 
+. *****************************************************************************
+> ***
+. * Question 1: Plot trend over 10+ year period
+. *****************************************************************************
+> ***
+. di _newline(2) "========== QUESTION 1: TREND VISUALIZATION =========="
+
+
+========== QUESTION 1: TREND VISUALIZATION ==========
+
+. 
+. preserve
+
+. collapse (mean) smoking_prev = ever_smoked (count) n = ever_smoked, by(year)
+
+. format smoking_prev %6.3f
+
+. 
+. di "Annual smoking prevalence (proportion ever smoked 100+ cigarettes):"
+Annual smoking prevalence (proportion ever smoked 100+ cigarettes):
+
+. list year smoking_prev n
+
+     +-------------------------+
+     | year   smokin~v       n |
+     |-------------------------|
+  1. | 1997      0.470   35831 |
+  2. | 1998      0.469   32167 |
+  3. | 1999      0.463   30541 |
+  4. | 2000      0.450   32097 |
+  5. | 2001      0.447   33036 |
+     |-------------------------|
+  6. | 2002      0.447   30714 |
+  7. | 2003      0.434   30475 |
+  8. | 2004      0.421   30995 |
+  9. | 2005      0.427   31151 |
+ 10. | 2006      0.405   23971 |
+     |-------------------------|
+ 11. | 2007      0.405   23000 |
+ 12. | 2008      0.423   21531 |
+ 13. | 2009      0.422   27616 |
+ 14. | 2010      0.404   26972 |
+ 15. | 2011      0.408   32934 |
+     |-------------------------|
+ 16. | 2012      0.409   34267 |
+ 17. | 2013      0.403   34446 |
+ 18. | 2014      0.402   36510 |
+ 19. | 2015      0.393   33548 |
+ 20. | 2016      0.410   32924 |
+     |-------------------------|
+ 21. | 2017      0.399   26643 |
+ 22. | 2018      0.397   25339 |
+     +-------------------------+
+
+. 
+. twoway (scatter smoking_prev year) (line smoking_prev year) ///
+>        (lfit smoking_prev year), ///
+>        title("NHIS Smoking Trends 1997-2018") ///
+>        subtitle("Proportion Ever Smoked 100+ Cigarettes") ///
+>        xtitle("Year") ytitle("Proportion Ever Smoked") ///
+>        legend(order(1 "Annual Rate" 2 "Trend Line" 3 "Linear Fit")) ///
+>        scheme(s2color)
+
+. 
+. graph export "smoking_trend.png", replace width(800) height(600)
+file smoking_trend.png saved as PNG format
+
+. di "Trend plot saved as smoking_trend.png"
+Trend plot saved as smoking_trend.png
+
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * Question 2: Test trend significance in two ways
+. *****************************************************************************
+> ***
+. di _newline(2) "========== QUESTION 2: TWO TREND TESTS =========="
+
+
+========== QUESTION 2: TWO TREND TESTS ==========
+
+. 
+. di "METHOD 1: Linear Time Trend"
+METHOD 1: Linear Time Trend
+
+. reg ever_smoked year_centered
+
+      Source |       SS           df       MS      Number of obs   =   666,708
+-------------+----------------------------------   F(1, 666706)    =   1372.34
+       Model |  334.456994         1  334.456994   Prob > F        =    0.0000
+    Residual |  162484.309   666,706  .243712084   R-squared       =    0.0021
+-------------+----------------------------------   Adj R-squared   =    0.0021
+       Total |  162818.766   666,707  .244213374   Root MSE        =    .49367
+
+------------------------------------------------------------------------------
+ ever_smoked | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+year_cente~d |  -.0034675   .0000936   -37.05   0.000     -.003651   -.0032841
+       _cons |   .4599715   .0011455   401.54   0.000     .4577263    .4622167
+------------------------------------------------------------------------------
+
+. local linear_coef = _b[year_centered]
+
+. local linear_se = _se[year_centered]
+
+. local linear_t = _b[year_centered]/_se[year_centered]
+
+. local linear_p = 2*ttail(e(df_r), abs(`linear_t'))
+
+. local linear_r2 = e(r2)
+
+. 
+. di "• Linear trend coefficient: " %8.5f `linear_coef' " (change per year)"
+• Linear trend coefficient: -0.00347 (change per year)
+
+. di "• Standard Error: " %8.5f `linear_se' 
+• Standard Error:  0.00009
+
+. di "• t-statistic: " %8.3f `linear_t'
+• t-statistic:  -37.045
+
+. di "• P-value: " %8.5f `linear_p'
+• P-value:  0.00000
+
+. di "• R-squared: " %6.4f `linear_r2'
+• R-squared: 0.0021
+
+. 
+. if `linear_p' < 0.001 {
+.     di "• Linear trend significance: p < 0.001 (***)"
+• Linear trend significance: p < 0.001 (***)
+. }
+
+. else if `linear_p' < 0.01 {
+.     di "• Linear trend significance: p < 0.01 (**)"
+. }
+
+. else if `linear_p' < 0.05 {
+.     di "• Linear trend significance: p < 0.05 (*)"
+. }
+
+. else {
+.     di "• Linear trend significance: Not significant (p >= 0.05)"
+. }
+
+. 
+. di _newline "METHOD 2: Year Dummy Variables"
+
+METHOD 2: Year Dummy Variables
+
+. * Create year dummies (omit first year as reference)
+. tab year, gen(year_)
+
+Survey year |      Freq.     Percent        Cum.
+------------+-----------------------------------
+       1997 |     35,831        5.37        5.37
+       1998 |     32,167        4.82       10.20
+       1999 |     30,541        4.58       14.78
+       2000 |     32,097        4.81       19.59
+       2001 |     33,036        4.96       24.55
+       2002 |     30,714        4.61       29.16
+       2003 |     30,475        4.57       33.73
+       2004 |     30,995        4.65       38.38
+       2005 |     31,151        4.67       43.05
+       2006 |     23,971        3.60       46.64
+       2007 |     23,000        3.45       50.09
+       2008 |     21,531        3.23       53.32
+       2009 |     27,616        4.14       57.47
+       2010 |     26,972        4.05       61.51
+       2011 |     32,934        4.94       66.45
+       2012 |     34,267        5.14       71.59
+       2013 |     34,446        5.17       76.76
+       2014 |     36,510        5.48       82.23
+       2015 |     33,548        5.03       87.26
+       2016 |     32,924        4.94       92.20
+       2017 |     26,643        4.00       96.20
+       2018 |     25,339        3.80      100.00
+------------+-----------------------------------
+      Total |    666,708      100.00
+
+. qui tab year
+
+. local num_years = r(r)
+
+. 
+. reg ever_smoked year_2-year_`num_years'
+
+      Source |       SS           df       MS      Number of obs   =   666,708
+-------------+----------------------------------   F(21, 666686)   =     77.16
+       Model |  394.788134        21   18.799435   Prob > F        =    0.0000
+    Residual |  162423.978   666,686  .243628901   R-squared       =    0.0024
+-------------+----------------------------------   Adj R-squared   =    0.0024
+       Total |  162818.766   666,707  .244213374   Root MSE        =    .49359
+
+------------------------------------------------------------------------------
+ ever_smoked | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      year_2 |  -.0005222   .0037912    -0.14   0.890    -.0079528    .0069085
+      year_3 |  -.0070058    .003844    -1.82   0.068      -.01454    .0005283
+      year_4 |  -.0198745   .0037934    -5.24   0.000    -.0273095   -.0124396
+      year_5 |   -.022915   .0037648    -6.09   0.000    -.0302939    -.015536
+      year_6 |  -.0231241   .0038382    -6.02   0.000    -.0306468   -.0156014
+      year_7 |  -.0361267   .0038463    -9.39   0.000    -.0436653   -.0285881
+      year_8 |  -.0483703   .0038288   -12.63   0.000    -.0558746    -.040866
+      year_9 |  -.0426798   .0038236   -11.16   0.000    -.0501741   -.0351856
+     year_10 |  -.0644794   .0041186   -15.66   0.000    -.0725518   -.0564071
+     year_11 |  -.0649347   .0041704   -15.57   0.000    -.0731085    -.056761
+     year_12 |  -.0472073   .0042561   -11.09   0.000    -.0555492   -.0388654
+     year_13 |  -.0475418   .0039524   -12.03   0.000    -.0552884   -.0397953
+     year_14 |  -.0660459    .003979   -16.60   0.000    -.0738445   -.0582472
+     year_15 |  -.0615808   .0037679   -16.34   0.000    -.0689657   -.0541959
+     year_16 |  -.0602998   .0037295   -16.17   0.000    -.0676095   -.0529901
+     year_17 |  -.0667822   .0037245   -17.93   0.000    -.0740822   -.0594823
+     year_18 |  -.0678983   .0036705   -18.50   0.000    -.0750923   -.0607043
+     year_19 |  -.0762649   .0037499   -20.34   0.000    -.0836145   -.0689153
+     year_20 |  -.0596952   .0037682   -15.84   0.000    -.0670807   -.0523097
+     year_21 |  -.0708568   .0039929   -17.75   0.000    -.0786828   -.0630308
+     year_22 |  -.0732574   .0040514   -18.08   0.000    -.0811981   -.0653167
+       _cons |   .4697608   .0026076   180.15   0.000     .4646501    .4748716
+------------------------------------------------------------------------------
+
+. local year_dummy_r2 = e(r2)
+
+. 
+. * Test joint significance of year dummies
+. local test_vars ""
+
+. forvalues i = 2/`num_years' {
+  2.     local test_vars "`test_vars' year_`i'"
+  3. }
+
+. test `test_vars'
+
+ ( 1)  year_2 = 0
+ ( 2)  year_3 = 0
+ ( 3)  year_4 = 0
+ ( 4)  year_5 = 0
+ ( 5)  year_6 = 0
+ ( 6)  year_7 = 0
+ ( 7)  year_8 = 0
+ ( 8)  year_9 = 0
+ ( 9)  year_10 = 0
+ (10)  year_11 = 0
+ (11)  year_12 = 0
+ (12)  year_13 = 0
+ (13)  year_14 = 0
+ (14)  year_15 = 0
+ (15)  year_16 = 0
+ (16)  year_17 = 0
+ (17)  year_18 = 0
+ (18)  year_19 = 0
+ (19)  year_20 = 0
+ (20)  year_21 = 0
+ (21)  year_22 = 0
+
+       F( 21,666686) =   77.16
+            Prob > F =    0.0000
+
+. local year_dummy_p = r(p)
+
+. 
+. di "• Year dummies R-squared: " %6.4f `year_dummy_r2'
+• Year dummies R-squared: 0.0024
+
+. di "• Joint F-test p-value: " %8.5f `year_dummy_p'
+• Joint F-test p-value:  0.00000
+
+. 
+. if `year_dummy_p' < 0.001 {
+.     di "• Year dummies significance: p < 0.001 (***)"
+• Year dummies significance: p < 0.001 (***)
+. }
+
+. else if `year_dummy_p' < 0.01 {
+.     di "• Year dummies significance: p < 0.01 (**)"
+. }
+
+. else if `year_dummy_p' < 0.05 {
+.     di "• Year dummies significance: p < 0.05 (*)"
+. }
+
+. else {
+.     di "• Year dummies significance: Not significant (p >= 0.05)"
+. }
+
+. 
+. di _newline "INTERPRETATION:"
+
+INTERPRETATION:
+
+. di "Linear trend test: Tests if there's a consistent linear change over time"
+Linear trend test: Tests if there's a consistent linear change over time
+
+. di "Year dummies test: Tests if ANY years differ significantly from baseline"
+Year dummies test: Tests if ANY years differ significantly from baseline
+
+. di "R-squared comparison: " %6.4f `year_dummy_r2' " (dummies) vs " %6.4f `lin
+> ear_r2' " (linear)"
+R-squared comparison: 0.0024 (dummies) vs 0.0021 (linear)
+
+. if `year_dummy_r2' > `linear_r2' + 0.001 {
+.     di "Year dummies explain more variance, suggesting non-linear patterns"
+. }
+
+. else {
+.     di "Linear trend captures most of the temporal variation"
+Linear trend captures most of the temporal variation
+. }
+
+. *****************************************************************************
+> ***
+. * Question 3: Linear trend with demographic controls
+. *****************************************************************************
+> *** 
+. di _newline(2) "========== QUESTION 3: CONTROLLED TREND ANALYSIS =========="
+
+
+========== QUESTION 3: CONTROLLED TREND ANALYSIS ==========
+
+. 
+. reg ever_smoked year_centered age female excellent_health
+
+      Source |       SS           df       MS      Number of obs   =   666,708
+-------------+----------------------------------   F(4, 666703)    =   8000.23
+       Model |  7457.16237         4  1864.29059   Prob > F        =    0.0000
+    Residual |  155361.604   666,703  .233029705   R-squared       =    0.0458
+-------------+----------------------------------   Adj R-squared   =    0.0458
+       Total |  162818.766   666,707  .244213374   Root MSE        =    .48273
+
+------------------------------------------------------------------------------
+ ever_smoked | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+year_cente~d |  -.0044896   .0000919   -48.87   0.000    -.0046696   -.0043096
+         age |   .0028675   .0000338    84.74   0.000     .0028012    .0029338
+      female |  -.1369938   .0011924  -114.89   0.000    -.1393309   -.1346568
+excellent_~h |  -.1037079   .0012424   -83.47   0.000    -.1061429   -.1012728
+       _cons |    .470878   .0022791   206.61   0.000     .4664111    .4753449
+------------------------------------------------------------------------------
+
+. local controlled_coef = _b[year_centered]
+
+. local controlled_p = 2*ttail(e(df_r), abs(_b[year_centered]/_se[year_centered
+> ]))
+
+. 
+. di "CONTROLLED TREND ANALYSIS:"
+CONTROLLED TREND ANALYSIS:
+
+. di "• Trend coefficient (controlled): " %8.5f `controlled_coef'
+• Trend coefficient (controlled): -0.00449
+
+. di "• P-value: " %8.5f `controlled_p'
+• P-value:  0.00000
+
+. di "• Change from uncontrolled: " %8.5f (`controlled_coef' - `linear_coef')
+• Change from uncontrolled: -0.00102
+
+. 
+. di _newline "CONTROL VARIABLES EFFECTS:"
+
+CONTROL VARIABLES EFFECTS:
+
+. di "• Age effect: " %8.5f _b[age] " (p=" %6.4f (2*ttail(e(df_r), abs(_b[age]/
+> _se[age]))) ")"
+• Age effect:  0.00287 (p=0.0000)
+
+. di "• Female effect: " %8.5f _b[female] " (p=" %6.4f (2*ttail(e(df_r), abs(_b
+> [female]/_se[female]))) ")"
+• Female effect: -0.13699 (p=0.0000)
+
+. di "• Excellent health effect: " %8.5f _b[excellent_health] " (p=" %6.4f (2*t
+> tail(e(df_r), abs(_b[excellent_health]/_se[excellent_health]))) ")"
+• Excellent health effect: -0.10371 (p=0.0000)
+
+. 
+. di _newline "WHY CONTROL FOR THESE VARIABLES?"
+
+WHY CONTROL FOR THESE VARIABLES?
+
+. di "• Age: Smoking initiation patterns vary across birth cohorts and life sta
+> ges"
+• Age: Smoking initiation patterns vary across birth cohorts and life stages
+
+. di "• Sex: Historical and cultural gender differences in smoking behavior"
+• Sex: Historical and cultural gender differences in smoking behavior
+
+. di "• Health Status: Individuals reporting excellent/very good health less li
+> kely to smoke"
+• Health Status: Individuals reporting excellent/very good health less likely t
+> o smoke
+
+. di "• Population composition: Controls help isolate time trend from demograph
+> ic shifts"
+• Population composition: Controls help isolate time trend from demographic shi
+> fts
+
+. 
+. *****************************************************************************
+> ***
+. * Question 4: Gender interaction with linear time trend
+. *****************************************************************************
+> ***
+. di _newline(2) "========== QUESTION 4: GENDER × LINEAR TREND INTERACTION ====
+> ======"
+
+
+========== QUESTION 4: GENDER × LINEAR TREND INTERACTION ==========
+
+. 
+. gen female_x_year = female * year_centered
+
+. reg ever_smoked year_centered age female excellent_health female_x_year
+
+      Source |       SS           df       MS      Number of obs   =   666,708
+-------------+----------------------------------   F(5, 666702)    =   6420.97
+       Model |  7480.28626         5  1496.05725   Prob > F        =    0.0000
+    Residual |   155338.48   666,702  .232995371   R-squared       =    0.0459
+-------------+----------------------------------   Adj R-squared   =    0.0459
+       Total |  162818.766   666,707  .244213374   Root MSE        =     .4827
+
+------------------------------------------------------------------------------
+ ever_smoked | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+year_cente~d |  -.0055161    .000138   -39.96   0.000    -.0057867   -.0052456
+         age |   .0028676   .0000338    84.75   0.000     .0028012    .0029339
+      female |  -.1561281   .0022607   -69.06   0.000     -.160559   -.1516973
+excellent_~h |  -.1038404   .0012424   -83.58   0.000    -.1062754   -.1014054
+female_x_y~r |   .0018366   .0001844     9.96   0.000     .0014752    .0021979
+       _cons |     .48173   .0025259   190.72   0.000     .4767794    .4866807
+------------------------------------------------------------------------------
+
+. 
+. test female_x_year
+
+ ( 1)  female_x_year = 0
+
+       F(  1,666702) =   99.25
+            Prob > F =    0.0000
+
+. local interact_p = r(p)
+
+. local interact_coef = _b[female_x_year]
+
+. 
+. * Calculate gender-specific trends
+. local male_trend = _b[year_centered]
+
+. local female_trend = _b[year_centered] + _b[female_x_year]
+
+. 
+. di "GENDER-SPECIFIC TRENDS:"
+GENDER-SPECIFIC TRENDS:
+
+. di "• Male trend: " %8.5f `male_trend' " per year"
+• Male trend: -0.00552 per year
+
+. di "• Female trend: " %8.5f `female_trend' " per year"
+• Female trend: -0.00368 per year
+
+. di "• Gender difference: " %8.5f `interact_coef' " per year"
+• Gender difference:  0.00184 per year
+
+. di "• Interaction p-value: " %8.5f `interact_p'
+• Interaction p-value:  0.00000
+
+. 
+. if `interact_p' < 0.05 {
+.     di "RESULT: Significant gender difference in linear time trends (p < 0.05
+> )"
+RESULT: Significant gender difference in linear time trends (p < 0.05)
+.     if `interact_coef' > 0 {
+.         di "INTERPRETATION: Women's smoking declining more slowly than men's"
+INTERPRETATION: Women's smoking declining more slowly than men's
+.     }
+.     else {
+.         di "INTERPRETATION: Women's smoking declining faster than men's" 
+.     }
+. }
+
+. else {
+.     di "RESULT: No significant gender difference in linear trends (p >= 0.05)
+> "
+.     di "INTERPRETATION: Men and women show similar linear trends over time"
+. }
+
+. 
+. *****************************************************************************
+> ***
+. * Question 5: Gender interaction with year dummies (NOT linear trend)
+. *****************************************************************************
+> ***
+. di _newline(2) "========== QUESTION 5: GENDER × YEAR DUMMIES INTERACTION ====
+> ======"
+
+
+========== QUESTION 5: GENDER × YEAR DUMMIES INTERACTION ==========
+
+. 
+. * Create female × year interactions (excluding linear trend as specified)
+. forvalues i = 2/`num_years' {
+  2.     gen female_x_year_`i' = female * year_`i'
+  3. }
+
+. 
+. * Regression with year dummies and gender interactions (NO linear trend)
+. reg ever_smoked year_2-year_`num_years' age female excellent_health ///
+>                 female_x_year_2-female_x_year_`num_years'
+
+      Source |       SS           df       MS      Number of obs   =   666,708
+-------------+----------------------------------   F(45, 666662)   =    719.43
+       Model |  7540.59214        45  167.568714   Prob > F        =    0.0000
+    Residual |  155278.174   666,662  .232918891   R-squared       =    0.0463
+-------------+----------------------------------   Adj R-squared   =    0.0462
+       Total |  162818.766   666,707  .244213374   Root MSE        =    .48262
+
+------------------------------------------------------------------------------
+ ever_smoked | Coefficient  Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+      year_2 |  -.0058492    .005631    -1.04   0.299    -.0168858    .0051874
+      year_3 |  -.0115565   .0057437    -2.01   0.044     -.022814   -.0002991
+      year_4 |  -.0310655   .0056542    -5.49   0.000    -.0421475   -.0199835
+      year_5 |  -.0353657   .0056029    -6.31   0.000    -.0463471   -.0243843
+      year_6 |  -.0334345   .0057114    -5.85   0.000    -.0446286   -.0222405
+      year_7 |  -.0512871   .0057214    -8.96   0.000    -.0625008   -.0400734
+      year_8 |  -.0705976   .0056689   -12.45   0.000    -.0817084   -.0594868
+      year_9 |    -.06066   .0056789   -10.68   0.000    -.0717905   -.0495295
+     year_10 |   -.080052   .0061014   -13.12   0.000    -.0920106   -.0680933
+     year_11 |  -.0819589   .0061679   -13.29   0.000    -.0940478   -.0698701
+     year_12 |  -.0743851    .006322   -11.77   0.000    -.0867761   -.0619941
+     year_13 |  -.0674858   .0058529   -11.53   0.000    -.0789574   -.0560143
+     year_14 |  -.0907029    .005892   -15.39   0.000    -.1022511   -.0791547
+     year_15 |  -.0907335   .0055611   -16.32   0.000     -.101633    -.079834
+     year_16 |  -.0918182   .0055247   -16.62   0.000    -.1026465   -.0809899
+     year_17 |  -.0970182   .0055053   -17.62   0.000    -.1078083    -.086228
+     year_18 |  -.1044301   .0054275   -19.24   0.000    -.1150678   -.0937924
+     year_19 |   -.118964   .0055392   -21.48   0.000    -.1298206   -.1081074
+     year_20 |  -.1023025   .0055472   -18.44   0.000    -.1131748   -.0914301
+     year_21 |  -.1188039   .0058764   -20.22   0.000    -.1303215   -.1072864
+     year_22 |  -.1186149   .0059524   -19.93   0.000    -.1302814   -.1069484
+         age |   .0028553   .0000339    84.34   0.000     .0027889    .0029216
+      female |  -.1608742   .0051521   -31.22   0.000    -.1709721   -.1507762
+excellent_~h |  -.1041747   .0012426   -83.84   0.000    -.1066101   -.1017393
+female_x_~_2 |   .0053034   .0074808     0.71   0.478    -.0093587    .0199656
+female_x_~_3 |   .0065452   .0075958     0.86   0.389    -.0083424    .0214328
+female_x_~_4 |   .0170538   .0074913     2.28   0.023     .0023712    .0317365
+female_x_~_5 |   .0190832   .0074321     2.57   0.010     .0045164      .03365
+female_x_~_6 |   .0116337   .0075767     1.54   0.125    -.0032163    .0264838
+female_x_~_7 |   .0192999   .0075921     2.54   0.011     .0044197    .0341801
+female_x_~_8 |   .0256704   .0075498     3.40   0.001     .0108731    .0404677
+female_x_~_9 |   .0173102   .0075447     2.29   0.022     .0025229    .0320975
+female_x_~10 |   .0146722   .0081221     1.81   0.071    -.0012468    .0305912
+female_x_~11 |   .0146902   .0082212     1.79   0.074    -.0014231    .0308036
+female_x_~12 |   .0309156   .0083982     3.68   0.000     .0144555    .0473758
+female_x_~13 |   .0174542   .0077937     2.24   0.025     .0021789    .0327296
+female_x_~14 |   .0241633    .007846     3.08   0.002     .0087855    .0395411
+female_x_~15 |   .0284744   .0074249     3.83   0.000     .0139218     .043027
+female_x_~16 |   .0316803   .0073546     4.31   0.000     .0172654    .0460951
+female_x_~17 |   .0293853   .0073416     4.00   0.000     .0149959    .0437747
+female_x_~18 |   .0377733   .0072356     5.22   0.000     .0235917    .0519548
+female_x_~19 |   .0438184   .0073904     5.93   0.000     .0293335    .0583034
+female_x_~20 |   .0411359   .0074217     5.54   0.000     .0265896    .0556822
+female_x_~21 |   .0498044   .0078636     6.33   0.000     .0343919    .0652169
+female_x_~22 |   .0398178   .0079763     4.99   0.000     .0241846    .0554511
+       _cons |   .4940386   .0043262   114.20   0.000     .4855593    .5025179
+------------------------------------------------------------------------------
+
+. 
+. * Test joint significance of all gender × year interactions
+. local interact_vars ""
+
+. forvalues i = 2/`num_years' {
+  2.     local interact_vars "`interact_vars' female_x_year_`i'"
+  3. }
+
+. test `interact_vars'
+
+ ( 1)  female_x_year_2 = 0
+ ( 2)  female_x_year_3 = 0
+ ( 3)  female_x_year_4 = 0
+ ( 4)  female_x_year_5 = 0
+ ( 5)  female_x_year_6 = 0
+ ( 6)  female_x_year_7 = 0
+ ( 7)  female_x_year_8 = 0
+ ( 8)  female_x_year_9 = 0
+ ( 9)  female_x_year_10 = 0
+ (10)  female_x_year_11 = 0
+ (11)  female_x_year_12 = 0
+ (12)  female_x_year_13 = 0
+ (13)  female_x_year_14 = 0
+ (14)  female_x_year_15 = 0
+ (15)  female_x_year_16 = 0
+ (16)  female_x_year_17 = 0
+ (17)  female_x_year_18 = 0
+ (18)  female_x_year_19 = 0
+ (19)  female_x_year_20 = 0
+ (20)  female_x_year_21 = 0
+ (21)  female_x_year_22 = 0
+
+       F( 21,666662) =    5.75
+            Prob > F =    0.0000
+
+. local joint_p = r(p)
+
+. 
+. di "GENDER × YEAR DUMMIES INTERACTION TEST:"
+GENDER × YEAR DUMMIES INTERACTION TEST:
+
+. di "• Joint F-test of all female×year interactions: p = " %8.5f `joint_p'
+• Joint F-test of all female×year interactions: p =  0.00000
+
+. 
+. if `joint_p' < 0.05 {
+.     di "RESULT: Significant gender differences in year-specific patterns (p <
+>  0.05)"
+RESULT: Significant gender differences in year-specific patterns (p < 0.05)
+.     di "INTERPRETATION: Gender differences in smoking vary significantly acro
+> ss years"
+INTERPRETATION: Gender differences in smoking vary significantly across years
+.     di "This suggests the gender gap in smoking changed over the study period
+> "
+This suggests the gender gap in smoking changed over the study period
+. }
+
+. else {
+.     di "RESULT: No significant gender differences in year-specific patterns (
+> p >= 0.05)"
+.     di "INTERPRETATION: While overall levels may differ, gender patterns are"
+.     di "consistent across years (no significant interaction with specific yea
+> rs)"
+. }
+
+. 
+. *****************************************************************************
+> ***
+. * Question 6: Weighted analysis using NHIS survey weights
+. *****************************************************************************
+> ***
+. di _newline(2) "========== QUESTION 6: SURVEY WEIGHTED ANALYSIS =========="
+
+
+========== QUESTION 6: SURVEY WEIGHTED ANALYSIS ==========
+
+. 
+. * Check availability of survey weights
+. capture confirm variable sampweight strata psu
+
+. if _rc == 0 {
+.     count if !missing(sampweight) & !missing(strata) & !missing(psu)
+  666,708
+.     local weight_n = r(N)
+.     if `weight_n' > 0 {
+.         di "Survey design variables available for " `weight_n' " observations
+> "
+Survey design variables available for 666708 observations
+.         
+.         * Set survey design 
+.         svyset psu [pweight=sampweight], strata(strata)
+
+Sampling weights: sampweight
+             VCE: linearized
+     Single unit: missing
+        Strata 1: strata
+ Sampling unit 1: psu
+           FPC 1: <zero>
+.         
+.         di "WEIGHTED ANALYSIS (replicating Question 4 with survey weights):"
+WEIGHTED ANALYSIS (replicating Question 4 with survey weights):
+.         svy: reg ever_smoked year_centered age female excellent_health female
+> _x_year
+(running regress on estimation sample)
+
+Survey: Linear regression
+
+Number of strata =   691                       Number of obs   =       666,708
+Number of PSUs   = 1,937                       Population size = 4,867,871,805
+                                               Design df       =         1,246
+                                               F(5, 1242)      =       4133.63
+                                               Prob > F        =        0.0000
+                                               R-squared       =        0.0495
+
+------------------------------------------------------------------------------
+             |             Linearized
+ ever_smoked | Coefficient  std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+year_cente~d |  -.0065931   .0002066   -31.91   0.000    -.0069984   -.0061877
+         age |   .0032753   .0000512    63.93   0.000     .0031748    .0033758
+      female |  -.1396418   .0030346   -46.02   0.000    -.1455952   -.1336883
+excellent_~h |  -.1080737   .0016033   -67.41   0.000    -.1112192   -.1049282
+female_x_y~r |    .001454   .0002463     5.90   0.000     .0009708    .0019373
+       _cons |   .4683305   .0039623   118.20   0.000      .460557     .476104
+------------------------------------------------------------------------------
+.         
+.         * Test weighted interaction
+.         test female_x_year
+
+Adjusted Wald test
+
+ ( 1)  female_x_year = 0
+
+       F(  1,  1246) =   34.84
+            Prob > F =    0.0000
+.         local weighted_p = r(p)
+.         local weighted_coef = _b[female_x_year]
+.         local weighted_se = _se[female_x_year]
+.         
+.         * Calculate weighted gender-specific trends
+.         local weighted_male_trend = _b[year_centered]
+.         local weighted_female_trend = _b[year_centered] + _b[female_x_year]
+.         
+.         di _newline "WEIGHTED vs UNWEIGHTED COMPARISON:"
+
+WEIGHTED vs UNWEIGHTED COMPARISON:
+.         di "Interaction Coefficient:"
+Interaction Coefficient:
+.         di "• Unweighted: " %8.5f `interact_coef' " (SE: " %8.5f _se[female_x
+> _year] ")"
+• Unweighted:  0.00184 (SE:  0.00025)
+.         di "• Weighted: " %8.5f `weighted_coef' " (SE: " %8.5f `weighted_se' 
+> ")"
+• Weighted:  0.00145 (SE:  0.00025)
+.         di "P-values:"
+P-values:
+.         di "• Unweighted: " %6.4f `interact_p'
+• Unweighted: 0.0000
+.         di "• Weighted: " %6.4f `weighted_p'
+• Weighted: 0.0000
+.         
+.         di _newline "Gender-specific trends:"
+
+Gender-specific trends:
+.         di "• Male (unweighted): " %8.5f `male_trend' " vs (weighted): " %8.5
+> f `weighted_male_trend'
+• Male (unweighted): -0.00552 vs (weighted): -0.00659
+.         di "• Female (unweighted): " %8.5f `female_trend' " vs (weighted): " 
+> %8.5f `weighted_female_trend'
+• Female (unweighted): -0.00368 vs (weighted): -0.00514
+.     }
+.     else {
+.         di "Survey weights available but incomplete for analysis sample"
+.     }
+. }
+
+. else {
+.     di "Survey design variables not available in current dataset"
+. }
+
+. 
+. di _newline "IMPORTANCE OF SURVEY WEIGHTS IN NHIS:"
+
+IMPORTANCE OF SURVEY WEIGHTS IN NHIS:
+
+. di "• NHIS uses complex multistage probability sampling design"
+• NHIS uses complex multistage probability sampling design
+
+. di "• Weights adjust for unequal selection probabilities across strata"
+• Weights adjust for unequal selection probabilities across strata
+
+. di "• Weights compensate for non-response bias"
+• Weights compensate for non-response bias
+
+. di "• Weighted results represent the US civilian non-institutionalized popula
+> tion"
+• Weighted results represent the US civilian non-institutionalized population
+
+. di "• Unweighted results may be biased toward oversampled groups"
+• Unweighted results may be biased toward oversampled groups
+
+. 
+. *****************************************************************************
+> ***
+. * Question 7: Variable information and analysis limitations
+. *****************************************************************************
+> ***
+. di _newline(2) "========== QUESTION 7: LIMITATIONS & BIASES =========="
+
+
+========== QUESTION 7: LIMITATIONS & BIASES ==========
+
+. 
+. di "SMOKING VARIABLE DETAILS (from IPUMS documentation):"
+SMOKING VARIABLE DETAILS (from IPUMS documentation):
+
+. di "• Variable: SMOKEV (Ever smoked 100 cigarettes in life)"
+• Variable: SMOKEV (Ever smoked 100 cigarettes in life)
+
+. di "• Question wording: 'Have you smoked at least 100 cigarettes in your enti
+> re life?'"
+• Question wording: 'Have you smoked at least 100 cigarettes in your entire lif
+> e?'
+
+. di "• Universe: Sample adults 18+ years"
+• Universe: Sample adults 18+ years
+
+. di "• Response categories: No (1), Yes (2), Unknown-refused (7),"
+• Response categories: No (1), Yes (2), Unknown-refused (7),
+
+. di "  Unknown-not ascertained (8), Unknown-don't know (9)"
+  Unknown-not ascertained (8), Unknown-don't know (9)
+
+. di "• Comparability: Generally consistent across survey years 1997-2018"
+• Comparability: Generally consistent across survey years 1997-2018
+
+. di "• Note: 100-cigarette threshold is CDC standard for 'ever smoker' classif
+> ication"
+• Note: 100-cigarette threshold is CDC standard for 'ever smoker' classificatio
+> n
+
+. 
+. di _newline "MAJOR LIMITATIONS AND BIASES:"
+
+MAJOR LIMITATIONS AND BIASES:
+
+. 
+. di _newline "1. RECALL BIAS:"
+
+1. RECALL BIAS:
+
+. di "   • Self-reported lifetime smoking subject to memory errors"
+   • Self-reported lifetime smoking subject to memory errors
+
+. di "   • Older respondents may have imperfect recall of distant smoking"
+   • Older respondents may have imperfect recall of distant smoking
+
+. di "   • Social desirability bias may lead to under-reporting"
+   • Social desirability bias may lead to under-reporting
+
+. 
+. di _newline "2. SURVIVAL BIAS:"
+
+2. SURVIVAL BIAS:
+
+. di "   • Heavy long-term smokers have higher mortality rates"
+   • Heavy long-term smokers have higher mortality rates
+
+. di "   • Surviving smokers in older age groups may be healthier subset"
+   • Surviving smokers in older age groups may be healthier subset
+
+. di "   • This could underestimate historical smoking prevalence"
+   • This could underestimate historical smoking prevalence
+
+. 
+. di _newline "3. NON-RESPONSE AND SAMPLING BIAS:"
+
+3. NON-RESPONSE AND SAMPLING BIAS:
+
+. di "   • Certain populations systematically under-represented"
+   • Certain populations systematically under-represented
+
+. di "   • Homeless, institutionalized populations excluded from NHIS"
+   • Homeless, institutionalized populations excluded from NHIS
+
+. di "   • Non-response may be associated with smoking behavior"
+   • Non-response may be associated with smoking behavior
+
+. 
+. di _newline "4. DEFINITION AND MEASUREMENT ISSUES:"
+
+4. DEFINITION AND MEASUREMENT ISSUES:
+
+. di "   • 100-cigarette threshold is somewhat arbitrary cutoff"
+   • 100-cigarette threshold is somewhat arbitrary cutoff
+
+. di "   • Doesn't capture intensity, duration, or current smoking status"
+   • Doesn't capture intensity, duration, or current smoking status
+
+. di "   • May not capture cultural differences in tobacco use patterns"
+   • May not capture cultural differences in tobacco use patterns
+
+. 
+. di _newline "5. TEMPORAL AND COHORT EFFECTS:"
+
+5. TEMPORAL AND COHORT EFFECTS:
+
+. di "   • Social attitudes toward smoking changed dramatically over study peri
+> od"
+   • Social attitudes toward smoking changed dramatically over study period
+
+. di "   • Birth cohort effects confounded with time trends"
+   • Birth cohort effects confounded with time trends
+
+. di "   • Policy changes (taxes, regulations) may affect reporting"
+   • Policy changes (taxes, regulations) may affect reporting
+
+. 
+. di "Note: Despite these limitations, NHIS provides the best available"
+Note: Despite these limitations, NHIS provides the best available
+
+. di "population-representative data for tracking US smoking trends."
+population-representative data for tracking US smoking trends.
+
+. 
+end of do-file
