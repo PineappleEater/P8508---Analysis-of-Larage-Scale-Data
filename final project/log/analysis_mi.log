@@ -1070,3 +1070,123 @@ expanded_s~e#|
 . mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
 >     i.age_cat i.female i.race i.education i.income i.employed ///
 >     if current_smoker == 1 & copay == 0
+
+Multiple-imputation estimates                 Imputations       =            5
+Survey: Logistic regression                   Number of obs     =      332,212
+
+Number of strata  =         1                 Population size   =  136,872,010
+Number of PSUs    =        23
+                                              Average RVI       =       0.2215
+                                              Largest FMI       =       0.2573
+                                              Complete DF       =           22
+DF adjustment:   Small sample                 DF:     min       =        13.23
+                                                      avg       =        18.78
+                                                      max       =        20.24
+Model F test:       Equal FMI                 F(  20,   19.0)   =        57.18
+Within VCE type:   Linearized                 Prob > F          =       0.0000
+
+------------------------------------------------------------------------------
+quit_attempt |     exp(b)   Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.115494   .0578719     2.11   0.048     1.001151    1.242896
+      1.post |    1.20148    .084294     2.62   0.016     1.038016    1.390686
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .8699198   .0643371    -1.88   0.074     .7456403    1.014914
+             |
+     age_cat |
+          2  |   .8019435   .0286903    -6.17   0.000     .7442925    .8640601
+          3  |    .714602   .0192723   -12.46   0.000     .6755011    .7559663
+          4  |   .5609288   .0233222   -13.91   0.000     .5143337     .611745
+          5  |   .4176442   .0871431    -4.18   0.000     .2703477    .6451939
+             |
+    1.female |   1.034554   .0254043     1.38   0.182     .9829164    1.088904
+             |
+        race |
+          2  |   1.786697   .0925197    11.21   0.000     1.603117    1.991299
+          3  |   1.365923    .085836     4.96   0.000     1.192811    1.564159
+          4  |   1.185663   .0875782     2.31   0.033     1.015367    1.384521
+             |
+   education |
+          2  |   .9409831   .0390905    -1.46   0.159     .8627389    1.026324
+          3  |   1.060911   .0587133     1.07   0.298     .9450914    1.190924
+             |
+      income |
+          2  |   .9958796   .0585575    -0.07   0.945     .8791023    1.128169
+          3  |   .9350595   .0569817    -1.10   0.287      .821411    1.064432
+          4  |   .8672482    .062337    -1.98   0.066     .7443762    1.010402
+             |
+    employed |
+          2  |   .9901881    .033592    -0.29   0.774     .9225476    1.062788
+          3  |   1.095924   .0552679     1.82   0.085      .986364    1.217652
+          4  |   1.044368   .0363555     1.25   0.227     .9712083    1.123038
+          5  |   1.294509   .0506165     6.60   0.000     1.192442    1.405312
+             |
+       _cons |   1.289101   .1128596     2.90   0.009     1.073626    1.547821
+------------------------------------------------------------------------------
+
+. 
+. di _newline(1) "Logistic regression barriers analysis complete (MICE)."
+
+Logistic regression barriers analysis complete (MICE).
+
+. 
+. *****************************************************************************
+> ***
+. * SENSITIVITY ANALYSES (MICE Data)
+. *****************************************************************************
+> ***
+. 
+. di _newline(3)
+
+
+
+
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "SENSITIVITY ANALYSES: TESTING ROBUSTNESS ACROSS METHODS (MICE DATA)"
+SENSITIVITY ANALYSES: TESTING ROBUSTNESS ACROSS METHODS (MICE DATA)
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "Purpose: Compare clustered vs unclustered and Poisson vs Logistic"
+Purpose: Compare clustered vs unclustered and Poisson vs Logistic
+
+. di "Using MICE imputed data (full sample N=5,389,478)"
+Using MICE imputed data (full sample N=5,389,478)
+
+. di _newline(1)
+
+
+
+. 
+. * METHOD 1: UNCLUSTERED POISSON (MICE)
+. di _newline(2)
+
+
+
+
+. di "========== METHOD 1: POISSON WITHOUT CLUSTERING (MICE) =========="
+========== METHOD 1: POISSON WITHOUT CLUSTERING (MICE) ==========
+
+. di "WARNING: Ignores state-level clustering, will underestimate standard erro
+> rs"
+WARNING: Ignores state-level clustering, will underestimate standard errors
+
+. di _newline(1)
+
+
+
+. 
+. di "--- Current Smoking (Unclustered, MICE) ---"
+--- Current Smoking (Unclustered, MICE) ---
+
+. mi estimate, eform: poisson current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     [pw=weight], vce(robust)
