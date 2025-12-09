@@ -5,8 +5,13 @@
 
 clear all
 set more off
-set maxvar 10000
-set varabbrev off
+
+* Batch mode optimization settings
+set rmsg off              // Suppress return message timing
+set type double           // Use double precision
+set maxvar 10000          // Increase max variables
+set varabbrev off         // Disable variable abbreviation
+capture set matsize 11000 // Increase matrix size if needed
 
 * Set working directory
 * Windows path:
