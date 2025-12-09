@@ -166,7 +166,7 @@ To address the 27% missing data (mostly income), this script implements **MICE (
 
 ### 3.2 Main Results: Difference-in-Differences Analysis
 
-#### Current Smoking (Primary Outcome)
+#### Current Smoking (Primary Outcome) (Table 4)
 | Method | Sample Size | DiD Estimate | 95% CI | P-value | Status |
 |--------|-------------|--------------|--------|---------|--------|
 | **Paper (GEE)** | 5,311,872 | RR = 0.94 | [0.93, 0.94] | NS | Null effect |
@@ -174,7 +174,7 @@ To address the 27% missing data (mostly income), this script implements **MICE (
 | **MICE (Poisson)** | 5,389,478 | IRR = 0.984 | [0.925, 1.047] | 0.612 | ✅ **Perfect Match** |
 | **Logistic (Extension)** | 3,880,716 | OR ≈ 0.98 | - | NS | Consistent |
 
-#### Quit Attempts (Secondary Outcome)
+#### Quit Attempts (Secondary Outcome) (Table 4)
 | Method | Sample Size | DiD Estimate | 95% CI | P-value | Status |
 |--------|-------------|--------------|--------|---------|--------|
 | **Paper (GEE)** | 5,311,872 | RR = 1.04 | [1.04, 1.05] | <0.001 | **Increase** |
