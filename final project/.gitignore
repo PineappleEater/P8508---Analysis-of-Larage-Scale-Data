@@ -4,8 +4,6 @@ data/raw/*.xpt
 data/*.dta
 
 # Stata log files
-log/*.txt
-*.log
 
 # Stata temporary files
 *.smcl

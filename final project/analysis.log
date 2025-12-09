@@ -1,0 +1,3453 @@
+
+  ___  ____  ____  ____  ____ ®
+ /__    /   ____/   /   ____/      18.0
+___/   /   /___/   /   /___/       MP—Parallel Edition
+
+ Statistics and Data Science       Copyright 1985-2023 StataCorp LLC
+                                   StataCorp
+                                   4905 Lakeway Drive
+                                   College Station, Texas 77845 USA
+                                   800-STATA-PC        https://www.stata.com
+                                   979-696-4600        stata@stata.com
+
+Stata license: Single-user 2-core , expiring 18 Feb 2027
+Serial number: 501809418514
+  Licensed to: Alex
+               1
+
+Notes:
+      1. Stata is running in batch mode.
+      2. Unicode is supported; see help unicode_advice.
+      3. More than 2 billion observations are allowed; see help obs_advice.
+      4. Maximum number of variables is set to 5,000 but can be increased;
+          see help set_maxvar.
+
+. do analysis.do 
+
+. *****************************************************************************
+> ***
+. * Final Project - Statistical Analysis (analysis.do)
+. * Analysis of Large-Scale Data 2025
+. * Name(s): Xuange Liang [xl3493], Zexuan Yan [zy2654]
+. *
+. * Replication of: Valvi et al. (2019)
+. *    "Current smoking and quit-attempts among US adults following
+. *     Medicaid expansion"
+. * Dataset: Processed BRFSS 2003-2015 (from proc.do)
+. * Purpose: Replicate Tables 1-5 and perform extension analysis
+. *****************************************************************************
+> ***
+. 
+. clear all
+
+. set more off
+
+. 
+. * Batch mode optimization settings
+. set rmsg off              // Suppress return message timing
+
+. set type double           // Use double precision
+
+. capture set matsize 11000 // Increase matrix size if needed
+
+. set maxvar 10000          // Increase max variables
+
+
+. 
+. *****************************************************************************
+> ***
+. * SETUP
+. *****************************************************************************
+> ***
+. 
+. * Set working directory
+. * Windows path:
+. global projdir "d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Da
+> ta\final project"
+
+. * For Linux Stata, use: 
+. * global projdir "/home/liang/desktop/P8508---Analysis-of-Larage-Scale-Data/f
+> inal project"
+. cd "$projdir"
+d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\final project
+
+. 
+. * Log file for documentation
+. capture mkdir "log"
+
+. capture log close
+
+. log using "log/analysis.log", text replace
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
+> nal project\log/analysis.log
+  log type:  text
+ opened on:   9 Dec 2025, 14:50:15
+
+. 
+. di "============================================================"
+============================================================
+
+. di "FINAL PROJECT: STATISTICAL ANALYSIS"
+FINAL PROJECT: STATISTICAL ANALYSIS
+
+. di "Replication of Valvi et al. (2019)"
+Replication of Valvi et al. (2019)
+
+. di "============================================================"
+============================================================
+
+. di "Started at: $S_DATE $S_TIME"
+Started at:  9 Dec 2025 14:50:15
+
+. 
+. * Load processed data
+. use "data/brfss_analysis.dta", clear
+
+. 
+. * --- NO AGE RESTRICTION (Paper includes all adults 18+) ---
+. * Paper Table 1 includes age groups: 18-34, 35-49, 50-64, 65-79, 80+
+. di "Sample includes all adults 18+..."
+Sample includes all adults 18+...
+
+. 
+. * --- YEAR RESTRICTION (Match Paper's Primary Analysis N=5,311,872) ---
+. * Paper analysis is 2003-2015. (2011-2017 is supplemental only).
+. keep if year <= 2015
+(936,319 observations deleted)
+
+. 
+. * Declare survey design (must do before any svy: commands)
+. capture confirm variable weight
+
+. if _rc != 0 {
+.     di "ERROR: Variable 'weight' is missing!"
+. }
+
+. svyset [pw=weight]
+
+Sampling weights: weight
+             VCE: linearized
+     Single unit: missing
+        Strata 1: <one>
+ Sampling unit 1: <observations>
+           FPC 1: <zero>
+
+. 
+. * Diagnose missing values
+. di _newline(1) "Checking for missing values in key variables:"
+
+Checking for missing values in key variables:
+
+. misstable patterns current_smoker post expanded_state weight
+
+   Missing-value patterns
+     (1 means complete)
+
+              |   Pattern
+    Percent   |  1  2  3
+  ------------+-------------
+       90%    |  1  1  1
+              |
+        8     |  1  1  0
+        1     |  1  0  1
+       <1     |  0  0  1
+       <1     |  1  0  0
+       <1     |  0  1  1
+       <1     |  0  1  0
+       <1     |  0  0  0
+  ------------+-------------
+      100%    |
+
+  Variables are  (1) weight  (2) current_smoker  (3) post
+
+. 
+. * Display sample size
+. di _newline(1)
+
+
+
+. di "Total observations: " _N
+Total observations: 5389478
+
+. 
+. *****************************************************************************
+> ***
+. * TABLE 1: Baseline Characteristics by Medicaid Expansion Status
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== TABLE 1: BASELINE CHARACTERISTICS =========="
+========== TABLE 1: BASELINE CHARACTERISTICS ==========
+
+. di "Comparing Expanded vs. Non-Expanded States"
+Comparing Expanded vs. Non-Expanded States
+
+. 
+. * Overall sample sizes
+. di _newline(1) "Sample Size by Expansion Status:"
+
+Sample Size by Expansion Status:
+
+. tab expanded_state, missing
+
+   Medicaid |
+  Expansion |
+      State |      Freq.     Percent        Cum.
+------------+-----------------------------------
+          0 |  2,336,780       43.36       43.36
+          1 |  3,052,698       56.64      100.00
+------------+-----------------------------------
+      Total |  5,389,478      100.00
+
+. 
+. * Age distribution
+. di _newline(1) "Age Category by Expansion Status:"
+
+Age Category by Expansion Status:
+
+. tab age_cat expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+           |  Medicaid Expansion
+       Age |         State
+  Category |         0          1 |     Total
+-----------+----------------------+----------
+         1 |   361,202    451,773 |   812,975 
+           |     15.55      14.90 |     15.18 
+-----------+----------------------+----------
+         2 |   527,877    713,955 | 1,241,832 
+           |     22.72      23.55 |     23.19 
+-----------+----------------------+----------
+         3 |   715,736    958,339 | 1,674,075 
+           |     30.80      31.62 |     31.26 
+-----------+----------------------+----------
+         4 |   541,390    676,329 | 1,217,719 
+           |     23.30      22.31 |     22.74 
+-----------+----------------------+----------
+         5 |   177,263    230,683 |   407,946 
+           |      7.63       7.61 |      7.62 
+-----------+----------------------+----------
+     Total | 2,323,468  3,031,079 | 5,354,547 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(4) =  1.6e+03   Pr = 0.000
+
+. 
+. * Sex distribution
+. di _newline(1) "Sex by Expansion Status:"
+
+Sex by Expansion Status:
+
+. tab female expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+           |  Medicaid Expansion
+           |         State
+    female |         0          1 |     Total
+-----------+----------------------+----------
+         0 |   904,773  1,211,063 | 2,115,836 
+           |     38.72      39.67 |     39.26 
+-----------+----------------------+----------
+         1 | 1,432,007  1,841,635 | 3,273,642 
+           |     61.28      60.33 |     60.74 
+-----------+----------------------+----------
+     Total | 2,336,780  3,052,698 | 5,389,478 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(1) = 504.2084   Pr = 0.000
+
+. 
+. * Race/Ethnicity distribution
+. di _newline(1) "Race/Ethnicity by Expansion Status:"
+
+Race/Ethnicity by Expansion Status:
+
+. tab race expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+           |  Medicaid Expansion
+Race/Ethni |         State
+      city |         0          1 |     Total
+-----------+----------------------+----------
+         1 | 1,769,649  2,408,968 | 4,178,617 
+           |     81.32      84.42 |     83.08 
+-----------+----------------------+----------
+         2 |   238,579    190,628 |   429,207 
+           |     10.96       6.68 |      8.53 
+-----------+----------------------+----------
+         3 |   111,768    154,980 |   266,748 
+           |      5.14       5.43 |      5.30 
+-----------+----------------------+----------
+         4 |    56,246     98,870 |   155,116 
+           |      2.58       3.46 |      3.08 
+-----------+----------------------+----------
+     Total | 2,176,242  2,853,446 | 5,029,688 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(3) =  3.1e+04   Pr = 0.000
+
+. 
+. * Education distribution
+. di _newline(1) "Education by Expansion Status:"
+
+Education by Expansion Status:
+
+. tab education expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+           |  Medicaid Expansion
+ Education |         State
+     Level |         0          1 |     Total
+-----------+----------------------+----------
+         1 |   256,592    254,139 |   510,731 
+           |     11.02       8.36 |      9.51 
+-----------+----------------------+----------
+         2 |   721,334    876,344 | 1,597,678 
+           |     30.97      28.83 |     29.76 
+-----------+----------------------+----------
+         3 | 1,351,181  1,909,241 | 3,260,422 
+           |     58.01      62.81 |     60.73 
+-----------+----------------------+----------
+     Total | 2,329,107  3,039,724 | 5,368,831 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(2) =  1.7e+04   Pr = 0.000
+
+. 
+. * Income distribution
+. di _newline(1) "Income by Expansion Status:"
+
+Income by Expansion Status:
+
+. tab income expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+    Annual |  Medicaid Expansion
+ Household |         State
+    Income |         0          1 |     Total
+-----------+----------------------+----------
+         1 |   131,749    134,974 |   266,723 
+           |      6.60       5.15 |      5.78 
+-----------+----------------------+----------
+         2 |   311,890    343,477 |   655,367 
+           |     15.63      13.10 |     14.20 
+-----------+----------------------+----------
+         3 |   784,169    953,953 | 1,738,122 
+           |     39.30      36.40 |     37.65 
+-----------+----------------------+----------
+         4 |   767,306  1,188,579 | 1,955,885 
+           |     38.46      45.35 |     42.37 
+-----------+----------------------+----------
+     Total | 1,995,114  2,620,983 | 4,616,097 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(3) =  2.4e+04   Pr = 0.000
+
+. 
+. * Employment distribution
+. di _newline(1) "Employment by Expansion Status:"
+
+Employment by Expansion Status:
+
+. tab employed expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+           |  Medicaid Expansion
+Employment |         State
+    Status |         0          1 |     Total
+-----------+----------------------+----------
+         1 |   982,793  1,338,800 | 2,321,593 
+           |     42.26      44.11 |     43.31 
+-----------+----------------------+----------
+         2 |   199,988    257,854 |   457,842 
+           |      8.60       8.50 |      8.54 
+-----------+----------------------+----------
+         3 |   107,696    154,576 |   262,272 
+           |      4.63       5.09 |      4.89 
+-----------+----------------------+----------
+         4 |   861,550  1,091,374 | 1,952,924 
+           |     37.04      35.96 |     36.43 
+-----------+----------------------+----------
+         5 |   173,835    192,422 |   366,257 
+           |      7.47       6.34 |      6.83 
+-----------+----------------------+----------
+     Total | 2,325,862  3,035,026 | 5,360,888 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(4) =  4.5e+03   Pr = 0.000
+
+. 
+. * Healthcare coverage
+. di _newline(1) "Healthcare Coverage by Expansion Status:"
+
+Healthcare Coverage by Expansion Status:
+
+. tab has_coverage expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+       Has |  Medicaid Expansion
+Healthcare |         State
+  Coverage |         0          1 |     Total
+-----------+----------------------+----------
+         0 |   119,145    118,863 |   238,008 
+           |     11.57       8.86 |     10.04 
+-----------+----------------------+----------
+         1 |   910,301  1,222,952 | 2,133,253 
+           |     88.43      91.14 |     89.96 
+-----------+----------------------+----------
+     Total | 1,029,446  1,341,815 | 2,371,261 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(1) =  4.8e+03   Pr = 0.000
+
+. 
+. * Personal doctor
+. di _newline(1) "Has Personal Doctor by Expansion Status:"
+
+Has Personal Doctor by Expansion Status:
+
+. tab has_doctor expanded_state, col chi2
+
++-------------------+
+| Key               |
+|-------------------|
+|     frequency     |
+| column percentage |
++-------------------+
+
+       Has |  Medicaid Expansion
+  Personal |         State
+    Doctor |         0          1 |     Total
+-----------+----------------------+----------
+         0 |   581,083    655,623 | 1,236,706 
+           |     24.95      21.56 |     23.03 
+-----------+----------------------+----------
+         1 | 1,748,294  2,385,420 | 4,133,714 
+           |     75.05      78.44 |     76.97 
+-----------+----------------------+----------
+     Total | 2,329,377  3,041,043 | 5,370,420 
+           |    100.00     100.00 |    100.00 
+
+          Pearson chi2(1) =  8.5e+03   Pr = 0.000
+
+. 
+. *****************************************************************************
+> ***
+. * TABLE 2: Current Smoking and Quit Attempts by Expansion Status
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== TABLE 2: OUTCOMES BY EXPANSION STATUS =========="
+========== TABLE 2: OUTCOMES BY EXPANSION STATUS ==========
+
+. 
+. * Current smoking prevalence
+. di _newline(1) "Current Smoking by Expansion Status:"
+
+Current Smoking by Expansion Status:
+
+. tab current_smoker expanded_state, row chi2
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+           |  Medicaid Expansion
+current_sm |         State
+      oker |         0          1 |     Total
+-----------+----------------------+----------
+         0 | 1,904,428  2,496,689 | 4,401,117 
+           |     43.27      56.73 |    100.00 
+-----------+----------------------+----------
+         1 |   402,171    505,715 |   907,886 
+           |     44.30      55.70 |    100.00 
+-----------+----------------------+----------
+     Total | 2,306,599  3,002,404 | 5,309,003 
+           |     43.45      56.55 |    100.00 
+
+          Pearson chi2(1) = 322.4817   Pr = 0.000
+
+. 
+. * Quit attempts (among current smokers only)
+. di _newline(1) "Quit Attempts by Expansion Status (Current Smokers Only):"
+
+Quit Attempts by Expansion Status (Current Smokers Only):
+
+. tab quit_attempt expanded_state if current_smoker == 1, row chi2
+
++----------------+
+| Key            |
+|----------------|
+|   frequency    |
+| row percentage |
++----------------+
+
+           |  Medicaid Expansion
+quit_attem |         State
+        pt |         0          1 |     Total
+-----------+----------------------+----------
+         0 |   177,257    224,363 |   401,620 
+           |     44.14      55.86 |    100.00 
+-----------+----------------------+----------
+         1 |   223,736    279,633 |   503,369 
+           |     44.45      55.55 |    100.00 
+-----------+----------------------+----------
+     Total |   400,993    503,996 |   904,989 
+           |     44.31      55.69 |    100.00 
+
+          Pearson chi2(1) =   8.8242   Pr = 0.003
+
+. 
+. *****************************************************************************
+> ***
+. * FIGURE 1 & 2: Trends Over Time
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== FIGURES: TRENDS OVER TIME =========="
+========== FIGURES: TRENDS OVER TIME ==========
+
+. 
+. * Calculate yearly prevalence by expansion status
+. preserve
+
+. 
+. 
+. * Collapse to get weighted means by year and expansion status
+. collapse (mean) smoke_prev = current_smoker ///
+>          (mean) quit_prev = quit_attempt [pw=weight], ///
+>          by(year expanded_state)
+
+. 
+. * Figure 1: Current Smoking Trends
+. di _newline(1) "Creating Figure 1: Smoking Prevalence Trends..."
+
+Creating Figure 1: Smoking Prevalence Trends...
+
+. twoway (connected smoke_prev year if expanded_state == 1, ///
+>             lcolor(blue) mcolor(blue) msymbol(circle)) ///
+>        (connected smoke_prev year if expanded_state == 0, ///
+>             lcolor(red) mcolor(red) msymbol(square)), ///
+>        title("Figure 1: Current Smoking Prevalence by Expansion Status", size
+> (medium)) ///
+>        subtitle("BRFSS 2003-2015", size(small)) ///
+>        xtitle("Year") ytitle("Prevalence of Current Smoking") ///
+>        xlabel(2003(2)2015) ylabel(0.10(0.05)0.30, format(%4.2f)) ///
+>        legend(order(1 "Expanded States" 2 "Non-Expanded States") rows(1)) ///
+>        note("Note: 2010 excluded as washout period") ///
+>        scheme(s2color) ///
+>        xline(2010.5, lpattern(dash) lcolor(gray))
+
+. 
+. graph export "output/figure1_smoking_trends.png", replace width(1000) height(
+> 600)
+file output/figure1_smoking_trends.png saved as PNG format
+
+. di "Figure 1 saved as: output/figure1_smoking_trends.png"
+Figure 1 saved as: output/figure1_smoking_trends.png
+
+. 
+. * Figure 2: Quit Attempt Trends
+. di _newline(1) "Creating Figure 2: Quit Attempt Trends..."
+
+Creating Figure 2: Quit Attempt Trends...
+
+. twoway (connected quit_prev year if expanded_state == 1, ///
+>             lcolor(blue) mcolor(blue) msymbol(circle)) ///
+>        (connected quit_prev year if expanded_state == 0, ///
+>             lcolor(red) mcolor(red) msymbol(square)), ///
+>        title("Figure 2: Quit Attempts in Past Year by Expansion Status", size
+> (medium)) ///
+>        subtitle("BRFSS 2003-2015, Among Current Smokers", size(small)) ///
+>        xtitle("Year") ytitle("Prevalence of Quit Attempts") ///
+>        xlabel(2003(2)2015) ylabel(0.45(0.05)0.65, format(%4.2f)) ///
+>        legend(order(1 "Expanded States" 2 "Non-Expanded States") rows(1)) ///
+>        note("Note: 2010 excluded as washout period") ///
+>        scheme(s2color) ///
+>        xline(2010.5, lpattern(dash) lcolor(gray))
+
+. 
+. graph export "output/figure2_quit_trends.png", replace width(1000) height(600
+> )
+file output/figure2_quit_trends.png saved as PNG format
+
+. di "Figure 2 saved as: output/figure2_quit_trends.png"
+Figure 2 saved as: output/figure2_quit_trends.png
+
+. 
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * TABLE 3: DIFFERENCE-IN-DIFFERENCES REGRESSION - CURRENT SMOKING
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== TABLE 3: DiD REGRESSION - CURRENT SMOKING =========="
+========== TABLE 3: DiD REGRESSION - CURRENT SMOKING ==========
+
+. di "Comparing Pre (2003-2009) vs Post (2011-2015) by Expansion Status"
+Comparing Pre (2003-2009) vs Post (2011-2015) by Expansion Status
+
+. 
+. * Model 1: Unadjusted (Using Poisson for Relative Risk, matching paper's GEE 
+> approach)
+. di _newline(1) "Model 1: Unadjusted (Poisson for RR, IRR ≈ Relative Risk)"
+
+Model 1: Unadjusted (Poisson for RR, IRR ≈ Relative Risk)
+
+. poisson current_smoker i.expanded_state##i.post [pw=weight], cluster(_state) 
+> irr
+
+Iteration 0:  Log pseudolikelihood = -1.066e+09  
+Iteration 1:  Log pseudolikelihood = -1.066e+09  
+
+Poisson regression                                   Number of obs = 4,857,982
+                                                     Wald chi2(3)  =    313.26
+Log pseudolikelihood = -1.066e+09                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.017431    .038822     0.45   0.651     .9441173    1.096439
+      1.post |   .8085331   .0227019    -7.57   0.000     .7652404    .8542751
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9864793   .0310971    -0.43   0.666     .9273747    1.049351
+             |
+       _cons |   .1539657    .004414   -65.26   0.000      .145553    .1628647
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. estimates store model1_unadj
+
+. 
+. * Model 2: Adjusted (with covariates)
+. di _newline(1) "Model 2: Adjusted (with demographic covariates)"
+
+Model 2: Adjusted (with demographic covariates)
+
+. poisson current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -6.899e+08  
+Iteration 1:  Log pseudolikelihood = -6.899e+08  
+Iteration 2:  Log pseudolikelihood = -6.899e+08  
+Iteration 3:  Log pseudolikelihood = -6.899e+08  
+
+Poisson regression                                   Number of obs = 3,902,304
+                                                     Wald chi2(20) =  16722.34
+Log pseudolikelihood = -6.899e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.047864     .03093     1.58   0.113     .9889631    1.110274
+      1.post |   .8785018   .0252667    -4.50   0.000     .8303499     .929446
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9842301   .0323218    -0.48   0.628     .9228762    1.049663
+             |
+     age_cat |
+          2  |    .932751   .0123029    -5.28   0.000     .9089467    .9571787
+          3  |   .7083017   .0115908   -21.08   0.000     .6859447    .7313874
+          4  |   .3886438   .0096893   -37.91   0.000     .3701096     .408106
+          5  |   .1424358   .0080534   -34.47   0.000     .1274946     .159128
+             |
+    1.female |   .8109405   .0103193   -16.47   0.000     .7909651    .8314202
+             |
+        race |
+          2  |   .7551577   .0360277    -5.89   0.000     .6877456    .8291775
+          3  |   .7671717   .0487708    -4.17   0.000      .677298    .8689712
+          4  |   1.022441   .0455121     0.50   0.618     .9370191     1.11565
+             |
+   education |
+          2  |   .7952913   .0120805   -15.08   0.000      .771963    .8193246
+          3  |    .539963   .0107746   -30.88   0.000     .5192528    .5614992
+             |
+      income |
+          2  |     .98471   .0171968    -0.88   0.378     .9515752    1.018998
+          3  |   .7818891   .0146432   -13.14   0.000     .7537093    .8111224
+          4  |   .4845847   .0096746   -36.29   0.000     .4659891    .5039224
+             |
+    employed |
+          2  |   .9149392   .0208264    -3.91   0.000     .8750173    .9566825
+          3  |   1.319013   .0182401    20.02   0.000     1.283743    1.355252
+          4  |   .8489705   .0121913   -11.40   0.000      .825409    .8732045
+          5  |   1.312933   .0229443    15.58   0.000     1.268725    1.358682
+             |
+       _cons |   .6099211   .0194317   -15.52   0.000     .5730004    .6492206
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. estimates store model2_adj
+
+. 
+. * Key coefficient interpretation
+. di _newline(1)
+
+
+
+. di "KEY COEFFICIENT INTERPRETATION:"
+KEY COEFFICIENT INTERPRETATION:
+
+. di "- expanded_state#post: This is the DiD estimator"
+- expanded_state#post: This is the DiD estimator
+
+. di "- It captures the differential change in smoking for expansion states"
+- It captures the differential change in smoking for expansion states
+
+. di "  relative to non-expansion states after 2011"
+  relative to non-expansion states after 2011
+
+. 
+. *****************************************************************************
+> ***
+. * TABLE 4: DIFFERENCE-IN-DIFFERENCES REGRESSION - QUIT ATTEMPTS
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== TABLE 4: DiD REGRESSION - QUIT ATTEMPTS =========="
+========== TABLE 4: DiD REGRESSION - QUIT ATTEMPTS ==========
+
+. di "Among Current Smokers Only"
+Among Current Smokers Only
+
+. 
+. * Restrict to current smokers for quit attempt analysis
+. preserve
+
+. keep if current_smoker == 1
+(4,481,592 observations deleted)
+
+. 
+. * Model 1: Unadjusted (Poisson for RR)
+. di _newline(1) "Model 1: Unadjusted (Current Smokers Only, IRR ≈ Relative Ris
+> k)"
+
+Model 1: Unadjusted (Current Smokers Only, IRR ≈ Relative Risk)
+
+. poisson quit_attempt i.expanded_state##i.post [pw=weight], cluster(_state) ir
+> r
+
+Iteration 0:  Log pseudolikelihood = -3.130e+08  
+Iteration 1:  Log pseudolikelihood = -3.130e+08  
+
+Poisson regression                                     Number of obs = 834,003
+                                                       Wald chi2(3)  =   22.49
+Log pseudolikelihood = -3.130e+08                      Prob > chi2   =  0.0001
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.011003   .0156464     0.71   0.479     .9807975     1.04214
+      1.post |   1.048212   .0177274     2.78   0.005     1.014037     1.08354
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9848623   .0187523    -0.80   0.423     .9487857    1.022311
+             |
+       _cons |    .529908   .0061232   -54.96   0.000     .5180416    .5420462
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. estimates store model3_unadj
+
+. 
+. * Model 2: Adjusted
+. di _newline(1) "Model 2: Adjusted (Current Smokers Only)"
+
+Model 2: Adjusted (Current Smokers Only)
+
+. poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -2.240e+08  
+Iteration 1:  Log pseudolikelihood = -2.240e+08  
+
+Poisson regression                                     Number of obs = 694,696
+                                                       Wald chi2(20) = 1902.64
+Log pseudolikelihood = -2.240e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.024149   .0181387     1.35   0.178     .9892081    1.060325
+      1.post |   1.061109   .0187904     3.35   0.001     1.024912    1.098584
+             |
+expanded_s~e#|
+        post |
+        1 1  |    .980116   .0206495    -0.95   0.340      .940468    1.021436
+             |
+     age_cat |
+          2  |   .8942913    .010904    -9.16   0.000     .8731732    .9159202
+          3  |   .8428623   .0110752   -13.01   0.000     .8214325    .8648512
+          4  |   .7836943   .0157829   -12.10   0.000     .7533628    .8152469
+          5  |   .6977558   .0329702    -7.62   0.000     .6360375    .7654629
+             |
+    1.female |   1.049557   .0070899     7.16   0.000     1.035753    1.063546
+             |
+        race |
+          2  |   1.250323   .0155846    17.92   0.000     1.220148    1.281245
+          3  |   1.141251   .0229334     6.57   0.000     1.097175    1.187096
+          4  |   1.048381   .0221303     2.24   0.025     1.005891    1.092665
+             |
+   education |
+          2  |   .9934552   .0136506    -0.48   0.633     .9670575    1.020574
+          3  |   1.055221   .0156992     3.61   0.000     1.024896    1.086444
+             |
+      income |
+          2  |   1.006728   .0147172     0.46   0.646     .9782924    1.035991
+          3  |   .9875532   .0154564    -0.80   0.424     .9577191    1.018317
+          4  |   .9803994   .0173365    -1.12   0.263     .9470026    1.014974
+             |
+    employed |
+          2  |    .985919    .014237    -0.98   0.326     .9584062    1.014222
+          3  |   1.050882    .016459     3.17   0.002     1.019113    1.083641
+          4  |   1.020653   .0154637     1.35   0.177     .9907904    1.051416
+          5  |   1.168066   .0142921    12.70   0.000     1.140388    1.196417
+             |
+       _cons |   .5349393   .0132111   -25.33   0.000     .5096628    .5614694
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. estimates store model4_adj
+
+. 
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * TABLE 3 EXTENDED: AGE-STRATIFIED ANALYSIS (Replicating Paper Table 3)
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== TABLE 3 EXTENDED: AGE-STRATIFIED ANALYSIS =========="
+========== TABLE 3 EXTENDED: AGE-STRATIFIED ANALYSIS ==========
+
+. di "Replicating Paper's Table 3: Current Smoking and Quit Attempts by Age Gro
+> up"
+Replicating Paper's Table 3: Current Smoking and Quit Attempts by Age Group
+
+. 
+. * Define age groups following paper's categories
+. * 1: 18-49 (combines 18-34 and 35-49)
+. * 2: 50-79 (combines 50-64 and 65-79)
+. * 3: 80+
+. 
+. gen age_group = .
+(5,389,478 missing values generated)
+
+. replace age_group = 1 if inlist(age_cat, 1, 2)  // 18-49
+(2,054,807 real changes made)
+
+. replace age_group = 2 if inlist(age_cat, 3, 4)  // 50-79
+(2,891,794 real changes made)
+
+. replace age_group = 3 if age_cat == 5           // 80+
+(407,946 real changes made)
+
+. label define age_group_lbl 1 "18-49" 2 "50-79" 3 "80+"
+
+. label values age_group age_group_lbl
+
+. 
+. * Current Smoking by Age Group
+. foreach a in 1 2 3 {
+  2.     local aname: label (age_group) `a'
+  3.     di _newline(1) "=== CURRENT SMOKING: Age `aname' ==="
+  4.     capture noisily poisson current_smoker i.expanded_state##i.post ///
+>         i.female i.race i.education i.income i.employed ///
+>         if age_group == `a' [pw=weight], cluster(_state) irr
+  5.     capture estimates store smoke_age`a'
+  6. }
+
+=== CURRENT SMOKING: Age 18-49 ===
+
+Iteration 0:  Log pseudolikelihood = -3.323e+08  
+Iteration 1:  Log pseudolikelihood = -3.323e+08  
+Iteration 2:  Log pseudolikelihood = -3.323e+08  
+
+Poisson regression                                   Number of obs = 1,537,746
+                                                     Wald chi2(16) =   8015.39
+Log pseudolikelihood = -3.323e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.050046   .0344091     1.49   0.136     .9847259      1.1197
+      1.post |   .8529551   .0308915    -4.39   0.000     .7945078     .915702
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9830935   .0409473    -0.41   0.682     .9060268    1.066715
+             |
+    1.female |   .9154486   .0142365    -5.68   0.000     .8879665    .9437812
+             |
+        race |
+          2  |   .6342272   .0333044    -8.67   0.000     .5721986      .70298
+          3  |    .693285    .048425    -5.24   0.000     .6045839    .7949998
+          4  |   .9743877   .0512862    -0.49   0.622     .8788797    1.080275
+             |
+   education |
+          2  |   .7755579   .0135668   -14.53   0.000     .7494181    .8026095
+          3  |   .4766283    .011048   -31.97   0.000     .4554591    .4987815
+             |
+      income |
+          2  |   1.034475   .0226463     1.55   0.122     .9910276    1.079827
+          3  |   .8350611   .0195204    -7.71   0.000     .7976651    .8742102
+          4  |   .5086584   .0132682   -25.91   0.000     .4833068    .5353398
+             |
+    employed |
+          2  |    .939464   .0258005    -2.27   0.023     .8902328    .9914177
+          3  |   1.333536   .0232371    16.52   0.000     1.288761    1.379866
+          4  |   .8288039   .0204875    -7.60   0.000     .7896063    .8699473
+          5  |   1.285447   .0316125    10.21   0.000     1.224957    1.348924
+             |
+       _cons |   .5709143   .0186581   -17.15   0.000     .5354917    .6086801
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== CURRENT SMOKING: Age 50-79 ===
+
+Iteration 0:  Log pseudolikelihood = -3.486e+08  
+Iteration 1:  Log pseudolikelihood = -3.486e+08  
+Iteration 2:  Log pseudolikelihood = -3.486e+08  
+
+Poisson regression                                   Number of obs = 2,110,674
+                                                     Wald chi2(16) =   5430.94
+Log pseudolikelihood = -3.486e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.047656   .0305253     1.60   0.110     .9895038    1.109226
+      1.post |   .9039351   .0246382    -3.71   0.000     .8569123    .9535383
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9848924   .0333903    -0.45   0.653     .9215755    1.052559
+             |
+    1.female |   .7153783   .0103718   -23.10   0.000     .6953361    .7359982
+             |
+        race |
+          2  |   .9599831   .0431554    -0.91   0.364     .8790192    1.048404
+          3  |   .9877141   .0697456    -0.18   0.861      .860053    1.134324
+          4  |   1.160082   .0503481     3.42   0.001     1.065482    1.263081
+             |
+   education |
+          2  |   .8693394   .0176999    -6.88   0.000     .8353314     .904732
+          3  |   .6577014   .0154759   -17.81   0.000      .628058     .688744
+             |
+      income |
+          2  |   .9048003   .0212337    -4.26   0.000     .8641256    .9473896
+          3  |   .7138082   .0170052   -14.15   0.000     .6812447    .7479282
+          4  |   .4649408   .0122887   -28.98   0.000     .4414686    .4896611
+             |
+    employed |
+          2  |   .8318062   .0248843    -6.16   0.000     .7844363    .8820367
+          3  |   1.306433   .0333321    10.48   0.000      1.24271    1.373424
+          4  |   .6455853   .0085992   -32.85   0.000     .6289493    .6626614
+          5  |   1.282348   .0270708    11.78   0.000     1.230373    1.336519
+             |
+       _cons |   .3931839   .0139556   -26.30   0.000     .3667612    .4215103
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== CURRENT SMOKING: Age 80+ ===
+
+Iteration 0:  Log pseudolikelihood =  -10557826  
+Iteration 1:  Log pseudolikelihood =  -10557750  
+Iteration 2:  Log pseudolikelihood =  -10557750  
+
+Poisson regression                                     Number of obs = 253,884
+                                                       Wald chi2(16) =  103.39
+Log pseudolikelihood = -10557750                       Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.019818   .1315726     0.15   0.879     .7919623    1.313231
+      1.post |   .7945738   .0899696    -2.03   0.042     .6364329    .9920095
+             |
+expanded_s~e#|
+        post |
+        1 1  |    1.17879   .1628036     1.19   0.234     .8992415    1.545242
+             |
+    1.female |   .7608615   .0580455    -3.58   0.000     .6551913    .8835744
+             |
+        race |
+          2  |   1.400314   .2333896     2.02   0.043     1.010081    1.941309
+          3  |   1.244745   .2807574     0.97   0.332     .7999965    1.936745
+          4  |   1.439592   .3362246     1.56   0.119     .9108285    2.275319
+             |
+   education |
+          2  |   .9646889   .0998386    -0.35   0.728     .7875785    1.181628
+          3  |    1.08138   .1093261     0.77   0.439     .8869991    1.318359
+             |
+      income |
+          2  |   .8658422   .1220322    -1.02   0.307     .6568558     1.14132
+          3  |   .6994614   .1247025    -2.00   0.045     .4931834    .9920168
+          4  |   .5006533   .1023743    -3.38   0.001     .3353375    .7474669
+             |
+    employed |
+          2  |   .5953274   .1885953    -1.64   0.102     .3199643     1.10767
+          3  |   .5916533   .2348434    -1.32   0.186     .2717703    1.288049
+          4  |   .5579686   .1145743    -2.84   0.004     .3730976    .8344438
+          5  |   .9920422   .2504934    -0.03   0.975     .6047828    1.627275
+             |
+       _cons |   .0986571    .027382    -8.34   0.000     .0572638    .1699718
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. 
+. * Quit Attempts by Age Group (among smokers)
+. preserve
+
+. keep if current_smoker == 1
+(4,481,592 observations deleted)
+
+. 
+. foreach a in 1 2 3 {
+  2.     local aname: label (age_group) `a'
+  3.     di _newline(1) "=== QUIT ATTEMPTS: Age `aname' (Smokers) ==="
+  4.     capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>         i.female i.race i.education i.income i.employed ///
+>         if age_group == `a' [pw=weight], cluster(_state) irr
+  5.     capture estimates store quit_age`a'
+  6. }
+
+=== QUIT ATTEMPTS: Age 18-49 (Smokers) ===
+
+Iteration 0:  Log pseudolikelihood = -1.204e+08  
+Iteration 1:  Log pseudolikelihood = -1.204e+08  
+
+Poisson regression                                     Number of obs = 346,268
+                                                       Wald chi2(16) =  282.18
+Log pseudolikelihood = -1.204e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.032266   .0220916     1.48   0.138     .9898624    1.076485
+      1.post |   1.085851   .0221923     4.03   0.000     1.043215     1.13023
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9740672     .02506    -1.02   0.307     .9261683    1.024443
+             |
+    1.female |     1.0055   .0085151     0.65   0.517     .9889482    1.022329
+             |
+        race |
+          2  |   1.193665    .020063    10.53   0.000     1.154983    1.233642
+          3  |    1.14756   .0222275     7.11   0.000     1.104811    1.191963
+          4  |    1.06281   .0262085     2.47   0.014     1.012663    1.115439
+             |
+   education |
+          2  |   1.014051   .0205464     0.69   0.491     .9745703    1.055132
+          3  |   1.096665   .0234238     4.32   0.000     1.051703     1.14355
+             |
+      income |
+          2  |   1.009381   .0201744     0.47   0.640     .9706045    1.049707
+          3  |   .9941897   .0204997    -0.28   0.777      .954812    1.035191
+          4  |   .9675337   .0222241    -1.44   0.151     .9249413    1.012087
+             |
+    employed |
+          2  |   .9639765   .0155562    -2.27   0.023      .933964    .9949535
+          3  |   1.042562   .0179436     2.42   0.015      1.00798    1.078331
+          4  |   1.059716   .0191201     3.21   0.001     1.022897    1.097862
+          5  |   1.064232   .0187202     3.54   0.000     1.028166    1.101562
+             |
+       _cons |   .5007954   .0136024   -25.46   0.000     .4748325     .528178
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== QUIT ATTEMPTS: Age 50-79 (Smokers) ===
+
+Iteration 0:  Log pseudolikelihood = -1.017e+08  
+Iteration 1:  Log pseudolikelihood = -1.017e+08  
+
+Poisson regression                                     Number of obs = 338,805
+                                                       Wald chi2(16) = 1203.38
+Log pseudolikelihood = -1.017e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.012506   .0211949     0.59   0.553     .9718056    1.054911
+      1.post |    1.02598   .0265808     0.99   0.322     .9751835    1.079423
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9913228   .0289756    -0.30   0.766     .9361278    1.049772
+             |
+    1.female |   1.101319   .0114616     9.27   0.000     1.079082    1.124014
+             |
+        race |
+          2  |   1.326906   .0186541    20.12   0.000     1.290843    1.363975
+          3  |   1.123999   .0422671     3.11   0.002     1.044136     1.20997
+          4  |    1.02379   .0276447     0.87   0.384      .971016    1.079432
+             |
+   education |
+          2  |   .9751916     .02411    -1.02   0.310     .9290636     1.02361
+          3  |   1.014802   .0271383     0.55   0.583     .9629818    1.069411
+             |
+      income |
+          2  |   .9977452   .0229761    -0.10   0.922     .9537139    1.043809
+          3  |    .978808   .0234217    -0.90   0.371     .9339621    1.025807
+          4  |   .9846371   .0256198    -0.60   0.552      .935682    1.036153
+             |
+    employed |
+          2  |   1.010547   .0262672     0.40   0.686     .9603534    1.063363
+          3  |    1.09002   .0315308     2.98   0.003      1.02994    1.153605
+          4  |   .9929477   .0191092    -0.37   0.713      .956192    1.031116
+          5  |   1.234017   .0210471    12.33   0.000     1.193447    1.275966
+             |
+       _cons |   .4457012   .0150501   -23.93   0.000     .4171585    .4761968
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== QUIT ATTEMPTS: Age 80+ (Smokers) ===
+
+Iteration 0:  Log pseudolikelihood = -1923998.8  
+Iteration 1:  Log pseudolikelihood = -1923997.8  
+Iteration 2:  Log pseudolikelihood = -1923997.8  
+
+Poisson regression                                      Number of obs =  9,623
+                                                        Wald chi2(16) =  62.03
+Log pseudolikelihood = -1923997.8                       Prob > chi2   = 0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.328948   .1661383     2.27   0.023     1.040148    1.697934
+      1.post |   1.373607   .2175132     2.00   0.045     1.007101    1.873492
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .7934371   .1434712    -1.28   0.201      .556668    1.130912
+             |
+    1.female |   .9744037    .088416    -0.29   0.775     .8156468    1.164061
+             |
+        race |
+          2  |   1.192899   .1427341     1.47   0.140     .9435277    1.508178
+          3  |   1.406664   .1798242     2.67   0.008     1.094902    1.807198
+          4  |   .7841163   .2621017    -0.73   0.467     .4072439    1.509755
+             |
+   education |
+          2  |   .9375413   .0950583    -0.64   0.525      .768575    1.143654
+          3  |   .8301237   .0991781    -1.56   0.119     .6568202    1.049154
+             |
+      income |
+          2  |   1.065485   .1400332     0.48   0.629     .8235247    1.378536
+          3  |   .7842694   .0962154    -1.98   0.048     .6166497    .9974519
+          4  |   .8251968   .2022708    -0.78   0.433     .5104021    1.334144
+             |
+    employed |
+          2  |   .8364708   .2614322    -0.57   0.568     .4533302     1.54343
+          3  |   1.087203      .4062     0.22   0.823     .5227394    2.261184
+          4  |   .8423948   .2269211    -0.64   0.524     .4968465    1.428266
+          5  |   .8757395   .2815569    -0.41   0.680     .4663449    1.644533
+             |
+       _cons |   .4676457   .1296445    -2.74   0.006     .2716064    .8051816
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. 
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * TREND ANALYSIS: Linear and Quadratic Trends (Paper Table 3 Footnotes)
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== TREND ANALYSIS: TIME TRENDS =========="
+========== TREND ANALYSIS: TIME TRENDS ==========
+
+. di "Testing Linear and Quadratic Trends (Paper Table 3 Footnotes)"
+Testing Linear and Quadratic Trends (Paper Table 3 Footnotes)
+
+. 
+. * Create year-squared term for quadratic trend
+. gen year_sq = year^2
+
+. 
+. * PRE-EXPANSION PERIOD (2003-2009): Current Smoking
+. di _newline(1) "=== PRE-EXPANSION (2003-2009): Current Smoking Trends ==="
+
+=== PRE-EXPANSION (2003-2009): Current Smoking Trends ===
+
+. di "Testing linear (year) and quadratic (year^2) terms"
+Testing linear (year) and quadratic (year^2) terms
+
+. capture noisily poisson current_smoker c.year c.year_sq ///
+>     i.expanded_state i.age_cat i.female i.race i.education i.income i.employe
+> d ///
+>     if post == 0 [pw=weight], cluster(_state)
+note: year_sq omitted because of collinearity.
+
+Iteration 0:  Log pseudolikelihood = -3.613e+08  
+Iteration 1:  Log pseudolikelihood = -3.613e+08  
+Iteration 2:  Log pseudolikelihood = -3.613e+08  
+Iteration 3:  Log pseudolikelihood = -3.613e+08  
+
+Poisson regression                                   Number of obs = 2,017,837
+                                                     Wald chi2(19) =   9621.74
+Log pseudolikelihood = -3.613e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        year |  -.0185925   .0029287    -6.35   0.000    -.0243327   -.0128523
+     year_sq |          0  (omitted)
+1.expanded~e |   .0408507   .0290165     1.41   0.159    -.0160206     .097722
+             |
+     age_cat |
+          2  |  -.0832621   .0189893    -4.38   0.000    -.1204805   -.0460437
+          3  |  -.3833969   .0179602   -21.35   0.000    -.4185982   -.3481956
+          4  |  -1.023424   .0298929   -34.24   0.000    -1.082013   -.9648351
+          5  |  -2.006846   .0667415   -30.07   0.000    -2.137657   -1.876035
+             |
+    1.female |  -.1845696    .013921   -13.26   0.000    -.2118542    -.157285
+             |
+        race |
+          2  |  -.3031921   .0589641    -5.14   0.000    -.4187597   -.1876245
+          3  |  -.0104561   .0624497    -0.17   0.867    -.1328552    .1119431
+          4  |   .1773527   .0390741     4.54   0.000     .1007688    .2539366
+             |
+   education |
+          2  |  -.2652715   .0161777   -16.40   0.000    -.2969792   -.2335639
+          3  |   -.654469   .0233969   -27.97   0.000    -.7003261   -.6086118
+             |
+      income |
+          2  |  -.0314336   .0217993    -1.44   0.149    -.0741594    .0112923
+          3  |  -.2678278   .0226694   -11.81   0.000    -.3122589   -.2233967
+          4  |  -.6925654   .0228665   -30.29   0.000    -.7373828    -.647748
+             |
+    employed |
+          2  |  -.0884576   .0250133    -3.54   0.000    -.1374828   -.0394324
+          3  |   .2653334   .0183611    14.45   0.000     .2293464    .3013205
+          4  |  -.1406194   .0170922    -8.23   0.000    -.1741194   -.1071194
+          5  |   .2065217   .0207605     9.95   0.000     .1658318    .2472115
+             |
+       _cons |    36.8477    5.86968     6.28   0.000     25.34334    48.35207
+------------------------------------------------------------------------------
+
+. di "Note: Check p-values for 'year' (linear) and 'year_sq' (quadratic)"
+Note: Check p-values for 'year' (linear) and 'year_sq' (quadratic)
+
+. 
+. * POST-EXPANSION PERIOD (2011-2015): Current Smoking
+. di _newline(1) "=== POST-EXPANSION (2011-2015): Current Smoking Trends ==="
+
+=== POST-EXPANSION (2011-2015): Current Smoking Trends ===
+
+. capture noisily poisson current_smoker c.year c.year_sq ///
+>     i.expanded_state i.age_cat i.female i.race i.education i.income i.employe
+> d ///
+>     if post == 1 [pw=weight], cluster(_state)
+note: year_sq omitted because of collinearity.
+
+Iteration 0:  Log pseudolikelihood = -3.277e+08  
+Iteration 1:  Log pseudolikelihood = -3.277e+08  
+Iteration 2:  Log pseudolikelihood = -3.277e+08  
+Iteration 3:  Log pseudolikelihood = -3.277e+08  
+
+Poisson regression                                   Number of obs = 1,884,467
+                                                     Wald chi2(19) =  13018.71
+Log pseudolikelihood = -3.277e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 53 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        year |  -.0413859   .0041523    -9.97   0.000    -.0495244   -.0332475
+     year_sq |          0  (omitted)
+1.expanded~e |   .0340611   .0439195     0.78   0.438    -.0520196    .1201418
+             |
+     age_cat |
+          2  |  -.0497347   .0154173    -3.23   0.001     -.079952   -.0195175
+          3  |  -.2903437   .0203573   -14.26   0.000    -.3302433   -.2504441
+          4  |  -.8568579   .0319779   -26.80   0.000    -.9195334   -.7941825
+          5  |  -1.885432   .0671851   -28.06   0.000    -2.017112   -1.753752
+             |
+    1.female |   -.246102   .0160039   -15.38   0.000    -.2774691   -.2147348
+             |
+        race |
+          2  |  -.2584594   .0465132    -5.56   0.000    -.3496236   -.1672953
+          3  |  -.4077294   .0599948    -6.80   0.000     -.525317   -.2901417
+          4  |  -.0233839   .0514032    -0.45   0.649    -.1241324    .0773646
+             |
+   education |
+          2  |  -.2141139   .0237736    -9.01   0.000    -.2607093   -.1675184
+          3  |  -.5991925   .0267176   -22.43   0.000     -.651558    -.546827
+             |
+      income |
+          2  |  -.0038884   .0223006    -0.17   0.862    -.0475967    .0398199
+          3  |  -.2322921    .023174   -10.02   0.000    -.2777124   -.1868718
+          4  |  -.7707853   .0273912   -28.14   0.000    -.8244711   -.7170994
+             |
+    employed |
+          2  |  -.0937373   .0307804    -3.05   0.002    -.1540657   -.0334089
+          3  |   .2735407   .0207524    13.18   0.000     .2328667    .3142148
+          4  |  -.1885403   .0198671    -9.49   0.000    -.2274791   -.1496014
+          5  |   .3186667   .0231624    13.76   0.000     .2732692    .3640641
+             |
+       _cons |   82.67238   8.340771     9.91   0.000     66.32477    99.01999
+------------------------------------------------------------------------------
+
+. 
+. * PRE-EXPANSION: Quit Attempts
+. preserve
+
+. keep if current_smoker == 1
+(4,481,592 observations deleted)
+
+. 
+. di _newline(1) "=== PRE-EXPANSION (2003-2009): Quit Attempt Trends ==="
+
+=== PRE-EXPANSION (2003-2009): Quit Attempt Trends ===
+
+. capture noisily poisson quit_attempt c.year c.year_sq ///
+>     i.expanded_state i.age_cat i.female i.race i.education i.income i.employe
+> d ///
+>     if post == 0 [pw=weight], cluster(_state)
+note: year_sq omitted because of collinearity.
+
+Iteration 0:  Log pseudolikelihood = -1.201e+08  
+Iteration 1:  Log pseudolikelihood = -1.201e+08  
+
+Poisson regression                                     Number of obs = 389,216
+                                                       Wald chi2(19) =  857.19
+Log pseudolikelihood = -1.201e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        year |    .012378   .0028539     4.34   0.000     .0067845    .0179716
+     year_sq |          0  (omitted)
+1.expanded~e |   .0228252   .0175914     1.30   0.194    -.0116533    .0573036
+             |
+     age_cat |
+          2  |  -.1159287   .0162643    -7.13   0.000    -.1478061   -.0840512
+          3  |  -.1592958   .0177218    -8.99   0.000    -.1940298   -.1245617
+          4  |  -.2321408   .0289003    -8.03   0.000    -.2887843   -.1754972
+          5  |  -.4108881   .0779484    -5.27   0.000    -.5636641   -.2581121
+             |
+    1.female |   .0645791    .010012     6.45   0.000     .0449559    .0842023
+             |
+        race |
+          2  |   .2109591   .0216107     9.76   0.000     .1686028    .2533153
+          3  |    .095909   .0273513     3.51   0.000     .0423015    .1495165
+          4  |   .0149714   .0400195     0.37   0.708    -.0634653    .0934082
+             |
+   education |
+          2  |  -.0117157   .0189756    -0.62   0.537    -.0489073    .0254759
+          3  |   .0584675   .0192926     3.03   0.002     .0206547    .0962803
+             |
+      income |
+          2  |   .0145446   .0210199     0.69   0.489    -.0266537    .0557429
+          3  |   .0054342    .020115     0.27   0.787    -.0339904    .0448588
+          4  |   .0057411    .021791     0.26   0.792    -.0369685    .0484508
+             |
+    employed |
+          2  |  -.0331333   .0204901    -1.62   0.106    -.0732931    .0070265
+          3  |   .0386682   .0200994     1.92   0.054    -.0007259    .0780623
+          4  |   .0100011   .0169998     0.59   0.556    -.0233178      .04332
+          5  |   .1713232    .014456    11.85   0.000       .14299    .1996564
+             |
+       _cons |  -25.48467   5.724023    -4.45   0.000    -36.70355   -14.26579
+------------------------------------------------------------------------------
+
+. 
+. * POST-EXPANSION: Quit Attempts
+. di _newline(1) "=== POST-EXPANSION (2011-2015): Quit Attempt Trends ==="
+
+=== POST-EXPANSION (2011-2015): Quit Attempt Trends ===
+
+. capture noisily poisson quit_attempt c.year c.year_sq ///
+>     i.expanded_state i.age_cat i.female i.race i.education i.income i.employe
+> d ///
+>     if post == 1 [pw=weight], cluster(_state)
+note: year_sq omitted because of collinearity.
+
+Iteration 0:  Log pseudolikelihood = -1.038e+08  
+Iteration 1:  Log pseudolikelihood = -1.038e+08  
+
+Poisson regression                                     Number of obs = 305,480
+                                                       Wald chi2(19) =  669.66
+Log pseudolikelihood = -1.038e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 53 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt | Coefficient  std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+        year |   .0086802   .0043983     1.97   0.048     .0000597    .0173008
+     year_sq |          0  (omitted)
+1.expanded~e |   .0053614   .0142905     0.38   0.708    -.0226474    .0333701
+             |
+     age_cat |
+          2  |   -.106233   .0189138    -5.62   0.000    -.1433034   -.0691626
+          3  |  -.1871949   .0208698    -8.97   0.000     -.228099   -.1462909
+          4  |  -.2609429   .0254748   -10.24   0.000    -.3108726   -.2110132
+          5  |  -.3273171     .05788    -5.66   0.000    -.4407599   -.2138743
+             |
+    1.female |   .0339523   .0106183     3.20   0.001     .0131408    .0547638
+             |
+        race |
+          2  |   .2369411   .0165754    14.29   0.000      .204454    .2694282
+          3  |   .1516926   .0234807     6.46   0.000     .1056713     .197714
+          4  |   .0543316   .0193783     2.80   0.005     .0163509    .0923123
+             |
+   education |
+          2  |   .0011199   .0166181     0.07   0.946     -.031451    .0336908
+          3  |   .0499509   .0180195     2.77   0.006     .0146333    .0852685
+             |
+      income |
+          2  |  -.0009858   .0196529    -0.05   0.960    -.0395047    .0375331
+          3  |  -.0293104   .0206162    -1.42   0.155    -.0697174    .0110966
+          4  |  -.0482873   .0248977    -1.94   0.052    -.0970859    .0005112
+             |
+    employed |
+          2  |   .0063486   .0227839     0.28   0.781    -.0383071    .0510042
+          3  |   .0589072   .0215897     2.73   0.006     .0165923    .1012222
+          4  |     .03158   .0207038     1.53   0.127    -.0089988    .0721588
+          5  |   .1404721   .0181147     7.75   0.000      .104968    .1759763
+             |
+       _cons |  -18.01421   8.846274    -2.04   0.042    -35.35259   -.6758311
+------------------------------------------------------------------------------
+
+. 
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * EXTENSION ANALYSIS - STRATIFIED BY RACE/ETHNICITY
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== EXTENSION: STRATIFIED ANALYSIS BY RACE =========="
+========== EXTENSION: STRATIFIED ANALYSIS BY RACE ==========
+
+. di "Does Medicaid Expansion have differential effects by race?"
+Does Medicaid Expansion have differential effects by race?
+
+. 
+. * Stratified DiD for Current Smoking by Race
+. foreach r in 1 2 3 {
+  2.     local rname: label (race) `r'
+  3.     di _newline(1) "=== Current Smoking - `rname' ==="
+  4.     capture noisily poisson current_smoker i.expanded_state##i.post ///
+>         i.age_cat i.female i.education i.income i.employed ///
+>         if race == `r' [pw=weight], cluster(_state) irr
+  5.     capture estimates store smoke_race`r'
+  6. }
+
+=== Current Smoking - 1 ===
+
+Iteration 0:  Log pseudolikelihood = -5.580e+08  
+Iteration 1:  Log pseudolikelihood = -5.579e+08  
+Iteration 2:  Log pseudolikelihood = -5.579e+08  
+Iteration 3:  Log pseudolikelihood = -5.579e+08  
+
+Poisson regression                                   Number of obs = 3,244,258
+                                                     Wald chi2(17) =  17064.18
+Log pseudolikelihood = -5.579e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.025589   .0327229     0.79   0.428     .9634178    1.091773
+      1.post |   .9041628   .0279051    -3.26   0.001     .8510912    .9605438
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9954044   .0351482    -0.13   0.896      .928845    1.066733
+             |
+     age_cat |
+          2  |   .9000274   .0132321    -7.16   0.000     .8744631    .9263391
+          3  |   .6507435   .0112611   -24.83   0.000     .6290424    .6731934
+          4  |   .3488301   .0091572   -40.12   0.000     .3313363    .3672475
+          5  |   .1238306   .0068234   -37.91   0.000     .1111538    .1379531
+             |
+    1.female |   .8369394   .0097159   -15.33   0.000     .8181116    .8562005
+             |
+   education |
+          2  |   .7511975   .0118293   -18.17   0.000     .7283667     .774744
+          3  |   .5013792   .0117649   -29.42   0.000     .4788426    .5249765
+             |
+      income |
+          2  |   .9895742   .0195232    -0.53   0.595     .9520399    1.028588
+          3  |   .7606835   .0163501   -12.73   0.000     .7293035    .7934136
+          4  |   .4676313   .0102249   -34.76   0.000     .4480143    .4881074
+             |
+    employed |
+          2  |   .9051106   .0210796    -4.28   0.000      .864724    .9473834
+          3  |   1.327933   .0195514    19.26   0.000     1.290161    1.366812
+          4  |   .8490126   .0128647   -10.80   0.000     .8241689    .8746051
+          5  |   1.279348   .0242272    13.01   0.000     1.232734    1.327724
+             |
+       _cons |   .6854787   .0192934   -13.42   0.000     .6486885    .7243555
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== Current Smoking - 2 ===
+
+Iteration 0:  Log pseudolikelihood =  -64919916  
+Iteration 1:  Log pseudolikelihood =  -64919305  
+Iteration 2:  Log pseudolikelihood =  -64919304  
+
+Poisson regression                                     Number of obs = 328,659
+                                                       Wald chi2(17) = 1573.85
+Log pseudolikelihood = -64919304                       Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.448099   .1239623     4.33   0.000     1.224425    1.712631
+      1.post |   .9698136    .068601    -0.43   0.665     .8442624    1.114036
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .8589654   .0689093    -1.90   0.058     .7339884    1.005222
+             |
+     age_cat |
+          2  |    1.08551   .0463992     1.92   0.055     .9982742    1.180369
+          3  |   1.046275   .0494247     0.96   0.338     .9537539    1.147772
+          4  |   .6136751   .0468148    -6.40   0.000     .5284498    .7126451
+          5  |   .2628179   .0469804    -7.48   0.000     .1851387    .3730892
+             |
+    1.female |   .6559684   .0298017    -9.28   0.000     .6000833    .7170581
+             |
+   education |
+          2  |   .7983663   .0260275    -6.91   0.000     .7489489    .8510443
+          3  |   .5966415   .0269155   -11.45   0.000      .546153    .6517974
+             |
+      income |
+          2  |   .9104041   .0298391    -2.86   0.004     .8537595     .970807
+          3  |   .7836056   .0278316    -6.87   0.000      .730912     .840098
+          4  |   .4947492     .02116   -16.45   0.000     .4549671    .5380099
+             |
+    employed |
+          2  |   1.026319   .0778849     0.34   0.732     .8844773    1.190908
+          3  |   1.361362    .053627     7.83   0.000      1.26021    1.470633
+          4  |   .9752305   .0496196    -0.49   0.622     .8826698    1.077498
+          5  |   1.232318    .073121     3.52   0.000     1.097023    1.384299
+             |
+       _cons |   .3441588   .0422876    -8.68   0.000     .2705015    .4378728
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== Current Smoking - 3 ===
+
+Iteration 0:  Log pseudolikelihood =  -39686129  
+Iteration 1:  Log pseudolikelihood =  -39685268  
+Iteration 2:  Log pseudolikelihood =  -39685265  
+Iteration 3:  Log pseudolikelihood =  -39685265  
+
+Poisson regression                                     Number of obs = 206,328
+                                                       Wald chi2(17) =  693.04
+Log pseudolikelihood = -39685265                       Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   .7364884   .0822042    -2.74   0.006     .5917767    .9165876
+      1.post |   .5181957   .0473119    -7.20   0.000     .4332894    .6197401
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.436142   .1663971     3.12   0.002     1.144389    1.802274
+             |
+     age_cat |
+          2  |   .9078614   .0359512    -2.44   0.015     .8400634    .9811311
+          3  |   .9235114   .0526241    -1.40   0.163     .8259212    1.032633
+          4  |   .6424063   .0511671    -5.56   0.000     .5495566    .7509434
+          5  |   .2584497   .0652356    -5.36   0.000     .1575881    .4238661
+             |
+    1.female |   .7256718   .0477356    -4.87   0.000      .637892    .8255309
+             |
+   education |
+          2  |   1.054531   .0517559     1.08   0.279     .9578175     1.16101
+          3  |   .7606837   .0388826    -5.35   0.000     .6881683    .8408402
+             |
+      income |
+          2  |   .9792917   .0623566    -0.33   0.742     .8643939    1.109462
+          3  |   .9063447   .0549872    -1.62   0.105     .8047328    1.020787
+          4  |   .6469345    .050799    -5.55   0.000     .5546535    .7545688
+             |
+    employed |
+          2  |   1.007074   .0559522     0.13   0.899     .9031694    1.122932
+          3  |   1.255999   .0650681     4.40   0.000     1.134729    1.390229
+          4  |   .7281761   .0259083    -8.92   0.000     .6791267    .7807679
+          5  |   1.416386   .0892429     5.52   0.000     1.251842    1.602558
+             |
+       _cons |   .4863796   .0461593    -7.59   0.000     .4038248    .5858113
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. 
+. * Stratified DiD for Quit Attempts by Race (among smokers)
+. preserve
+
+. keep if current_smoker == 1
+(4,481,592 observations deleted)
+
+. 
+. foreach r in 1 2 3 {
+  2.     local rname: label (race) `r'
+  3.     di _newline(1) "=== Quit Attempts - `rname' Smokers ==="
+  4.     capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>         i.age_cat i.female i.education i.income i.employed ///
+>         if race == `r' [pw=weight], cluster(_state) irr
+  5.     capture estimates store quit_race`r'
+  6. }
+
+=== Quit Attempts - 1 Smokers ===
+
+Iteration 0:  Log pseudolikelihood = -1.789e+08  
+Iteration 1:  Log pseudolikelihood = -1.789e+08  
+
+Poisson regression                                     Number of obs = 562,953
+                                                       Wald chi2(17) =  746.78
+Log pseudolikelihood = -1.789e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.034843   .0209066     1.70   0.090     .9946671    1.076641
+      1.post |   1.063422   .0237723     2.75   0.006     1.017835    1.111051
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9599839   .0246642    -1.59   0.112       .91284    1.009563
+             |
+     age_cat |
+          2  |   .8683967   .0138393    -8.85   0.000     .8416915    .8959492
+          3  |      .8208   .0126963   -12.77   0.000     .7962891    .8460654
+          4  |   .7555962    .018016   -11.75   0.000     .7210979     .791745
+          5  |   .6771484   .0336769    -7.84   0.000     .6142578    .7464779
+             |
+    1.female |   1.074863   .0087943     8.82   0.000     1.057764    1.092238
+             |
+   education |
+          2  |   .9916523   .0166728    -0.50   0.618     .9595068    1.024875
+          3  |   1.063014   .0186227     3.49   0.000     1.027134    1.100147
+             |
+      income |
+          2  |   1.019548   .0198213     1.00   0.319     .9814298    1.059147
+          3  |   1.001363    .020373     0.07   0.947     .9622179      1.0421
+          4  |   .9994587   .0224173    -0.02   0.981     .9564734    1.044376
+             |
+    employed |
+          2  |    .998457   .0179253    -0.09   0.931      .963935    1.034215
+          3  |   1.066207   .0230219     2.97   0.003     1.022026    1.112297
+          4  |   1.019502   .0186983     1.05   0.292     .9835045    1.056816
+          5  |   1.201585   .0177519    12.43   0.000     1.167291    1.236887
+             |
+       _cons |    .524722   .0164886   -20.52   0.000       .49338     .558055
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== Quit Attempts - 2 Smokers ===
+
+Iteration 0:  Log pseudolikelihood =  -22393628  
+Iteration 1:  Log pseudolikelihood =  -22393628  
+
+Poisson regression                                      Number of obs = 65,592
+                                                        Wald chi2(17) =  48.04
+Log pseudolikelihood = -22393628                        Prob > chi2   = 0.0001
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   .9838447   .0354208    -0.45   0.651      .916814    1.055776
+      1.post |   1.035283   .0432677     0.83   0.407       .95386    1.123656
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.046143   .0553444     0.85   0.394     .9431046     1.16044
+             |
+     age_cat |
+          2  |   .9745494   .0307055    -0.82   0.413     .9161882    1.036628
+          3  |     .98329   .0259548    -0.64   0.523     .9337129    1.035499
+          4  |   .9588425   .0321617    -1.25   0.210     .8978341    1.023997
+          5  |   .7759718   .0913927    -2.15   0.031     .6160171    .9774603
+             |
+    1.female |   1.004696   .0191273     0.25   0.806     .9678981    1.042893
+             |
+   education |
+          2  |   1.023395   .0297475     0.80   0.426     .9667212    1.083392
+          3  |   1.040446   .0319281     1.29   0.196     .9797127    1.104944
+             |
+      income |
+          2  |   1.004129   .0278035     0.15   0.882     .9510873    1.060128
+          3  |   1.032841   .0294452     1.13   0.257     .9767124    1.092195
+          4  |   .9859186   .0421974    -0.33   0.740     .9065872    1.072192
+             |
+    employed |
+          2  |    1.00838    .041844     0.20   0.841     .9296141    1.093821
+          3  |   1.078587   .0301799     2.70   0.007     1.021028     1.13939
+          4  |    1.03596   .0379031     0.97   0.334     .9642725    1.112977
+          5  |    1.11416   .0298253     4.04   0.000      1.05721    1.174177
+             |
+       _cons |   .6190137   .0346424    -8.57   0.000     .5547072    .6907752
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+=== Quit Attempts - 3 Smokers ===
+
+Iteration 0:  Log pseudolikelihood =  -13609567  
+Iteration 1:  Log pseudolikelihood =  -13609567  
+
+Poisson regression                                      Number of obs = 37,560
+                                                        Wald chi2(17) =  87.59
+Log pseudolikelihood = -13609567                        Prob > chi2   = 0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   .9781109   .0484284    -0.45   0.655     .8876532    1.077787
+      1.post |   1.053567   .0443669     1.24   0.215     .9701016    1.144214
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.093692   .0619553     1.58   0.114     .9787599     1.22212
+             |
+     age_cat |
+          2  |    1.04026   .0292397     1.40   0.160     .9845016    1.099177
+          3  |    .881432   .0427778    -2.60   0.009     .8014532     .969392
+          4  |   .8642362    .049946    -2.52   0.012     .7716844    .9678881
+          5  |   1.027405   .1179459     0.24   0.814     .8203966    1.286647
+             |
+    1.female |   .9776103   .0305086    -0.73   0.468     .9196066    1.039273
+             |
+   education |
+          2  |    1.03638   .0376709     0.98   0.326     .9651151    1.112907
+          3  |   1.037732   .0398517     0.96   0.335      .962491    1.118854
+             |
+      income |
+          2  |   .9610667   .0369979    -1.03   0.302     .8912203    1.036387
+          3  |   .8830773   .0377367    -2.91   0.004     .8121273    .9602256
+          4  |   .8625079   .0407673    -3.13   0.002     .7861949    .9462283
+             |
+    employed |
+          2  |   .9098829   .0443313    -1.94   0.053     .8270148    1.001054
+          3  |   .9151932    .043985    -1.84   0.065     .8329199    1.005593
+          4  |   .9798446     .04426    -0.45   0.652     .8968257    1.070549
+          5  |   .9904306   .0496923    -0.19   0.848     .8976711    1.092775
+             |
+       _cons |   .6642109   .0397016    -6.85   0.000     .5907822     .746766
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. 
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * EXTENSION ANALYSIS - STRATIFIED BY INCOME
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== EXTENSION: STRATIFIED ANALYSIS BY INCOME =========="
+========== EXTENSION: STRATIFIED ANALYSIS BY INCOME ==========
+
+. di "Does Medicaid Expansion have differential effects by income level?"
+Does Medicaid Expansion have differential effects by income level?
+
+. 
+. * Low income (< $20,000) - more likely to be Medicaid eligible
+. di _newline(1) "=== Current Smoking - LOW INCOME (<$20k) ==="
+
+=== Current Smoking - LOW INCOME (<$20k) ===
+
+. capture noisily poisson current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.employed ///
+>     if income <= 2 [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -1.711e+08  
+Iteration 1:  Log pseudolikelihood = -1.711e+08  
+Iteration 2:  Log pseudolikelihood = -1.711e+08  
+
+Poisson regression                                     Number of obs = 726,299
+                                                       Wald chi2(17) = 5314.28
+Log pseudolikelihood = -1.711e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.061343   .0337028     1.87   0.061     .9973007    1.129499
+      1.post |   .9129772   .0272648    -3.05   0.002     .8610731    .9680101
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9865463   .0368796    -0.36   0.717     .9168481    1.061543
+             |
+     age_cat |
+          2  |   1.023578   .0178585     1.34   0.182     .9891679    1.059185
+          3  |   .7817043   .0155952   -12.34   0.000     .7517281    .8128758
+          4  |   .4178611   .0136549   -26.70   0.000      .391937    .4454999
+          5  |   .1372916   .0121674   -22.41   0.000     .1154001    .1633358
+             |
+    1.female |   .8099843   .0146689   -11.64   0.000     .7817382    .8392511
+             |
+        race |
+          2  |   .7121373   .0316351    -7.64   0.000     .6527562    .7769202
+          3  |   .6307523   .0499287    -5.82   0.000     .5401071    .7366102
+          4  |   .9813238   .0461368    -0.40   0.688     .8949386    1.076047
+             |
+   education |
+          2  |    .787982   .0136226   -13.78   0.000     .7617295    .8151394
+          3  |   .6379159   .0134142   -21.38   0.000     .6121591    .6647565
+             |
+    employed |
+          2  |   .9276597   .0331497    -2.10   0.036     .8649105    .9949613
+          3  |     1.2408   .0294217     9.10   0.000     1.184454    1.299826
+          4  |   .8397755   .0225004    -6.52   0.000     .7968135     .885054
+          5  |   1.203693   .0305189     7.31   0.000     1.145339     1.26502
+             |
+       _cons |   .5578241   .0182353   -17.86   0.000     .5232045    .5947343
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store smoke_lowinc
+
+. 
+. * Higher income (>= $20,000)
+. di _newline(1) "=== Current Smoking - HIGHER INCOME (>=$20k) ==="
+
+=== Current Smoking - HIGHER INCOME (>=$20k) ===
+
+. capture noisily poisson current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.employed ///
+>     if income >= 3 & income != . [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -5.219e+08  
+Iteration 1:  Log pseudolikelihood = -5.219e+08  
+Iteration 2:  Log pseudolikelihood = -5.219e+08  
+Iteration 3:  Log pseudolikelihood = -5.219e+08  
+
+Poisson regression                                   Number of obs = 3,176,005
+                                                     Wald chi2(17) =   8879.08
+Log pseudolikelihood = -5.219e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.018867   .0311526     0.61   0.541     .9596028    1.081792
+      1.post |   .8470576   .0273228    -5.15   0.000     .7951636    .9023384
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9841579   .0352181    -0.45   0.655     .9174967    1.055662
+             |
+     age_cat |
+          2  |   .8528507   .0124993   -10.86   0.000     .8287011    .8777041
+          3  |   .6521199   .0122782   -22.71   0.000     .6284937    .6766342
+          4  |   .3911786   .0111796   -32.84   0.000     .3698695    .4137154
+          5  |   .1627584   .0105019   -28.14   0.000     .1434234       .1847
+             |
+    1.female |   .8375217   .0106622   -13.93   0.000     .8168828    .8586821
+             |
+        race |
+          2  |   .8456644   .0438114    -3.24   0.001     .7640114    .9360441
+          3  |    .921212   .0535609    -1.41   0.158      .821995    1.032405
+          4  |   1.067377   .0564393     1.23   0.218     .9622966    1.183931
+             |
+   education |
+          2  |   .7145588   .0138591   -17.33   0.000     .6879053     .742245
+          3  |   .4143831   .0099258   -36.78   0.000     .3953784    .4343013
+             |
+    employed |
+          2  |   .9046448   .0223933    -4.05   0.000     .8618025     .949617
+          3  |   1.474624   .0263554    21.73   0.000     1.423863    1.527195
+          4  |   .8660928   .0141584    -8.79   0.000     .8387826    .8942922
+          5  |   1.607292   .0355248    21.47   0.000     1.539151    1.678449
+             |
+       _cons |   .4788534   .0163453   -21.57   0.000     .4478654    .5119855
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store smoke_highinc
+
+. 
+. * Quit Attempts by Income (among smokers)
+. preserve
+
+. keep if current_smoker == 1
+(4,481,592 observations deleted)
+
+. 
+. di _newline(1) "=== Quit Attempts - LOW INCOME (<$20k) ==="
+
+=== Quit Attempts - LOW INCOME (<$20k) ===
+
+. capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.employed ///
+>     if income <= 2 [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood =  -66810777  
+Iteration 1:  Log pseudolikelihood =  -66810777  
+
+Poisson regression                                     Number of obs = 205,046
+                                                       Wald chi2(17) =  362.55
+Log pseudolikelihood = -66810777                       Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |    1.00977   .0250853     0.39   0.696     .9617814    1.060153
+      1.post |   1.084035   .0195134     4.48   0.000     1.046456    1.122963
+             |
+expanded_s~e#|
+        post |
+        1 1  |    .974895   .0293036    -0.85   0.398     .9191201    1.034054
+             |
+     age_cat |
+          2  |    .912566   .0192781    -4.33   0.000     .8755533    .9511434
+          3  |    .892594    .018907    -5.36   0.000     .8562956    .9304311
+          4  |   .8562707   .0253638    -5.24   0.000     .8079741    .9074541
+          5  |   .8419704   .0455935    -3.18   0.001     .7571876    .9362464
+             |
+    1.female |   1.068447   .0143038     4.95   0.000     1.040777    1.096853
+             |
+        race |
+          2  |   1.226202   .0182233    13.72   0.000        1.191    1.262445
+          3  |   1.181079   .0318489     6.17   0.000     1.120277    1.245181
+          4  |    1.05968   .0358501     1.71   0.087     .9916944    1.132327
+             |
+   education |
+          2  |   .9915817   .0200702    -0.42   0.676     .9530148    1.031709
+          3  |   1.032162   .0245169     1.33   0.183     .9852112     1.08135
+             |
+    employed |
+          2  |   1.011222   .0342003     0.33   0.741     .9463637    1.080524
+          3  |   1.042983   .0239511     1.83   0.067       .99708    1.090998
+          4  |   1.002712   .0243904     0.11   0.911     .9560291    1.051674
+          5  |   1.123136   .0200521     6.50   0.000     1.084514    1.163133
+             |
+       _cons |   .5220904   .0151746   -22.36   0.000       .49318    .5526957
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store quit_lowinc
+
+. 
+. di _newline(1) "=== Quit Attempts - HIGHER INCOME (>=$20k) ==="
+
+=== Quit Attempts - HIGHER INCOME (>=$20k) ===
+
+. capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.employed ///
+>     if income >= 3 & income != . [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -1.571e+08  
+Iteration 1:  Log pseudolikelihood = -1.571e+08  
+
+Poisson regression                                     Number of obs = 489,650
+                                                       Wald chi2(17) = 1650.65
+Log pseudolikelihood = -1.571e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.028875   .0196858     1.49   0.137     .9910063    1.068191
+      1.post |   1.049382   .0242108     2.09   0.037     1.002986    1.097923
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9864144   .0269414    -0.50   0.616     .9349988    1.040657
+             |
+     age_cat |
+          2  |   .8861186    .012111    -8.85   0.000     .8626966    .9101766
+          3  |   .8221858   .0120896   -13.32   0.000     .7988289    .8462257
+          4  |   .7462251   .0191208   -11.42   0.000     .7096744    .7846582
+          5  |   .5931751   .0440365    -7.03   0.000     .5128506    .6860803
+             |
+    1.female |    1.04112   .0081822     5.13   0.000     1.025206    1.057281
+             |
+        race |
+          2  |   1.268489   .0239843    12.58   0.000     1.222341    1.316379
+          3  |   1.112202   .0275128     4.30   0.000     1.059564    1.167455
+          4  |   1.039737   .0256329     1.58   0.114     .9906914     1.09121
+             |
+   education |
+          2  |   1.005594   .0160125     0.35   0.726     .9746944    1.037472
+          3  |   1.076638    .015017     5.29   0.000     1.047604    1.106477
+             |
+    employed |
+          2  |   .9794391   .0187021    -1.09   0.277     .9434611    1.016789
+          3  |   1.057529   .0217947     2.71   0.007     1.015664    1.101121
+          4  |   1.030604   .0194664     1.60   0.110     .9931481    1.069472
+          5  |   1.227606   .0205693    12.24   0.000     1.187945     1.26859
+             |
+       _cons |   .5280819   .0109975   -30.66   0.000     .5069612    .5500824
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store quit_highinc
+
+. 
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * SUMMARY TABLE: COMPARE REPLICATION VS EXTENSION
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== SUMMARY: COMPARISON OF RESULTS =========="
+========== SUMMARY: COMPARISON OF RESULTS ==========
+
+. 
+. * Create comparison table - Current Smoking
+. di _newline(1) "CURRENT SMOKING - DiD Coefficients (1.expanded#1.post):"
+
+CURRENT SMOKING - DiD Coefficients (1.expanded#1.post):
+
+. di "-----------------------------------------------------"
+-----------------------------------------------------
+
+. capture noisily estimates table model2_adj smoke_age1 smoke_age2 smoke_age3 /
+> //
+>     smoke_race1 smoke_race2 smoke_race3 smoke_lowinc smoke_highinc, ///
+>     keep(1.expanded_state#1.post) b se stats(N) modelwidth(12)
+
+--------------------------------------------------------------------------
+    Variable |  model2_adj     smoke_age1     smoke_age2     smoke_age3   
+-------------+------------------------------------------------------------
+expanded_s~e#|
+        post |
+        1 1  |   -.01589558      -.0170511     -.01522293      .16448853  
+             |    .03283971      .04165143      .03390247      .13811079  
+-------------+------------------------------------------------------------
+           N |      3902304        1537746        2110674         253884  
+--------------------------------------------------------------------------
+                                                              Legend: b/se
+
+
+--------------------------------------------------------------------------
+    Variable | smoke_race1    smoke_race2    smoke_race3    smoke_lowinc  
+-------------+------------------------------------------------------------
+expanded_s~e#|
+        post |
+        1 1  |   -.00460615     -.15202669      .36196018     -.01354505  
+             |    .03531047      .08022361      .11586397      .03738256  
+-------------+------------------------------------------------------------
+           N |      3244258         328659         206328         726299  
+--------------------------------------------------------------------------
+                                                              Legend: b/se
+
+
+-----------------------------
+    Variable | smoke_high~c  
+-------------+---------------
+expanded_s~e#|
+        post |
+        1 1  |   -.01596893  
+             |    .03578506  
+-------------+---------------
+           N |      3176005  
+-----------------------------
+                 Legend: b/se
+
+. 
+. * Create comparison table - Quit Attempts
+. di _newline(1) "QUIT ATTEMPTS - DiD Coefficients (1.expanded#1.post):"
+
+QUIT ATTEMPTS - DiD Coefficients (1.expanded#1.post):
+
+. di "-----------------------------------------------------"
+-----------------------------------------------------
+
+. capture noisily estimates table model4_adj quit_age1 quit_age2 quit_age3 ///
+>     quit_race1 quit_race2 quit_race3 quit_lowinc quit_highinc, ///
+>     keep(1.expanded_state#1.post) b se stats(N) modelwidth(12)
+
+--------------------------------------------------------------------------
+    Variable |  model4_adj     quit_age1      quit_age2      quit_age3    
+-------------+------------------------------------------------------------
+expanded_s~e#|
+        post |
+        1 1  |    -.0200843     -.02627496     -.00871508     -.23138101  
+             |     .0210684      .02572716      .02922919      .18082235  
+-------------+------------------------------------------------------------
+           N |       694696         346268         338805           9623  
+--------------------------------------------------------------------------
+                                                              Legend: b/se
+
+
+--------------------------------------------------------------------------
+    Variable |  quit_race1     quit_race2     quit_race3    quit_lowinc   
+-------------+------------------------------------------------------------
+expanded_s~e#|
+        post |
+        1 1  |   -.04083879      .04511041      .08955891     -.02542552  
+             |    .02569227      .05290326      .05664789      .03005819  
+-------------+------------------------------------------------------------
+           N |       562953          65592          37560         205046  
+--------------------------------------------------------------------------
+                                                              Legend: b/se
+
+
+-----------------------------
+    Variable | quit_highinc  
+-------------+---------------
+expanded_s~e#|
+        post |
+        1 1  |    -.0136787  
+             |    .02731243  
+-------------+---------------
+           N |       489650  
+-----------------------------
+                 Legend: b/se
+
+. 
+. *****************************************************************************
+> ***
+. * SENSITIVITY ANALYSIS (Optional)
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== SENSITIVITY ANALYSIS =========="
+========== SENSITIVITY ANALYSIS ==========
+
+. 
+. * 1. Sensitivity Analysis: No Clustering (Test if this matches Paper's small 
+> p-values)
+. di _newline(1) "Sensitivity 1: Poisson GEE *WITHOUT* State Clustering (Naive 
+> SEs):"
+
+Sensitivity 1: Poisson GEE *WITHOUT* State Clustering (Naive SEs):
+
+. capture noisily poisson current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     [pw=weight], irr
+
+Iteration 0:  Log pseudolikelihood = -6.899e+08  
+Iteration 1:  Log pseudolikelihood = -6.899e+08  
+Iteration 2:  Log pseudolikelihood = -6.899e+08  
+Iteration 3:  Log pseudolikelihood = -6.899e+08  
+
+Poisson regression                                   Number of obs = 3,902,304
+                                                     Wald chi2(20) =  22896.31
+Log pseudolikelihood = -6.899e+08                    Prob > chi2   =    0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.047864   .0111618     4.39   0.000     1.026215    1.069971
+      1.post |   .8785018   .0106048   -10.73   0.000     .8579607    .8995347
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9842301   .0157685    -0.99   0.321     .9538046    1.015626
+             |
+     age_cat |
+          2  |    .932751   .0103492    -6.27   0.000     .9126859    .9532572
+          3  |   .7083017   .0079431   -30.75   0.000     .6929034    .7240422
+          4  |   .3886438   .0062662   -58.62   0.000     .3765543    .4011214
+          5  |   .1424358   .0058764   -47.24   0.000     .1313716    .1544319
+             |
+    1.female |   .8109405   .0058395   -29.10   0.000     .7995757    .8224667
+             |
+        race |
+          2  |   .7551577   .0105038   -20.19   0.000     .7348487    .7760279
+          3  |   .7671717   .0138959   -14.63   0.000     .7404141    .7948964
+          4  |   1.022441   .0202038     1.12   0.261      .983599    1.062816
+             |
+   education |
+          2  |   .7952913   .0096086   -18.96   0.000       .77668    .8143487
+          3  |    .539963   .0068864   -48.32   0.000     .5266333    .5536301
+             |
+      income |
+          2  |     .98471   .0144257    -1.05   0.293     .9568383    1.013394
+          3  |   .7818891   .0114829   -16.75   0.000     .7597038    .8047222
+          4  |   .4845847   .0081283   -43.19   0.000     .4689126    .5007807
+             |
+    employed |
+          2  |   .9149392   .0139228    -5.84   0.000     .8880539    .9426384
+          3  |   1.319013    .019118    19.10   0.000     1.282069    1.357021
+          4  |   .8489705   .0105027   -13.23   0.000     .8286331     .869807
+          5  |   1.312933    .017814    20.07   0.000     1.278478    1.348316
+             |
+       _cons |   .6099211   .0120484   -25.03   0.000     .5867579    .6339986
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store sensitivity_no_cluster
+
+. 
+. 
+. * 2. Innovation: Logistic Regression (Methods Comparison)
+. di _newline(1) "Innovation 2: Logistic Regression (Odds Ratios) instead of RR
+> :"
+
+Innovation 2: Logistic Regression (Odds Ratios) instead of RR:
+
+. capture noisily logit current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     [pw=weight], cluster(_state) or
+
+Iteration 0:  Log pseudolikelihood = -7.132e+08  
+Iteration 1:  Log pseudolikelihood = -6.630e+08  
+Iteration 2:  Log pseudolikelihood = -6.587e+08  
+Iteration 3:  Log pseudolikelihood = -6.587e+08  
+Iteration 4:  Log pseudolikelihood = -6.587e+08  
+Iteration 5:  Log pseudolikelihood = -6.587e+08  
+
+Logistic regression                                  Number of obs = 3,902,304
+                                                     Wald chi2(20) =  17089.10
+                                                     Prob > chi2   =    0.0000
+Log pseudolikelihood = -6.587e+08                    Pseudo R2     =    0.0764
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r | Odds ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.062802   .0408195     1.59   0.113     .9857347    1.145895
+      1.post |   .8507496   .0306477    -4.49   0.000     .7927528    .9129893
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9795272   .0400108    -0.51   0.613     .9041645    1.061171
+             |
+     age_cat |
+          2  |    .911219   .0165004    -5.13   0.000      .879446    .9441399
+          3  |   .6392501   .0144137   -19.84   0.000     .6116148     .668134
+          4  |   .3126572   .0104186   -34.89   0.000     .2928898    .3337588
+          5  |   .1031873   .0066234   -35.38   0.000     .0909891    .1170208
+             |
+    1.female |   .7607979   .0124596   -16.69   0.000     .7367654    .7856144
+             |
+        race |
+          2  |   .6931636   .0426718    -5.95   0.000     .6143771    .7820535
+          3  |   .7028731   .0580906    -4.27   0.000     .5977608    .8264687
+          4  |     1.0271   .0611946     0.45   0.654     .9138989    1.154323
+             |
+   education |
+          2  |   .7128042   .0167934   -14.37   0.000     .6806382    .7464904
+          3  |   .4380856    .012392   -29.18   0.000     .4144587    .4630593
+             |
+      income |
+          2  |   .9652039   .0249198    -1.37   0.170     .9175771    1.015303
+          3  |   .7106724    .019312   -12.57   0.000     .6738119    .7495494
+          4  |   .4019955   .0107823   -33.98   0.000     .3814084    .4236938
+             |
+    employed |
+          2  |   .8948531    .025051    -3.97   0.000     .8470767    .9453241
+          3  |   1.486623    .029221    20.17   0.000      1.43044    1.545013
+          4  |   .8208463   .0140964   -11.50   0.000     .7936776    .8489451
+          5  |   1.468949   .0355522    15.89   0.000     1.400895    1.540309
+             |
+       _cons |   1.135167   .0551646     2.61   0.009     1.032035    1.248604
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. capture estimates store innovation_logit
+
+. 
+. di _newline(1) "Interpretation: Odds Ratios (OR) will invariably be further f
+> rom 1 than RR"
+
+Interpretation: Odds Ratios (OR) will invariably be further from 1 than RR
+
+. di "because smoking is a common outcome (>10%). This highlights why RR is pre
+> ferred,"
+because smoking is a common outcome (>10%). This highlights why RR is preferred
+> ,
+
+. di "but OR is often used in older studies."
+but OR is often used in older studies.
+
+. 
+. 
+. * 3. Innovation: Handling Missing Data (Missing Indicator Method)
+. di _newline(2) "========== INNOVATION 3: HANDLING MISSING DATA (MISSING INDIC
+> ATOR) =========="
+
+
+========== INNOVATION 3: HANDLING MISSING DATA (MISSING INDICATOR) ==========
+
+. di "Problem: Listwise deletion removed ~1.5 million people (mostly missing in
+> come)."
+Problem: Listwise deletion removed ~1.5 million people (mostly missing income).
+
+. di "Solution: Recode missing income as 'Unknown' category to restore sample s
+> ize."
+Solution: Recode missing income as 'Unknown' category to restore sample size.
+
+. 
+. * Create new imputed income variable
+. gen income_imp = income
+(773,381 missing values generated)
+
+. replace income_imp = 5 if income == .
+(773,381 real changes made)
+
+. label define income_lbl 1 "<$10k" 2 "$10k-<$20k" 3 "$20k-<$50k" 4 "$50k+" 5 "
+> Unknown"
+
+. label values income_imp income_lbl
+
+. 
+. di _newline(1) "Running Poisson Model with 'Unknown' Income Category:"
+
+Running Poisson Model with 'Unknown' Income Category:
+
+. capture noisily poisson current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income_imp i.employed ///
+>     [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -8.754e+08  
+Iteration 1:  Log pseudolikelihood = -8.753e+08  
+Iteration 2:  Log pseudolikelihood = -8.753e+08  
+Iteration 3:  Log pseudolikelihood = -8.753e+08  
+
+Poisson regression                                   Number of obs = 4,496,182
+                                                     Wald chi2(21) =  19517.69
+Log pseudolikelihood = -8.753e+08                    Prob > chi2   =    0.0000
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.050871   .0318277     1.64   0.101     .9903052    1.115141
+      1.post |   .8707231   .0254959    -4.73   0.000      .822159    .9221559
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9854179   .0328991    -0.44   0.660     .9230013    1.052055
+             |
+     age_cat |
+          2  |    .914654   .0108206    -7.54   0.000     .8936899    .9361098
+          3  |   .6947811   .0106156   -23.83   0.000     .6742833     .715902
+          4  |   .3897889   .0090239   -40.70   0.000     .3724976    .4078827
+          5  |   .1480909   .0078572   -36.00   0.000     .1334647    .1643199
+             |
+    1.female |   .8047808   .0102661   -17.03   0.000     .7849091    .8251556
+             |
+        race |
+          2  |   .7673993   .0350644    -5.79   0.000     .7016619    .8392954
+          3  |   .7651023   .0466126    -4.39   0.000     .6789871    .8621395
+          4  |    1.06869   .0482841     1.47   0.141     .9781236    1.167641
+             |
+   education |
+          2  |   .7607804   .0121445   -17.13   0.000     .7373461    .7849594
+          3  |   .5016874   .0100043   -34.59   0.000     .4824575    .5216838
+             |
+  income_imp |
+ $10k-<$20k  |   1.004728   .0170371     0.28   0.781     .9718851    1.038682
+ $20k-<$50k  |   .8244248    .014462   -11.01   0.000     .7965615    .8532628
+      $50k+  |   .5219939   .0098392   -34.49   0.000     .5030613     .541639
+    Unknown  |   .5435563    .011052   -29.98   0.000     .5223208    .5656551
+             |
+    employed |
+          2  |    .908537    .021422    -4.07   0.000     .8675061    .9515085
+          3  |   1.379285   .0187022    23.72   0.000     1.343112    1.416432
+          4  |   .8475571   .0131709   -10.64   0.000     .8221317    .8737687
+          5  |   1.430653    .022805    22.47   0.000     1.386647    1.476055
+             |
+       _cons |   .6150776   .0202123   -14.79   0.000      .576711    .6559966
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store innovation_missing_ind
+
+. 
+. * Also run Low Income (imputed) if user wants? 
+. * Note: 'Unknown' group is distinct from 'Low Income'.
+. * But we can check if N is restored.
+. 
+. di _newline(2) "========== FINAL COMPARISON =========="
+
+
+========== FINAL COMPARISON ==========
+
+. di "Comparing Adjusted RR (Clustered) vs Unclustered vs Logit vs Missing Indi
+> cator"
+Comparing Adjusted RR (Clustered) vs Unclustered vs Logit vs Missing Indicator
+
+. capture noisily estimates table model2_adj sensitivity_no_cluster innovation_
+> logit innovation_missing_ind, ///
+>     keep(1.expanded_state#1.post) b se p stats(N) modelwidth(15)
+
+--------------------------------------------------------------------
+    Variable |   model2_adj      sensitivity_n~r   innovation_lo~t  
+-------------+------------------------------------------------------
+expanded_s~e#|
+        post |
+        1 1  |      -.01589558        -.01589558        -.02068531  
+             |       .03283971         .01602115         .04084701  
+             |          0.6284            0.3211            0.6126  
+-------------+------------------------------------------------------
+           N |         3902304           3902304           3902304  
+--------------------------------------------------------------------
+                                                      Legend: b/se/p
+
+
+--------------------------------
+    Variable | innovation_mi~d  
+-------------+------------------
+expanded_s~e#|
+        post |
+        1 1  |      -.01468948  
+             |       .03338591  
+             |          0.6599  
+-------------+------------------
+           N |         4496182  
+--------------------------------
+                  Legend: b/se/p
+
+. 
+. *****************************************************************************
+> ***
+. * TABLE 5 & 6: ADMINISTRATIVE BARRIERS ANALYSIS
+. * Replicating Impact of Prior Authorization and Copayments (2010 state polici
+> es)
+. *****************************************************************************
+> ***
+. 
+. di _newline(2)
+
+
+
+
+. di "========== TABLES 5 & 6: ADMINISTRATIVE BARRIERS =========="
+========== TABLES 5 & 6: ADMINISTRATIVE BARRIERS ==========
+
+. di "Analyzing impact of Prior Authorization and Copayment barriers on quit at
+> tempts"
+Analyzing impact of Prior Authorization and Copayment barriers on quit attempts
+
+. di "Data source: Valvi et al. (2019) footnotes, 2010 state policies"
+Data source: Valvi et al. (2019) footnotes, 2010 state policies
+
+. 
+. * FIPS Codes Reference:
+. * AL=01 AK=02 AZ=04 AR=05 CA=06 CO=08 CT=09 DE=10 DC=11 FL=12 GA=13 HI=15 ID=
+> 16
+. * IL=17 IN=18 IA=19 KS=20 KY=21 LA=22 ME=23 MD=24 MA=25 MI=26 MN=27 MS=28 MO=
+> 29
+. * MT=30 NE=31 NV=32 NH=33 NJ=34 NM=35 NY=36 NC=37 ND=38 OH=39 OK=40 OR=41 PA=
+> 42
+. * RI=44 SC=45 SD=46 TN=47 TX=48 UT=49 VT=50 VA=51 WA=53 WV=54 WI=55 WY=56
+. 
+. * A. PRIOR AUTHORIZATION (Table 5)
+. * States requiring prior authorization in 2010: AK, AL, AR, CO, DE, HI, IA, I
+> D, MA, ME, MI, MO, MT, ND, NE, NV, OK, RI, TN, UT, VT, WA, WV (23 states)
+. gen prior_auth = 0
+
+. foreach st in 2 1 5 8 10 15 19 16 25 23 26 29 30 38 31 32 40 44 47 49 50 53 5
+> 4 {
+  2.     replace prior_auth = 1 if _state == `st'
+  3. }
+(40,370 real changes made)
+(81,444 real changes made)
+(64,340 real changes made)
+(135,869 real changes made)
+(56,454 real changes made)
+(81,059 real changes made)
+(81,139 real changes made)
+(73,065 real changes made)
+(196,615 real changes made)
+(93,215 real changes made)
+(113,076 real changes made)
+(75,302 real changes made)
+(90,024 real changes made)
+(64,926 real changes made)
+(191,395 real changes made)
+(51,398 real changes made)
+(106,269 real changes made)
+(69,923 real changes made)
+(66,844 real changes made)
+(114,603 real changes made)
+(84,477 real changes made)
+(240,089 real changes made)
+(60,715 real changes made)
+
+. label variable prior_auth "Prior Authorization Required (2010)"
+
+. 
+. di _newline(1) "Cross-tabulation: Expansion State by Prior Authorization"
+
+Cross-tabulation: Expansion State by Prior Authorization
+
+. tab expanded_state prior_auth
+
+  Medicaid |  Prior Authorization
+ Expansion |    Required (2010)
+     State |         0          1 |     Total
+-----------+----------------------+----------
+         0 | 1,494,273    842,507 | 2,336,780 
+         1 | 1,662,594  1,390,104 | 3,052,698 
+-----------+----------------------+----------
+     Total | 3,156,867  2,232,611 | 5,389,478 
+
+. 
+. * B. CO-PAYMENTS (Table 6)
+. * States requiring copayments in 2010: AK, CA, CO, DE, GA, IL, IN, KS, LA, MA
+> , ME, MN, MS, MT, NC, ND, NE, NH, NV, OH, OK, OR, PA, SD, TX, UT, VA, VT, WI,
+>  WV, WY (31 states)
+. * Note: "OA" in paper assumed to be "GA" (Georgia, FIPS 13)
+. gen copay = 0
+
+. foreach st in 2 6 8 10 13 17 18 20 22 25 23 27 28 30 37 38 31 33 32 39 40 41 
+> 42 46 48 49 51 50 55 54 56 {
+  2.     replace copay = 1 if _state == `st'
+  3. }
+(40,370 real changes made)
+(138,804 real changes made)
+(135,869 real changes made)
+(56,454 real changes made)
+(86,798 real changes made)
+(68,033 real changes made)
+(99,621 real changes made)
+(167,580 real changes made)
+(89,688 real changes made)
+(196,615 real changes made)
+(93,215 real changes made)
+(114,219 real changes made)
+(89,595 real changes made)
+(90,024 real changes made)
+(159,739 real changes made)
+(64,926 real changes made)
+(191,395 real changes made)
+(80,674 real changes made)
+(51,398 real changes made)
+(126,090 real changes made)
+(106,269 real changes made)
+(73,181 real changes made)
+(142,857 real changes made)
+(90,024 real changes made)
+(148,519 real changes made)
+(114,603 real changes made)
+(84,638 real changes made)
+(84,477 real changes made)
+(72,555 real changes made)
+(60,715 real changes made)
+(75,736 real changes made)
+
+. label variable copay "Co-payment Required (2010)"
+
+. 
+. di _newline(1) "Cross-tabulation: Expansion State by Copayment"
+
+Cross-tabulation: Expansion State by Copayment
+
+. tab expanded_state copay
+
+  Medicaid |  Co-payment Required
+ Expansion |        (2010)
+     State |         0          1 |     Total
+-----------+----------------------+----------
+         0 |   726,056  1,610,724 | 2,336,780 
+         1 | 1,468,741  1,583,957 | 3,052,698 
+-----------+----------------------+----------
+     Total | 2,194,797  3,194,681 | 5,389,478 
+
+. 
+. * Barriers Analysis: Restrict to Current Smokers (quit attempts only defined 
+> for smokers)
+. preserve
+
+. keep if current_smoker == 1
+(4,481,592 observations deleted)
+
+. 
+. * TABLE 5: PRIOR AUTHORIZATION
+. di _newline(2) "========== TABLE 5: PRIOR AUTHORIZATION BARRIERS =========="
+
+
+========== TABLE 5: PRIOR AUTHORIZATION BARRIERS ==========
+
+. di "Outcome: Quit Attempts (Among Current Smokers)"
+Outcome: Quit Attempts (Among Current Smokers)
+
+. di "Comparing Post vs Pre by Expansion Status, stratified by Prior Auth requi
+> rement"
+Comparing Post vs Pre by Expansion Status, stratified by Prior Auth requirement
+
+. 
+. di _newline(1) "--- STRATUM: Prior Authorization Required (YES) ---"
+
+--- STRATUM: Prior Authorization Required (YES) ---
+
+. capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if prior_auth == 1 [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood =  -94223837  
+Iteration 1:  Log pseudolikelihood =  -94223837  
+
+Poisson regression                                     Number of obs = 292,683
+                                                       Wald chi2(20) = 5676.90
+Log pseudolikelihood = -94223837                       Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 23 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.014277   .0289592     0.50   0.620     .9590771    1.072654
+      1.post |   1.003302      .0283     0.12   0.907     .9493401    1.060331
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.024184   .0305264     0.80   0.423     .9660675    1.085797
+             |
+     age_cat |
+          2  |   .8827101   .0158653    -6.94   0.000     .8521561    .9143598
+          3  |   .8235935   .0185061    -8.64   0.000     .7881093    .8606753
+          4  |   .7494198   .0253937    -8.51   0.000     .7012658    .8008804
+          5  |    .668194   .0498511    -5.40   0.000     .5772953    .7734053
+             |
+    1.female |   1.043984   .0096462     4.66   0.000     1.025248    1.063063
+             |
+        race |
+          2  |    1.24006   .0272856     9.78   0.000     1.187718    1.294708
+          3  |   1.088391   .0358256     2.57   0.010     1.020391    1.160923
+          4  |   1.023537   .0244393     0.97   0.330     .9767404    1.072576
+             |
+   education |
+          2  |   .9949455   .0260372    -0.19   0.846     .9452002    1.047309
+          3  |   1.051229   .0245631     2.14   0.033     1.004172    1.100491
+             |
+      income |
+          2  |   1.014993    .019182     0.79   0.431     .9780846    1.053294
+          3  |   .9946607   .0181919    -0.29   0.770     .9596366    1.030963
+          4  |   .9823407   .0236742    -0.74   0.460      .937019    1.029854
+             |
+    employed |
+          2  |   .9915089   .0243051    -0.35   0.728     .9449981    1.040309
+          3  |   1.097136   .0290157     3.51   0.000     1.041715    1.155505
+          4  |    1.03844   .0267547     1.46   0.143     .9873035    1.092225
+          5  |   1.182437   .0214053     9.26   0.000     1.141219    1.225143
+             |
+       _cons |   .5583652   .0212131   -15.34   0.000     .5182985    .6015291
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store barrier_prior_yes
+
+. 
+. di _newline(1) "--- STRATUM: No Prior Authorization Required (NO) ---"
+
+--- STRATUM: No Prior Authorization Required (NO) ---
+
+. capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if prior_auth == 0 [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -1.297e+08  
+Iteration 1:  Log pseudolikelihood = -1.297e+08  
+
+Poisson regression                                     Number of obs = 402,013
+                                                       Wald chi2(20) = 1609.07
+Log pseudolikelihood = -1.297e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 31 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.021334   .0204877     1.05   0.293     .9819582    1.062289
+      1.post |   1.093115   .0183261     5.31   0.000      1.05778     1.12963
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9626907   .0227902    -1.61   0.108     .9190432    1.008411
+             |
+     age_cat |
+          2  |   .9021534   .0149247    -6.22   0.000     .8733707    .9318847
+          3  |   .8564008   .0125781   -10.55   0.000     .8320996    .8814117
+          4  |   .8087891   .0171711   -10.00   0.000     .7758249    .8431538
+          5  |    .718703    .043192    -5.50   0.000     .6388437     .808545
+             |
+    1.female |   1.054789   .0099224     5.67   0.000      1.03552    1.074417
+             |
+        race |
+          2  |   1.264887   .0173014    17.18   0.000     1.231427    1.299255
+          3  |   1.178354    .026071     7.42   0.000     1.128348    1.230577
+          4  |   1.068114   .0376538     1.87   0.062     .9968058    1.144524
+             |
+   education |
+          2  |   .9918574   .0147814    -0.55   0.583     .9633055    1.021256
+          3  |   1.056656   .0204822     2.84   0.004     1.017265    1.097573
+             |
+      income |
+          2  |   1.000709   .0213658     0.03   0.974     .9596967    1.043474
+          3  |   .9836097   .0232571    -0.70   0.485     .9390667    1.030266
+          4  |   .9817625   .0249611    -0.72   0.469     .9340386    1.031925
+             |
+    employed |
+          2  |   .9806188   .0171263    -1.12   0.262       .94762    1.014767
+          3  |   1.020023    .016531     1.22   0.221     .9881323    1.052943
+          4  |   1.008253   .0182984     0.45   0.651      .973019    1.044763
+          5  |   1.159016   .0201595     8.48   0.000      1.12017     1.19921
+             |
+       _cons |   .5208625   .0165079   -20.58   0.000      .489492    .5542435
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store barrier_prior_no
+
+. 
+. * TABLE 6: CO-PAYMENTS
+. di _newline(2) "========== TABLE 6: CO-PAYMENT BARRIERS =========="
+
+
+========== TABLE 6: CO-PAYMENT BARRIERS ==========
+
+. di "Outcome: Quit Attempts (Among Current Smokers)"
+Outcome: Quit Attempts (Among Current Smokers)
+
+. di "Comparing Post vs Pre by Expansion Status, stratified by Copayment requir
+> ement"
+Comparing Post vs Pre by Expansion Status, stratified by Copayment requirement
+
+. 
+. di _newline(1) "--- STRATUM: Copayment Required (YES) ---"
+
+--- STRATUM: Copayment Required (YES) ---
+
+. capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if copay == 1 [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood = -1.365e+08  
+Iteration 1:  Log pseudolikelihood = -1.365e+08  
+
+Poisson regression                                     Number of obs = 422,589
+                                                       Wald chi2(20) = 1430.77
+Log pseudolikelihood = -1.365e+08                      Prob > chi2   =  0.0000
+
+                                (Std. err. adjusted for 31 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.006984   .0230823     0.30   0.761     .9627451    1.053257
+      1.post |   1.043189   .0183331     2.41   0.016     1.007869    1.079747
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.004828   .0238591     0.20   0.839     .9591366    1.052696
+             |
+     age_cat |
+          2  |   .8756778   .0143128    -8.12   0.000     .8480698    .9041846
+          3  |   .8238582   .0155102   -10.29   0.000     .7940128    .8548255
+          4  |   .7837733   .0199452    -9.57   0.000     .7456403    .8238564
+          5  |   .6870496   .0382472    -6.74   0.000     .6160313    .7662551
+             |
+    1.female |   1.061292   .0091832     6.87   0.000     1.043445    1.079444
+             |
+        race |
+          2  |     1.2261   .0163348    15.30   0.000     1.194499    1.258537
+          3  |   1.129487   .0328045     4.19   0.000     1.066987    1.195647
+          4  |   1.041909   .0304144     1.41   0.160     .9839708    1.103258
+             |
+   education |
+          2  |   .9898319    .015992    -0.63   0.527     .9589792    1.021677
+          3  |   1.055666    .016413     3.48   0.000     1.023983     1.08833
+             |
+      income |
+          2  |    1.02502   .0163182     1.55   0.121     .9935311    1.057508
+          3  |   1.003033   .0164519     0.18   0.853     .9713011    1.035802
+          4  |    1.00612   .0177326     0.35   0.729      .971958    1.041482
+             |
+    employed |
+          2  |   .9690705   .0181202    -1.68   0.093     .9341984    1.005244
+          3  |   1.048133   .0232123     2.12   0.034     1.003611     1.09463
+          4  |   1.019642   .0199024     1.00   0.319     .9813712    1.059406
+          5  |   1.188391    .018274    11.22   0.000     1.153109    1.224753
+             |
+       _cons |   .5354022   .0156956   -21.31   0.000     .5055066    .5670658
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store barrier_copay_yes
+
+. 
+. di _newline(1) "--- STRATUM: No Copayment Required (NO) ---"
+
+--- STRATUM: No Copayment Required (NO) ---
+
+. capture noisily poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if copay == 0 [pw=weight], cluster(_state) irr
+
+Iteration 0:  Log pseudolikelihood =  -87513125  
+Iteration 1:  Log pseudolikelihood =  -87513125  
+
+Poisson regression                                    Number of obs =  272,107
+                                                      Wald chi2(20) = 39396.58
+Log pseudolikelihood = -87513125                      Prob > chi2   =   0.0000
+
+                                (Std. err. adjusted for 23 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.054946   .0317093     1.78   0.075     .9945918    1.118962
+      1.post |   1.106317   .0385787     2.90   0.004      1.03323    1.184573
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9308437   .0356612    -1.87   0.061     .8635088    1.003429
+             |
+     age_cat |
+          2  |   .9253051   .0145141    -4.95   0.000     .8972908     .954194
+          3  |   .8733698   .0135117    -8.75   0.000     .8472848    .9002577
+          4  |   .7857036    .026561    -7.13   0.000     .7353322    .8395255
+          5  |    .717332   .0606912    -3.93   0.000      .607719    .8467158
+             |
+    1.female |   1.031918     .00981     3.30   0.001     1.012869    1.051325
+             |
+        race |
+          2  |   1.278244   .0218567    14.36   0.000     1.236115    1.321808
+          3  |   1.159395   .0325197     5.27   0.000     1.097378    1.224917
+          4  |   1.055943   .0313802     1.83   0.067     .9961962    1.119274
+             |
+   education |
+          2  |   .9995347   .0243704    -0.02   0.985     .9528929     1.04846
+          3  |   1.053859   .0308184     1.79   0.073     .9951547    1.116027
+             |
+      income |
+          2  |   .9781479   .0252404    -0.86   0.392     .9299078     1.02889
+          3  |   .9644339   .0280602    -1.24   0.213     .9109756    1.021029
+          4  |   .9413412   .0315104    -1.81   0.071     .8815643    1.005171
+             |
+    employed |
+          2  |   1.011008   .0210196     0.53   0.598     .9706382    1.053056
+          3  |   1.053269   .0245546     2.23   0.026     1.006226    1.102512
+          4  |   1.021293   .0248861     0.86   0.387     .9736637    1.071252
+          5  |   1.139075   .0199923     7.42   0.000     1.100557    1.178941
+             |
+       _cons |   .5302572   .0233836   -14.39   0.000     .4863509    .5781273
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. capture estimates store barrier_copay_no
+
+. 
+. * Summary comparison
+. di _newline(2) "========== BARRIERS SUMMARY =========="
+
+
+========== BARRIERS SUMMARY ==========
+
+. di "DiD Coefficients (1.expanded#1.post) by Barrier Status:"
+DiD Coefficients (1.expanded#1.post) by Barrier Status:
+
+. capture noisily estimates table barrier_prior_yes barrier_prior_no barrier_co
+> pay_yes barrier_copay_no, ///
+>     keep(1.expanded_state#1.post) b se stats(N) modelwidth(15)
+
+--------------------------------------------------------------------
+    Variable | barrier_prior~s   barrier_prior~o   barrier_copay~s  
+-------------+------------------------------------------------------
+expanded_s~e#|
+        post |
+        1 1  |       .02389631        -.03802309          .0048165  
+             |       .02980557         .02367343         .02374447  
+-------------+------------------------------------------------------
+           N |          292683            402013            422589  
+--------------------------------------------------------------------
+                                                        Legend: b/se
+
+
+--------------------------------
+    Variable | barrier_copay~o  
+-------------+------------------
+expanded_s~e#|
+        post |
+        1 1  |      -.07166386  
+             |       .03831059  
+-------------+------------------
+           N |          272107  
+--------------------------------
+                    Legend: b/se
+
+. 
+. restore
+
+. 
+. *****************************************************************************
+> ***
+. * SENSITIVITY ANALYSES
+. *****************************************************************************
+> ***
+. 
+. di _newline(3)
+
+
+
+
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "SENSITIVITY ANALYSES: TESTING ROBUSTNESS ACROSS METHODS"
+SENSITIVITY ANALYSES: TESTING ROBUSTNESS ACROSS METHODS
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "Purpose: Demonstrate that clustering is critical for correct inference"
+Purpose: Demonstrate that clustering is critical for correct inference
+
+. di _newline(1)
+
+
+
+. 
+. * METHOD 1: UNCLUSTERED POISSON
+. di _newline(2)
+
+
+
+
+. di "========== METHOD 1: POISSON WITHOUT CLUSTERING =========="
+========== METHOD 1: POISSON WITHOUT CLUSTERING ==========
+
+. di "WARNING: Ignores state-level clustering, will underestimate standard erro
+> rs"
+WARNING: Ignores state-level clustering, will underestimate standard errors
+
+. di _newline(1)
+
+
+
+. 
+. di "--- Current Smoking (Unclustered) ---"
+--- Current Smoking (Unclustered) ---
+
+. poisson current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     [pw=weight], vce(robust) irr
+
+Iteration 0:  Log pseudolikelihood = -6.899e+08  
+Iteration 1:  Log pseudolikelihood = -6.899e+08  
+Iteration 2:  Log pseudolikelihood = -6.899e+08  
+Iteration 3:  Log pseudolikelihood = -6.899e+08  
+
+Poisson regression                                   Number of obs = 3,902,304
+                                                     Wald chi2(20) =  22896.31
+Log pseudolikelihood = -6.899e+08                    Prob > chi2   =    0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.047864   .0111618     4.39   0.000     1.026215    1.069971
+      1.post |   .8785018   .0106048   -10.73   0.000     .8579607    .8995347
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9842301   .0157685    -0.99   0.321     .9538046    1.015626
+             |
+     age_cat |
+          2  |    .932751   .0103492    -6.27   0.000     .9126859    .9532572
+          3  |   .7083017   .0079431   -30.75   0.000     .6929034    .7240422
+          4  |   .3886438   .0062662   -58.62   0.000     .3765543    .4011214
+          5  |   .1424358   .0058764   -47.24   0.000     .1313716    .1544319
+             |
+    1.female |   .8109405   .0058395   -29.10   0.000     .7995757    .8224667
+             |
+        race |
+          2  |   .7551577   .0105038   -20.19   0.000     .7348487    .7760279
+          3  |   .7671717   .0138959   -14.63   0.000     .7404141    .7948964
+          4  |   1.022441   .0202038     1.12   0.261      .983599    1.062816
+             |
+   education |
+          2  |   .7952913   .0096086   -18.96   0.000       .77668    .8143487
+          3  |    .539963   .0068864   -48.32   0.000     .5266333    .5536301
+             |
+      income |
+          2  |     .98471   .0144257    -1.05   0.293     .9568383    1.013394
+          3  |   .7818891   .0114829   -16.75   0.000     .7597038    .8047222
+          4  |   .4845847   .0081283   -43.19   0.000     .4689126    .5007807
+             |
+    employed |
+          2  |   .9149392   .0139228    -5.84   0.000     .8880539    .9426384
+          3  |   1.319013    .019118    19.10   0.000     1.282069    1.357021
+          4  |   .8489705   .0105027   -13.23   0.000     .8286331     .869807
+          5  |   1.312933    .017814    20.07   0.000     1.278478    1.348316
+             |
+       _cons |   .6099211   .0120484   -25.03   0.000     .5867579    .6339986
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. di _newline(1) "DiD Effect:"
+
+DiD Effect:
+
+. lincom 1.expanded_state#1.post, irr
+
+ ( 1)  [current_smoker]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+current_sm~r |        IRR   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   .9842301   .0157685    -0.99   0.321     .9538046    1.015626
+------------------------------------------------------------------------------
+
+. 
+. di _newline(1)
+
+
+
+. di "--- Quit Attempts (Unclustered) ---"
+--- Quit Attempts (Unclustered) ---
+
+. poisson quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if current_smoker == 1 [pw=weight], vce(robust) irr
+
+Iteration 0:  Log pseudolikelihood = -2.240e+08  
+Iteration 1:  Log pseudolikelihood = -2.240e+08  
+
+Poisson regression                                     Number of obs = 694,696
+                                                       Wald chi2(20) = 1268.50
+Log pseudolikelihood = -2.240e+08                      Prob > chi2   =  0.0000
+
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt |        IRR   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.024149   .0113137     2.16   0.031     1.002213    1.046566
+      1.post |   1.061109   .0127881     4.92   0.000     1.036338    1.086472
+             |
+expanded_s~e#|
+        post |
+        1 1  |    .980116    .015707    -1.25   0.210     .9498094     1.01139
+             |
+     age_cat |
+          2  |   .8942913   .0095518   -10.46   0.000     .8757647    .9132099
+          3  |   .8428623   .0091035   -15.83   0.000     .8252074     .860895
+          4  |   .7836943   .0127388   -14.99   0.000     .7591202    .8090639
+          5  |   .6977558   .0327431    -7.67   0.000     .6364432     .764975
+             |
+    1.female |   1.049557   .0076406     6.64   0.000     1.034688     1.06464
+             |
+        race |
+          2  |   1.250323   .0138816    20.12   0.000      1.22341    1.277829
+          3  |   1.141251   .0177222     8.51   0.000     1.107039    1.176519
+          4  |   1.048381     .02012     2.46   0.014     1.009679    1.088566
+             |
+   education |
+          2  |   .9934552   .0126955    -0.51   0.607     .9688815    1.018652
+          3  |   1.055221   .0133661     4.24   0.000     1.029347    1.081746
+             |
+      income |
+          2  |   1.006728    .014756     0.46   0.647     .9782184    1.036069
+          3  |   .9875532   .0142323    -0.87   0.385     .9600487    1.015846
+          4  |   .9803994   .0157976    -1.23   0.219     .9499206    1.011856
+             |
+    employed |
+          2  |    .985919    .015754    -0.89   0.375     .9555202    1.017285
+          3  |   1.050882   .0151871     3.43   0.001     1.021533    1.081074
+          4  |   1.020653   .0125997     1.66   0.098     .9962547    1.045649
+          5  |   1.168066   .0150212    12.08   0.000     1.138993    1.197882
+             |
+       _cons |   .5349393   .0107074   -31.25   0.000     .5143595    .5563425
+------------------------------------------------------------------------------
+Note: _cons estimates baseline incidence rate.
+
+. di _newline(1) "DiD Effect:"
+
+DiD Effect:
+
+. lincom 1.expanded_state#1.post, irr
+
+ ( 1)  [quit_attempt]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+quit_attempt |        IRR   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |    .980116    .015707    -1.25   0.210     .9498094     1.01139
+------------------------------------------------------------------------------
+
+. 
+. * METHOD 2: LOGISTIC REGRESSION
+. di _newline(2)
+
+
+
+
+. di "========== METHOD 2: LOGISTIC REGRESSION =========="
+========== METHOD 2: LOGISTIC REGRESSION ==========
+
+. di "Using logistic regression instead of Poisson (with clustering)"
+Using logistic regression instead of Poisson (with clustering)
+
+. di _newline(1)
+
+
+
+. 
+. di "--- Current Smoking (Logistic) ---"
+--- Current Smoking (Logistic) ---
+
+. logistic current_smoker i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     [pw=weight], cluster(_state)
+
+Logistic regression                                  Number of obs = 3,902,304
+                                                     Wald chi2(20) =  17089.10
+                                                     Prob > chi2   =    0.0000
+Log pseudolikelihood = -6.587e+08                    Pseudo R2     =    0.0764
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+current_sm~r | Odds ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.062802   .0408195     1.59   0.113     .9857347    1.145895
+      1.post |   .8507496   .0306477    -4.49   0.000     .7927528    .9129893
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9795272   .0400108    -0.51   0.613     .9041645    1.061171
+             |
+     age_cat |
+          2  |    .911219   .0165004    -5.13   0.000      .879446    .9441399
+          3  |   .6392501   .0144137   -19.84   0.000     .6116148     .668134
+          4  |   .3126572   .0104186   -34.89   0.000     .2928898    .3337588
+          5  |   .1031873   .0066234   -35.38   0.000     .0909891    .1170208
+             |
+    1.female |   .7607979   .0124596   -16.69   0.000     .7367654    .7856144
+             |
+        race |
+          2  |   .6931636   .0426718    -5.95   0.000     .6143771    .7820535
+          3  |   .7028731   .0580906    -4.27   0.000     .5977608    .8264687
+          4  |     1.0271   .0611946     0.45   0.654     .9138989    1.154323
+             |
+   education |
+          2  |   .7128042   .0167934   -14.37   0.000     .6806382    .7464904
+          3  |   .4380856    .012392   -29.18   0.000     .4144587    .4630593
+             |
+      income |
+          2  |   .9652039   .0249198    -1.37   0.170     .9175771    1.015303
+          3  |   .7106724    .019312   -12.57   0.000     .6738119    .7495494
+          4  |   .4019955   .0107823   -33.98   0.000     .3814084    .4236938
+             |
+    employed |
+          2  |   .8948531    .025051    -3.97   0.000     .8470767    .9453241
+          3  |   1.486623    .029221    20.17   0.000      1.43044    1.545013
+          4  |   .8208463   .0140964   -11.50   0.000     .7936776    .8489451
+          5  |   1.468949   .0355522    15.89   0.000     1.400895    1.540309
+             |
+       _cons |   1.135167   .0551646     2.61   0.009     1.032035    1.248604
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. di _newline(1) "DiD Effect (Odds Ratio):"
+
+DiD Effect (Odds Ratio):
+
+. lincom 1.expanded_state#1.post, or
+
+ ( 1)  [current_smoker]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+current_sm~r | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   .9795272   .0400108    -0.51   0.613     .9041645    1.061171
+------------------------------------------------------------------------------
+
+. 
+. di _newline(1)
+
+
+
+. di "--- Quit Attempts (Logistic) ---"
+--- Quit Attempts (Logistic) ---
+
+. logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if current_smoker == 1 [pw=weight], cluster(_state)
+
+Logistic regression                                    Number of obs = 694,696
+                                                       Wald chi2(20) = 1726.79
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -1.741e+08                      Pseudo R2     =  0.0146
+
+                                (Std. err. adjusted for 54 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt | Odds ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.053977   .0408691     1.36   0.175     .9768433    1.137201
+      1.post |   1.141858   .0457883     3.31   0.001      1.05555    1.235222
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9566138   .0454495    -0.93   0.351     .8715561    1.049973
+             |
+     age_cat |
+          2  |   .7638617   .0229194    -8.98   0.000     .7202359      .81013
+          3  |   .6703085   .0213876   -12.54   0.000     .6296734    .7135658
+          4  |   .5777471   .0259375   -12.22   0.000     .5290829    .6308874
+          5  |   .4642038   .0411121    -8.67   0.000     .3902314    .5521985
+             |
+    1.female |   1.114644    .016746     7.22   0.000     1.082301    1.147954
+             |
+        race |
+          2  |   1.763115   .0628501    15.91   0.000     1.644135    1.890704
+          3  |   1.368901   .0710751     6.05   0.000      1.23645     1.51554
+          4  |   1.110846   .0551423     2.12   0.034      1.00786    1.224355
+             |
+   education |
+          2  |   .9892243   .0309453    -0.35   0.729     .9303946    1.051774
+          3  |    1.13119   .0386584     3.61   0.000     1.057902    1.209554
+             |
+      income |
+          2  |   1.014009   .0366575     0.38   0.700     .9446478    1.088463
+          3  |      .9711   .0368714    -0.77   0.440     .9014567    1.046124
+          4  |   .9564194   .0400841    -1.06   0.288     .8809962      1.0383
+             |
+    employed |
+          2  |   .9738347   .0299242    -0.86   0.388     .9169155    1.034287
+          3  |   1.122716   .0418535     3.11   0.002      1.04361    1.207819
+          4  |   1.049058   .0352056     1.43   0.154     .9822771     1.12038
+          5  |   1.445077   .0425654    12.50   0.000     1.364012    1.530958
+             |
+       _cons |   1.174339   .0688799     2.74   0.006     1.046808    1.317407
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. di _newline(1) "DiD Effect (Odds Ratio):"
+
+DiD Effect (Odds Ratio):
+
+. lincom 1.expanded_state#1.post, or
+
+ ( 1)  [quit_attempt]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+quit_attempt | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   .9566138   .0454495    -0.93   0.351     .8715561    1.049973
+------------------------------------------------------------------------------
+
+. 
+. di _newline(2)
+
+
+
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "SENSITIVITY ANALYSIS SUMMARY"
+SENSITIVITY ANALYSIS SUMMARY
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "Key findings:"
+Key findings:
+
+. di "  - Point estimates stable across methods (≈0.98)"
+  - Point estimates stable across methods (≈0.98)
+
+. di "  - Clustering by state is CRITICAL for correct inference"
+  - Clustering by state is CRITICAL for correct inference
+
+. di "  - Without clustering, standard errors severely underestimated"
+  - Without clustering, standard errors severely underestimated
+
+. di "  - All methods confirm: no evidence of increased quit attempts"
+  - All methods confirm: no evidence of increased quit attempts
+
+. di _newline(1)
+
+
+
+. 
+. 
+. log close
+      name:  <unnamed>
+       log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
+> nal project\log/analysis.log
+  log type:  text
+ closed on:   9 Dec 2025, 15:04:18
+-------------------------------------------------------------------------------
+
+. 
+. *****************************************************************************
+> ***
+. * END OF ANALYSIS
+. *****************************************************************************
+> ***
+. 
+end of do-file

@@ -1,0 +1,987 @@
+-------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
+> nal project\log/proc.log
+  log type:  text
+ opened on:   8 Dec 2025, 23:33:03
+
+. 
+. di "============================================================"
+============================================================
+
+. di "Memory Optimization Run"
+Memory Optimization Run
+
+. di "============================================================"
+============================================================
+
+. 
+. *****************************************************************************
+> ***
+. * STEP 1: Process each file individually to reduce size
+. *****************************************************************************
+> ***
+. 
+. * Define the list of variables we ULTIMATELY need
+. * We need to look for variations of these names
+. 
+. local years 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 
+> 2016 2017
+
+. 
+. foreach yr of local years {
+  2.     di _newline(1) "Processing `yr'..."
+  3.     
+.     * Check if DTA exists, if not, try to create it from XPT
+.     capture confirm file "data/brfss_`yr'.dta"
+  4.     if _rc != 0 {
+  5.         di "DTA file not found for `yr'. Checking for XPT..."
+  6.         
+.         * Define XPT filename logic
+.         local xpt_file ""
+  7.         if `yr' <= 2010 {
+  8.             local short_yr = substr("`yr'", 3, 2)
+  9.             local xpt_file "data/raw/CDBRFS`short_yr'.XPT"
+ 10.             * Check lowercase as fallback
+.             capture confirm file "`xpt_file'"
+ 11.             if _rc != 0 local xpt_file "data/raw/cdbrfs`short_yr'.xpt"
+ 12.         }
+ 13.         else {
+ 14.             local xpt_file "data/raw/LLCP`yr'.XPT"
+ 15.             * Check lowercase as fallback
+.             capture confirm file "`xpt_file'"
+ 16.             if _rc != 0 local xpt_file "data/raw/llcp`yr'.xpt"
+ 17.         }
+ 18.         
+.         * Attempt conversion
+.         capture confirm file "`xpt_file'"
+ 19.         if _rc == 0 {
+ 20.             di "Converting `xpt_file' to data/brfss_`yr'.dta..."
+ 21.             import sasxport5 "`xpt_file'", clear
+ 22.             gen year = `yr'
+ 23.             save "data/brfss_`yr'.dta", replace
+ 24.         }
+ 25.         else {
+ 26.             di "Error: Neither DTA nor XPT found for `yr'. Skipping."
+ 27.             continue
+ 28.         }
+ 29.     }
+ 30.     
+.     use "data/brfss_`yr'.dta", clear
+ 31.     
+.     * --- STANDARDIZE VARIABLES ---
+.     
+.     * State
+.     capture confirm variable _STATE
+ 32.     if _rc == 0 rename _STATE _state
+ 33.     
+.     * Weight (check variations)
+.     * SEARCH AND RESCUE for weight variable (handles weight2, _finalwt, _llcp
+> wt, etc.)
+.     
+.     local weight_candidates weight weight2 _FINALWT _finalwt _LLCPWT _llcpwt 
+> _WT2 _wt2 _POSTSTR _poststr
+ 34.     local weight_found 0
+ 35.     
+.     foreach wvar of local weight_candidates {
+ 36.         capture confirm variable `wvar'
+ 37.         if _rc == 0 {
+ 38.             di "Found weight variable: `wvar'"
+ 39.             if "`wvar'" != "weight" {
+ 40.                 capture rename `wvar' weight
+ 41.                 if _rc == 0 {
+ 42.                      di "Successfully renamed `wvar' to weight"
+ 43.                      local weight_found 1
+ 44.                      continue, break 
+ 45.                 }
+ 46.                 else {
+ 47.                      di "Failed to rename `wvar' to weight"
+ 48.                 }
+ 49.             }
+ 50.             else {
+ 51.                 local weight_found 1
+ 52.                 continue, break
+ 53.             }
+ 54.         }
+ 55.     }
+ 56.     
+.     if `weight_found' == 0 {
+ 57.         di "WARNING: FATAL - No weight variable found for year `yr'!"
+ 58.         describe
+ 59.     }
+ 60.     
+.     * Age
+.     capture confirm variable age
+ 61.     if _rc == 0 rename age age
+ 62.     else {
+ 63.         capture confirm variable AGE
+ 64.         if _rc == 0 rename AGE age
+ 65.         else {
+ 66.             capture confirm variable _age80
+ 67.             if _rc == 0 rename _age80 age
+ 68.             else {
+ 69.                 capture confirm variable _AGE80
+ 70.                 if _rc == 0 rename _AGE80 age
+ 71.                 else {
+ 72.                     capture confirm variable _ageg5yr
+ 73.                     if _rc == 0 rename _ageg5yr age
+ 74.                     else {
+ 75.                         capture confirm variable _AGEG5YR
+ 76.                         if _rc == 0 rename _AGEG5YR age
+ 77.                     }
+ 78.                 }
+ 79.             }
+ 80.         }
+ 81.     }
+ 82.     
+.     * Race (Handle multiple versions & Standardize to 2011+ schema)
+.     * Target Schema (_race): 1=White, 2=Black, 3=AmInd/Alaskan, 4=Asian, 5=HI
+> /PI, 6=Other, 7=Multi, 8=Hispanic.
+.     * We will create a standardized variable `race_std` and rename it to `_ra
+> ce` at the end.
+.     
+.     gen race_std = .
+ 83. 
+.     capture confirm variable _race
+ 84.     if _rc == 0 {
+ 85.         di "  -> Found _race (native)"
+ 86.         replace race_std = _race
+ 87.     }
+ 88.     else {
+ 89.         capture confirm variable _RACE
+ 90.         if _rc == 0 {
+ 91.             di "  -> Found _RACE (renaming)"
+ 92.             replace race_std = _RACE
+ 93.         }
+ 94.         else {
+ 95.             capture confirm variable _RACEGR3
+ 96.             if _rc == 0 {
+ 97.                  di "  -> Found _RACEGR3"
+ 98.                  * _RACEGR3 coding: 1=White, 2=Black, 3=Other, 4=Multi, 5=
+> Hispanic. (This varies, best to treat like _race if similar)
+.                  * Actually, common BRFSS _RACEGR3: 1=White, 2=Black, 3=Other
+> , 4=Multi, 5=Hispanic... 
+.                  * WAIT: 2011 _RACE has 8=Hispanic. 
+.                  * Let's assume _RACE/ _RACEGR3 follow the newer 8=Hispanic o
+> r we check.
+.                  * To be safe for the replication which expects 8=Hispanic:
+.                  replace race_std = _RACEGR3
+ 99.             }
+100.             else {
+101.                 capture confirm variable _racegr3
+102.                 if _rc == 0 replace race_std = _racegr3
+103.                 else {
+104.                     capture confirm variable _RACEGR2
+105.                     if _rc == 0 {
+106.                         di "  -> Found _RACEGR2 (standardizing)"
+107.                         * _RACEGR2: 1=White, 2=Black, 3=Hispanic, 4=Other/
+> Multi
+.                         replace race_std = 1 if _RACEGR2 == 1
+108.                         replace race_std = 2 if _RACEGR2 == 2
+109.                         replace race_std = 8 if _RACEGR2 == 3 // Standardi
+> ze Hispanic to 8
+110.                         replace race_std = 6 if _RACEGR2 == 4 // Other
+111.                     }
+112.                     else {
+113.                         capture confirm variable _racegr2
+114.                         if _rc == 0 {
+115.                             di "  -> Found _racegr2 (standardizing)"
+116.                             replace race_std = 1 if _racegr2 == 1
+117.                             replace race_std = 2 if _racegr2 == 2
+118.                             replace race_std = 8 if _racegr2 == 3
+119.                             replace race_std = 6 if _racegr2 == 4
+120.                         }
+121.                     }
+122.                 }
+123.             }
+124.         }
+125.     }
+126.     
+.     * Drop old race vars and use the standardized one
+.     capture drop _race
+127.     rename race_std _race
+128.     
+.     * Employment
+.     capture confirm variable employ1
+129.     if _rc == 0 rename employ1 employ1
+130.     else {
+131.         capture confirm variable EMPLOY1
+132.         if _rc == 0 rename EMPLOY1 employ1
+133.         else {
+134.             capture confirm variable EMPLOY
+135.             if _rc == 0 rename EMPLOY employ1
+136.             else {
+137.                 capture confirm variable employ
+138.                 if _rc == 0 rename employ employ1
+139.             }
+140.         }
+141.     }
+142.     
+.     * Health Plan
+.     capture confirm variable HLTHPLN1
+143.     if _rc != 0 {
+144.         capture confirm variable HLTHPLAN
+145.         if _rc == 0 rename HLTHPLAN hlthpln1
+146.     }
+147.     
+.     * Smoker3 (Calculated)
+.     capture confirm variable _SMOKER3
+148.     if _rc != 0 {
+149.         capture confirm variable _RFSMOK3
+150.         if _rc == 0 rename _RFSMOK3 _smoker3
+151.         else {
+152.              * Try older versions (2003 uses _SMOKER2 / _RFSMOK2 / lowerca
+> se)
+.              capture confirm variable _SMOKER2
+153.              if _rc == 0 rename _SMOKER2 _smoker3
+154.              else {
+155.                  capture confirm variable _smoker2
+156.                  if _rc == 0 rename _smoker2 _smoker3
+157.                  else {
+158.                      capture confirm variable _RFSMOK2
+159.                      if _rc == 0 rename _RFSMOK2 _smoker3
+160.                      else {
+161.                         capture confirm variable _rfsmok2
+162.                         if _rc == 0 rename _rfsmok2 _smoker3
+163.                      }
+164.                  }
+165.              }
+166.         }
+167.     }
+168. 
+.     * --- KEEP ONLY RELEVANT VARIABLES ---
+.     * List of targets (after renaming)
+.     local targets year _state weight age sex _race educa income2 employ1 hlth
+> pln1 persdoc2 smoke100 smokday2 stopsmk2 _smoker3
+169.     
+.     * Income (Search and Rescue)
+.     capture confirm variable income2
+170.     if _rc != 0 {
+171.         capture confirm variable INCOME2
+172.         if _rc == 0 rename INCOME2 income2
+173.         else {
+174.             capture confirm variable _INCOMG
+175.             if _rc == 0 {
+176.                  rename _INCOMG income2 
+177.                  di "Renamed _INCOMG to income2 (Warning: Check coding mat
+> ch)"
+178.                  * _INCOMG (1-5) is different from INCOME2 (1-8). 
+.                  * We might need to map it if we strictly use it.
+.             }
+179.             else {
+180.                  capture confirm variable _incomg
+181.                  if _rc == 0 rename _incomg income2
+182.             }
+183.         }
+184.     }
+185. 
+.     * --- KEEP ONLY RELEVANT VARIABLES ---
+.     * List of targets (after renaming)
+.     local targets year _state weight age sex _race educa income2 employ1 hlth
+> pln1 persdoc2 smoke100 smokday2 stopsmk2 _smoker3
+186.     
+.     local keep_cmd "keep"
+187.     foreach var of local targets {
+188.         capture confirm variable `var'
+189.         if _rc == 0 {
+190.             local keep_cmd "`keep_cmd' `var'"
+191.         }
+192.     }
+193.     
+.     * Execute Keep
+.     `keep_cmd'
+194.     
+.     * Compress to save space
+.     compress
+195.     
+.     * Save small temporary file
+.     save "data/temp/small_`yr'.dta", replace
+196.     di "Saved small_`yr'.dta"
+197. }
+
+Processing 2003...
+Found weight variable: weight
+  (all newnames==oldnames)
+(264,684 missing values generated)
+  -> Found _racegr2 (standardizing)
+(206,158 real changes made)
+(20,684 real changes made)
+(11,638 real changes made)
+(4,249 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (22,498,140 bytes saved)
+file data/temp/small_2003.dta saved
+Saved small_2003.dta
+
+Processing 2004...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(303,822 missing values generated)
+  -> Found _racegr2 (standardizing)
+(237,692 real changes made)
+(26,031 real changes made)
+(10,038 real changes made)
+(4,070 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (25,824,870 bytes saved)
+file data/temp/small_2004.dta saved
+Saved small_2004.dta
+
+Processing 2005...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(356,112 missing values generated)
+  -> Found _racegr2 (standardizing)
+(278,672 real changes made)
+(27,735 real changes made)
+(14,280 real changes made)
+(6,470 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (32,762,304 bytes saved)
+file data/temp/small_2005.dta saved
+Saved small_2005.dta
+
+Processing 2006...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(355,710 missing values generated)
+  -> Found _racegr2 (standardizing)
+(277,006 real changes made)
+(28,772 real changes made)
+(13,547 real changes made)
+(6,163 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (32,725,320 bytes saved)
+file data/temp/small_2006.dta saved
+Saved small_2006.dta
+
+Processing 2007...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(430,912 missing values generated)
+  -> Found _racegr2 (standardizing)
+(338,611 real changes made)
+(33,216 real changes made)
+(16,444 real changes made)
+(7,094 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (39,643,904 bytes saved)
+file data/temp/small_2007.dta saved
+Saved small_2007.dta
+
+Processing 2008...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(414,509 missing values generated)
+  -> Found _racegr2 (standardizing)
+(325,936 real changes made)
+(32,681 real changes made)
+(16,110 real changes made)
+(6,696 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (38,134,828 bytes saved)
+file data/temp/small_2008.dta saved
+Saved small_2008.dta
+
+Processing 2009...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(432,607 missing values generated)
+  -> Found _racegr2 (standardizing)
+(339,059 real changes made)
+(34,609 real changes made)
+(16,920 real changes made)
+(7,161 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (39,799,844 bytes saved)
+file data/temp/small_2009.dta saved
+Saved small_2009.dta
+
+Processing 2010...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(451,075 missing values generated)
+  -> Found _racegr2 (standardizing)
+(351,951 real changes made)
+(36,215 real changes made)
+(16,940 real changes made)
+(7,688 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (41,498,900 bytes saved)
+file data/temp/small_2010.dta saved
+Saved small_2010.dta
+
+Processing 2011...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(506,467 missing values generated)
+  -> Found _racegr2 (standardizing)
+(391,068 real changes made)
+(40,613 real changes made)
+(20,942 real changes made)
+(9,011 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable hlthpln1 was double now byte
+  variable persdoc2 was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (50,140,233 bytes saved)
+file data/temp/small_2011.dta saved
+Saved small_2011.dta
+
+Processing 2012...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+  (all newnames==oldnames)
+(475,687 missing values generated)
+  -> Found _racegr2 (standardizing)
+(363,139 real changes made)
+(40,092 real changes made)
+(21,202 real changes made)
+(9,106 real changes made)
+  variable year was float now int
+  variable _state was double now byte
+  variable hlthpln1 was double now byte
+  variable persdoc2 was double now byte
+  variable age was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (47,093,013 bytes saved)
+file data/temp/small_2012.dta saved
+Saved small_2012.dta
+
+Processing 2013...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+(491,773 missing values generated)
+  -> Found _race (native)
+(491,748 real changes made)
+  (all newnames==oldnames)
+  variable year was float now int
+  variable _state was double now byte
+  variable hlthpln1 was double now byte
+  variable persdoc2 was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable _smoker3 was double now byte
+  variable age was double now byte
+  variable _race was double now byte
+  (48,685,527 bytes saved)
+file data/temp/small_2013.dta saved
+Saved small_2013.dta
+
+Processing 2014...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+(464,664 missing values generated)
+  -> Found _race (native)
+(464,570 real changes made)
+  (all newnames==oldnames)
+  variable year was float now int
+  variable _state was double now byte
+  variable hlthpln1 was double now byte
+  variable persdoc2 was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable sex was double now byte
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (46,001,736 bytes saved)
+file data/temp/small_2014.dta saved
+Saved small_2014.dta
+
+Processing 2015...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+(441,456 missing values generated)
+  -> Found _race (native)
+(441,456 real changes made)
+  (all newnames==oldnames)
+  variable year was float now int
+  variable _state was double now byte
+  variable hlthpln1 was double now byte
+  variable persdoc2 was double now byte
+  variable sex was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (43,704,144 bytes saved)
+file data/temp/small_2015.dta saved
+Saved small_2015.dta
+
+Processing 2016...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+(486,303 missing values generated)
+  -> Found _race (native)
+(486,303 real changes made)
+  (all newnames==oldnames)
+  variable year was float now int
+  variable _state was double now byte
+  variable hlthpln1 was double now byte
+  variable persdoc2 was double now byte
+  variable sex was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (48,143,997 bytes saved)
+file data/temp/small_2016.dta saved
+Saved small_2016.dta
+
+Processing 2017...
+Found weight variable: weight2
+Successfully renamed weight2 to weight
+(450,016 missing values generated)
+  -> Found _race (native)
+(450,016 real changes made)
+  (all newnames==oldnames)
+  variable year was float now int
+  variable _state was double now byte
+  variable hlthpln1 was double now byte
+  variable persdoc2 was double now byte
+  variable sex was double now byte
+  variable educa was double now byte
+  variable employ1 was double now byte
+  variable income2 was double now byte
+  variable weight was double now int
+  variable smoke100 was double now byte
+  variable smokday2 was double now byte
+  variable stopsmk2 was double now byte
+  variable age was double now byte
+  variable _smoker3 was double now byte
+  variable _race was double now byte
+  (44,551,584 bytes saved)
+file data/temp/small_2017.dta saved
+Saved small_2017.dta
+
+. 
+. *****************************************************************************
+> ***
+. * STEP 2: Append the small files
+. *****************************************************************************
+> ***
+. 
+. di _newline(2) "Appending small files..."
+
+
+Appending small files...
+
+. clear
+
+. 
+. * Start with first processed file
+. use "data/temp/small_2003.dta", clear
+
+. 
+. foreach yr in 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 201
+> 6 2017 {
+  2.     di "Appending `yr'..."
+  3.     append using "data/temp/small_`yr'.dta", force
+  4. }
+Appending 2004...
+Appending 2005...
+Appending 2006...
+Appending 2007...
+Appending 2008...
+Appending 2009...
+Appending 2010...
+Appending 2011...
+Appending 2012...
+Appending 2013...
+Appending 2014...
+Appending 2015...
+Appending 2016...
+Appending 2017...
+
+. 
+. di "Total observations: " _N
+Total observations: 6325797
+
+. 
+. *****************************************************************************
+> ***
+. * STEP 3: Create Analysis Variables & Final Save
+. * (Same logic as before)
+. *****************************************************************************
+> ***
+. 
+. * ... [Logic from original Section 5, 6, 7] ...
+. 
+. * Expansion Status
+. gen expanded_state = 0
+
+. replace expanded_state = 1 if inlist(_state, 4, 5, 6, 8, 9, 10, 11)     
+(741,535 real changes made)
+
+. replace expanded_state = 1 if inlist(_state, 15, 17, 18, 19, 21, 24, 25) 
+(895,300 real changes made)
+
+. replace expanded_state = 1 if inlist(_state, 26, 27, 30, 32, 33, 34, 35) 
+(829,459 real changes made)
+
+. replace expanded_state = 1 if inlist(_state, 36, 38, 39, 41, 42, 44)    
+(693,584 real changes made)
+
+. replace expanded_state = 1 if inlist(_state, 50, 53, 54)                
+(438,498 real changes made)
+
+. 
+. label variable expanded_state "Medicaid Expansion State"
+
+. 
+. * Post Period
+. gen post = .
+(6,325,797 missing values generated)
+
+. replace post = 0 if year >= 2003 & year <= 2009
+(2,558,356 real changes made)
+
+. replace post = 1 if year >= 2011 & year <= 2015
+(2,380,047 real changes made)
+
+. label variable post "Post-Expansion Period"
+
+. 
+. * Outcomes
+. gen current_smoker = .
+(6,325,797 missing values generated)
+
+. capture confirm variable _smoker3
+
+. if _rc == 0 {
+.     replace current_smoker = 1 if inlist(_smoker3, 1, 2)
+(1,040,294 real changes made)
+.     replace current_smoker = 0 if inlist(_smoker3, 3, 4)
+(5,166,476 real changes made)
+. }
+
+. 
+. gen quit_attempt = .
+(6,325,797 missing values generated)
+
+. capture confirm variable stopsmk2
+
+. if _rc == 0 {
+.     replace quit_attempt = 1 if stopsmk2 == 1
+(577,439 real changes made)
+.     replace quit_attempt = 0 if stopsmk2 == 2
+(459,393 real changes made)
+. }
+
+. 
+. * Covariates
+. gen female = (sex == 2) if sex != .
+
+. 
+. * Age Categories (18-34, 35-49, 50-64, 65-79, 80+)
+. gen age_cat = .
+(6,325,797 missing values generated)
+
+. replace age_cat = 1 if age >= 18 & age <= 34
+(961,593 real changes made)
+
+. replace age_cat = 2 if age >= 35 & age <= 49
+(1,414,409 real changes made)
+
+. replace age_cat = 3 if age >= 50 & age <= 64
+(1,959,397 real changes made)
+
+. replace age_cat = 4 if age >= 65 & age <= 79
+(1,471,966 real changes made)
+
+. replace age_cat = 5 if age >= 80 & age < .
+(483,501 real changes made)
+
+. label variable age_cat "Age Category"
+
+. 
+. * Race/Ethnicity
+. gen race = .
+(6,325,797 missing values generated)
+
+. replace race = 1 if _race == 1                    // White
+(4,883,831 real changes made)
+
+. replace race = 2 if _race == 2                    // Black
+(504,527 real changes made)
+
+. replace race = 3 if _race == 8                    // Hispanic
+(343,050 real changes made)
+
+. replace race = 4 if inlist(_race, 3, 4, 5, 6, 7)  // Other
+(217,161 real changes made)
+
+. label variable race "Race/Ethnicity"
+
+. 
+. * Education
+. gen education = .
+(6,325,797 missing values generated)
+
+. replace education = 1 if inlist(educa, 1, 2, 3)   // Less than HS
+(581,326 real changes made)
+
+. replace education = 2 if educa == 4                // HS graduate
+(1,856,881 real changes made)
+
+. replace education = 3 if inlist(educa, 5, 6)       // Some college+
+(3,863,462 real changes made)
+
+. label variable education "Education Level"
+
+. 
+. * Income
+. gen income = .
+(6,325,797 missing values generated)
+
+. replace income = 1 if income2 == 1                         // <$10k
+(304,924 real changes made)
+
+. replace income = 2 if inlist(income2, 2, 3)                // $10k-<$20k
+(755,187 real changes made)
+
+. replace income = 3 if inlist(income2, 4, 5, 6)             // $20k-<$50k
+(2,005,611 real changes made)
+
+. replace income = 4 if inlist(income2, 7, 8)                // $50k+
+(2,330,308 real changes made)
+
+. label variable income "Annual Household Income"
+
+. 
+. * Employment
+. gen employed = .
+(6,325,797 missing values generated)
+
+. capture confirm variable employ1
+
+. if _rc == 0 {
+.     replace employed = 1 if employ1 == 1
+(2,701,656 real changes made)
+.     replace employed = 2 if employ1 == 2
+(539,082 real changes made)
+.     replace employed = 3 if inlist(employ1, 3, 4)
+(301,374 real changes made)
+.     replace employed = 4 if inlist(employ1, 5, 6, 7)
+(2,311,478 real changes made)
+.     replace employed = 5 if employ1 == 8
+(435,872 real changes made)
+. }
+
+. else {
+.     * Logic for older EMPLOY variable not strictly needed if we standardized,
+>  
+.     * but good for safety if standardize failed for some reason.
+.     * In optimized step 1 we tried to rename EMPLOY -> employ1
+. }
+
+. label variable employed "Employment Status"
+
+. 
+. * Healthcare Coverage
+. gen has_coverage = .
+(6,325,797 missing values generated)
+
+. capture confirm variable hlthpln1
+
+. if _rc == 0 {
+.     replace has_coverage = 1 if hlthpln1 == 1
+(2,995,033 real changes made)
+.     replace has_coverage = 0 if hlthpln1 == 2
+(308,877 real changes made)
+. }
+
+. label variable has_coverage "Has Healthcare Coverage"
+
+. 
+. * Personal Doctor
+. gen has_doctor = (persdoc2 == 1) if inlist(persdoc2, 1, 2, 3)
+(22,845 missing values generated)
+
+. label variable has_doctor "Has Personal Doctor"
+
+. 
+. * Save
+. compress
+  variable expanded_state was double now byte
+  variable post was double now byte
+  variable current_smoker was double now byte
+  variable quit_attempt was double now byte
+  variable female was double now byte
+  variable age_cat was double now byte
+  variable race was double now byte
+  variable education was double now byte
+  variable income was double now byte
+  variable employed was double now byte
+  variable has_coverage was double now byte
+  variable has_doctor was double now byte
+  (531,366,948 bytes saved)
+
+. save "data/brfss_analysis.dta", replace
+file data/brfss_analysis.dta saved
+
+. 
+. di "DONE."
+DONE.
+
+. log close
+      name:  <unnamed>
+       log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
+> nal project\log/proc.log
+  log type:  text
+ closed on:   8 Dec 2025, 23:33:45
+-------------------------------------------------------------------------------
