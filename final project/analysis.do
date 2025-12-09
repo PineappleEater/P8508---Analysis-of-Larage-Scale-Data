@@ -545,10 +545,54 @@ capture noisily poisson quit_attempt i.expanded_state##i.post ///
 capture estimates store barrier_copay_no
 
 * Summary comparison
-di _newline(2) "========== BARRIERS SUMMARY =========="
+di _newline(2) "========== BARRIERS SUMMARY (POISSON) =========="
 di "DiD Coefficients (1.expanded#1.post) by Barrier Status:"
 capture noisily estimates table barrier_prior_yes barrier_prior_no barrier_copay_yes barrier_copay_no, ///
     keep(1.expanded_state#1.post) b se stats(N) modelwidth(15)
+
+* LOGISTIC REGRESSION VERSION OF BARRIERS ANALYSIS
+di _newline(3)
+di "=========================================================================="
+di "BARRIERS ANALYSIS - LOGISTIC REGRESSION (EXTENSION)"
+di "=========================================================================="
+di "Re-running Tables 5 & 6 with Logistic Regression for robustness check"
+di _newline(1)
+
+* TABLE 5: PRIOR AUTHORIZATION (LOGISTIC)
+di _newline(2) "========== TABLE 5: PRIOR AUTHORIZATION BARRIERS (LOGISTIC) =========="
+
+di _newline(1) "--- STRATUM: Prior Authorization Required (YES) ---"
+capture noisily logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if prior_auth == 1 [pw=weight], cluster(_state)
+di _newline(1) "DiD Effect (Odds Ratio):"
+lincom 1.expanded_state#1.post, or
+
+di _newline(1) "--- STRATUM: No Prior Authorization Required (NO) ---"
+capture noisily logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if prior_auth == 0 [pw=weight], cluster(_state)
+di _newline(1) "DiD Effect (Odds Ratio):"
+lincom 1.expanded_state#1.post, or
+
+* TABLE 6: CO-PAYMENTS (LOGISTIC)
+di _newline(2) "========== TABLE 6: CO-PAYMENT BARRIERS (LOGISTIC) =========="
+
+di _newline(1) "--- STRATUM: Copayment Required (YES) ---"
+capture noisily logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if copay == 1 [pw=weight], cluster(_state)
+di _newline(1) "DiD Effect (Odds Ratio):"
+lincom 1.expanded_state#1.post, or
+
+di _newline(1) "--- STRATUM: No Copayment Required (NO) ---"
+capture noisily logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if copay == 0 [pw=weight], cluster(_state)
+di _newline(1) "DiD Effect (Odds Ratio):"
+lincom 1.expanded_state#1.post, or
+
+di _newline(1) "Logistic regression barriers analysis complete."
 
 restore
 

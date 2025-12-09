@@ -83,7 +83,7 @@ d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\final project
        log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
 > nal project\log/analysis.log
   log type:  text
- opened on:   9 Dec 2025, 14:50:15
+ opened on:   9 Dec 2025, 16:41:19
 
 . 
 . di "============================================================"
@@ -99,7 +99,7 @@ Replication of Valvi et al. (2019)
 ============================================================
 
 . di "Started at: $S_DATE $S_TIME"
-Started at:  9 Dec 2025 14:50:15
+Started at:  9 Dec 2025 16:41:19
 
 . 
 . * Load processed data
@@ -2995,10 +2995,10 @@ Note: _cons estimates baseline incidence rate.
 
 . 
 . * Summary comparison
-. di _newline(2) "========== BARRIERS SUMMARY =========="
+. di _newline(2) "========== BARRIERS SUMMARY (POISSON) =========="
 
 
-========== BARRIERS SUMMARY ==========
+========== BARRIERS SUMMARY (POISSON) ==========
 
 . di "DiD Coefficients (1.expanded#1.post) by Barrier Status:"
 DiD Coefficients (1.expanded#1.post) by Barrier Status:
@@ -3031,6 +3031,341 @@ expanded_s~e#|
            N |          272107  
 --------------------------------
                     Legend: b/se
+
+. 
+. * LOGISTIC REGRESSION VERSION OF BARRIERS ANALYSIS
+. di _newline(3)
+
+
+
+
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "BARRIERS ANALYSIS - LOGISTIC REGRESSION (EXTENSION)"
+BARRIERS ANALYSIS - LOGISTIC REGRESSION (EXTENSION)
+
+. di "=========================================================================
+> ="
+==========================================================================
+
+. di "Re-running Tables 5 & 6 with Logistic Regression for robustness check"
+Re-running Tables 5 & 6 with Logistic Regression for robustness check
+
+. di _newline(1)
+
+
+
+. 
+. * TABLE 5: PRIOR AUTHORIZATION (LOGISTIC)
+. di _newline(2) "========== TABLE 5: PRIOR AUTHORIZATION BARRIERS (LOGISTIC) =
+> ========="
+
+
+========== TABLE 5: PRIOR AUTHORIZATION BARRIERS (LOGISTIC) ==========
+
+. 
+. di _newline(1) "--- STRATUM: Prior Authorization Required (YES) ---"
+
+--- STRATUM: Prior Authorization Required (YES) ---
+
+. capture noisily logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if prior_auth == 1 [pw=weight], cluster(_state)
+
+Logistic regression                                   Number of obs =  292,683
+                                                      Wald chi2(20) = 11633.31
+                                                      Prob > chi2   =   0.0000
+Log pseudolikelihood = -73121231                      Pseudo R2     =   0.0141
+
+                                (Std. err. adjusted for 23 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt | Odds ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.032815   .0657503     0.51   0.612     .9116621    1.170068
+      1.post |    1.00774   .0635391     0.12   0.903     .8905932    1.140296
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.054969   .0705056     0.80   0.423     .9254484    1.202616
+             |
+     age_cat |
+          2  |   .7376323   .0326628    -6.87   0.000     .6763137    .8045104
+          3  |    .632714   .0334438    -8.66   0.000     .5704465    .7017783
+          4  |   .5223883   .0385472    -8.80   0.000     .4520464    .6036759
+          5  |   .4226389   .0588447    -6.19   0.000     .3217032    .5552437
+             |
+    1.female |   1.102211   .0226104     4.74   0.000     1.058774    1.147429
+             |
+        race |
+          2  |   1.758595   .1101987     9.01   0.000     1.555347    1.988404
+          3  |    1.22257   .1026702     2.39   0.017     1.037029    1.441308
+          4  |   1.052783   .0585584     0.92   0.355     .9440453    1.174045
+             |
+   education |
+          2  |   .9928745   .0591156    -0.12   0.904     .8835151     1.11577
+          3  |   1.122792   .0608804     2.14   0.033      1.00959    1.248686
+             |
+      income |
+          2  |   1.035493   .0485151     0.74   0.457     .9446406    1.135084
+          3  |   .9876346    .043888    -0.28   0.779     .9052552    1.077511
+          4  |   .9621272   .0539441    -0.69   0.491     .8620009    1.073884
+             |
+    employed |
+          2  |    .986017   .0515771    -0.27   0.788     .8899371     1.09247
+          3  |   1.244946   .0825363     3.30   0.001     1.093247    1.417694
+          4  |   1.091094   .0625133     1.52   0.128     .9751987    1.220762
+          5  |   1.485346   .0651189     9.02   0.000     1.363045    1.618621
+             |
+       _cons |   1.293995    .116843     2.85   0.004     1.084107    1.544518
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. di _newline(1) "DiD Effect (Odds Ratio):"
+
+DiD Effect (Odds Ratio):
+
+. lincom 1.expanded_state#1.post, or
+
+ ( 1)  [quit_attempt]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+quit_attempt | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   1.054969   .0705056     0.80   0.423     .9254484    1.202616
+------------------------------------------------------------------------------
+
+. 
+. di _newline(1) "--- STRATUM: No Prior Authorization Required (NO) ---"
+
+--- STRATUM: No Prior Authorization Required (NO) ---
+
+. capture noisily logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if prior_auth == 0 [pw=weight], cluster(_state)
+
+Logistic regression                                    Number of obs = 402,013
+                                                       Wald chi2(20) = 1265.32
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -1.009e+08                      Pseudo R2     =  0.0160
+
+                                (Std. err. adjusted for 31 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt | Odds ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.046735    .045241     1.06   0.291     .9617161     1.13927
+      1.post |   1.221991    .046803     5.23   0.000     1.133617    1.317254
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9174555   .0486728    -1.62   0.104     .8268507    1.017989
+             |
+     age_cat |
+          2  |   .7816118   .0315355    -6.11   0.000     .7221841    .8459297
+          3  |   .6970434   .0255546    -9.84   0.000     .6487145    .7489729
+          4  |    .620004   .0297284    -9.97   0.000     .5643914    .6810963
+          5  |   .4943049   .0554556    -6.28   0.000      .396734     .615872
+             |
+    1.female |   1.126698   .0235975     5.70   0.000     1.081384     1.17391
+             |
+        race |
+          2  |   1.798723   .0721492    14.64   0.000     1.662729     1.94584
+          3  |   1.479029   .0849616     6.81   0.000     1.321539    1.655287
+          4  |   1.158538   .0978396     1.74   0.081     .9818052    1.367083
+             |
+   education |
+          2  |   .9854966   .0336972    -0.43   0.669     .9216158    1.053805
+          3  |    1.13382   .0503094     2.83   0.005     1.039381    1.236839
+             |
+      income |
+          2  |   .9992667   .0527666    -0.01   0.989     .9010179    1.108229
+          3  |     .96247   .0553675    -0.66   0.506     .8598457    1.077343
+          4  |   .9588605   .0582781    -0.69   0.489     .8511786    1.080165
+             |
+    employed |
+          2  |   .9625254   .0356347    -1.03   0.302     .8951565    1.034965
+          3  |   1.046799   .0390925     1.22   0.221     .9729155    1.126292
+          4  |   1.020438   .0408783     0.51   0.614     .9433829    1.103787
+          5  |   1.421027   .0591197     8.45   0.000     1.309753    1.541755
+             |
+       _cons |   1.106305   .0836966     1.34   0.182     .9538454    1.283134
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. di _newline(1) "DiD Effect (Odds Ratio):"
+
+DiD Effect (Odds Ratio):
+
+. lincom 1.expanded_state#1.post, or
+
+ ( 1)  [quit_attempt]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+quit_attempt | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   .9174555   .0486728    -1.62   0.104     .8268507    1.017989
+------------------------------------------------------------------------------
+
+. 
+. * TABLE 6: CO-PAYMENTS (LOGISTIC)
+. di _newline(2) "========== TABLE 6: CO-PAYMENT BARRIERS (LOGISTIC) ==========
+> "
+
+
+========== TABLE 6: CO-PAYMENT BARRIERS (LOGISTIC) ==========
+
+. 
+. di _newline(1) "--- STRATUM: Copayment Required (YES) ---"
+
+--- STRATUM: Copayment Required (YES) ---
+
+. capture noisily logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if copay == 1 [pw=weight], cluster(_state)
+
+Logistic regression                                    Number of obs = 422,589
+                                                       Wald chi2(20) = 1221.12
+                                                       Prob > chi2   =  0.0000
+Log pseudolikelihood = -1.064e+08                      Pseudo R2     =  0.0142
+
+                                (Std. err. adjusted for 31 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt | Odds ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.015991   .0509943     0.32   0.752     .9208029    1.121019
+      1.post |   1.097525    .043214     2.36   0.018     1.016013    1.185577
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.011168   .0535188     0.21   0.834     .9115303    1.121697
+             |
+     age_cat |
+          2  |   .7275882   .0290369    -7.97   0.000     .6728457    .7867845
+          3  |   .6373178   .0287335    -9.99   0.000     .5834176    .6961976
+          4  |   .5762267   .0336628    -9.44   0.000      .513886    .6461301
+          5  |   .4506189   .0474217    -7.57   0.000     .3666331    .5538436
+             |
+    1.female |   1.141057   .0219468     6.86   0.000     1.098843    1.184893
+             |
+        race |
+          2  |   1.663178    .056504    14.97   0.000     1.556039    1.777694
+          3  |   1.331892   .0988676     3.86   0.000     1.151552    1.540474
+          4  |   1.095408   .0748563     1.33   0.182     .9580933    1.252403
+             |
+   education |
+          2  |   .9803703   .0355024    -0.55   0.584     .9131989    1.052482
+          3  |   1.130281   .0399832     3.46   0.001     1.054571    1.211428
+             |
+      income |
+          2  |   1.060168   .0409466     1.51   0.130     .9828765    1.143537
+          3  |   1.009398   .0391398     0.24   0.809     .9355278    1.089101
+          4  |   1.016712   .0418063     0.40   0.687     .9379875    1.102043
+             |
+    employed |
+          2  |   .9400994   .0367527    -1.58   0.114      .870756    1.014965
+          3  |   1.113901    .058284     2.06   0.039     1.005329    1.234198
+          4  |   1.046498   .0450389     1.06   0.291     .9618439    1.138603
+          5  |   1.501493   .0558816    10.92   0.000     1.395866    1.615112
+             |
+       _cons |    1.17815   .0806404     2.40   0.017     1.030241    1.347294
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. di _newline(1) "DiD Effect (Odds Ratio):"
+
+DiD Effect (Odds Ratio):
+
+. lincom 1.expanded_state#1.post, or
+
+ ( 1)  [quit_attempt]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+quit_attempt | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   1.011168   .0535188     0.21   0.834     .9115303    1.121697
+------------------------------------------------------------------------------
+
+. 
+. di _newline(1) "--- STRATUM: No Copayment Required (NO) ---"
+
+--- STRATUM: No Copayment Required (NO) ---
+
+. capture noisily logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if copay == 0 [pw=weight], cluster(_state)
+
+Logistic regression                                  Number of obs =   272,107
+                                                     Wald chi2(20) = 219934.55
+                                                     Prob > chi2   =    0.0000
+Log pseudolikelihood = -67630336                     Pseudo R2     =    0.0162
+
+                                (Std. err. adjusted for 23 clusters in _state)
+------------------------------------------------------------------------------
+             |               Robust
+quit_attempt | Odds ratio   std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |    1.12393   .0721674     1.82   0.069     .9910226    1.274661
+      1.post |   1.259743   .0999366     2.91   0.004     1.078339    1.471664
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .8498088    .074144    -1.87   0.062     .7162353    1.008293
+             |
+     age_cat |
+          2  |   .8268748   .0331741    -4.74   0.000     .7643453    .8945196
+          3  |   .7255512   .0286406    -8.13   0.000     .6715333    .7839143
+          4  |   .5831896   .0423519    -7.43   0.000     .5058184    .6723957
+          5  |   .4899546   .0779665    -4.48   0.000     .3586775    .6692796
+             |
+    1.female |    1.07487   .0230304     3.37   0.001     1.030666     1.12097
+             |
+        race |
+          2  |   1.890611   .0998845    12.06   0.000     1.704636    2.096876
+          3  |   1.428845   .1038491     4.91   0.000     1.239137    1.647596
+          4  |   1.128637   .0797136     1.71   0.087     .9827325    1.296203
+             |
+   education |
+          2  |   1.004144    .056831     0.07   0.942     .8987127    1.121943
+          3  |   1.131469   .0768337     1.82   0.069     .9904686    1.292541
+             |
+      income |
+          2  |   .9421316   .0630954    -0.89   0.373     .8262394    1.074279
+          3  |   .9132142   .0675424    -1.23   0.220     .7899813    1.055671
+          4  |   .8662247   .0712611    -1.75   0.081      .737234    1.017784
+             |
+    employed |
+          2  |   1.027734   .0472338     0.60   0.552     .9392049    1.124608
+          3  |   1.132629   .0631553     2.23   0.026     1.015371    1.263428
+          4  |   1.051045   .0570837     0.92   0.359     .9449125    1.169099
+          5  |   1.366043   .0581699     7.32   0.000      1.25666    1.484947
+             |
+       _cons |   1.153638   .1250184     1.32   0.187     .9328805    1.426636
+------------------------------------------------------------------------------
+Note: _cons estimates baseline odds.
+
+. di _newline(1) "DiD Effect (Odds Ratio):"
+
+DiD Effect (Odds Ratio):
+
+. lincom 1.expanded_state#1.post, or
+
+ ( 1)  [quit_attempt]1.expanded_state#1.post = 0
+
+------------------------------------------------------------------------------
+quit_attempt | Odds ratio   Std. err.      z    P>|z|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+         (1) |   .8498088    .074144    -1.87   0.062     .7162353    1.008293
+------------------------------------------------------------------------------
+
+. 
+. di _newline(1) "Logistic regression barriers analysis complete."
+
+Logistic regression barriers analysis complete.
 
 . 
 . restore
@@ -3440,7 +3775,7 @@ Key findings:
        log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
 > nal project\log/analysis.log
   log type:  text
- closed on:   9 Dec 2025, 15:04:18
+ closed on:   9 Dec 2025, 16:56:32
 -------------------------------------------------------------------------------
 
 . 

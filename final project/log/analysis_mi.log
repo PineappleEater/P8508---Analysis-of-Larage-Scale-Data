@@ -3,7 +3,7 @@
        log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
 > nal project\log/analysis_mi.log
   log type:  text
- opened on:   9 Dec 2025, 15:40:46
+ opened on:   9 Dec 2025, 16:41:36
 
 . 
 . * Load data
@@ -824,17 +824,12 @@ expanded_s~e#|
 ------------------------------------------------------------------------------
 
 . 
-. di _newline(1) "Administrative Barriers Analysis Complete (MI)."
+. di _newline(1) "Administrative Barriers Analysis Complete (MI - Poisson)."
 
-Administrative Barriers Analysis Complete (MI).
+Administrative Barriers Analysis Complete (MI - Poisson).
 
 . 
-. *****************************************************************************
-> ***
-. * SENSITIVITY ANALYSES (MICE Data)
-. *****************************************************************************
-> ***
-. 
+. * LOGISTIC REGRESSION VERSION OF BARRIERS ANALYSIS (MICE)
 . di _newline(3)
 
 
@@ -845,351 +840,233 @@ Administrative Barriers Analysis Complete (MI).
 > ="
 ==========================================================================
 
-. di "SENSITIVITY ANALYSES: TESTING ROBUSTNESS ACROSS METHODS (MICE DATA)"
-SENSITIVITY ANALYSES: TESTING ROBUSTNESS ACROSS METHODS (MICE DATA)
+. di "BARRIERS ANALYSIS - LOGISTIC REGRESSION (MICE EXTENSION)"
+BARRIERS ANALYSIS - LOGISTIC REGRESSION (MICE EXTENSION)
 
 . di "=========================================================================
 > ="
 ==========================================================================
 
-. di "Purpose: Compare clustered vs unclustered and Poisson vs Logistic"
-Purpose: Compare clustered vs unclustered and Poisson vs Logistic
-
-. di "Using MICE imputed data (full sample N=5,389,478)"
-Using MICE imputed data (full sample N=5,389,478)
+. di "Re-running Tables 5 & 6 with Logistic Regression for robustness check"
+Re-running Tables 5 & 6 with Logistic Regression for robustness check
 
 . di _newline(1)
 
 
 
 . 
-. * METHOD 1: UNCLUSTERED POISSON (MICE)
-. di _newline(2)
+. * TABLE 5: PRIOR AUTHORIZATION (LOGISTIC, MICE)
+. di _newline(2) "========== TABLE 5: PRIOR AUTHORIZATION BARRIERS (LOGISTIC, M
+> ICE) =========="
 
 
-
-
-. di "========== METHOD 1: POISSON WITHOUT CLUSTERING (MICE) =========="
-========== METHOD 1: POISSON WITHOUT CLUSTERING (MICE) ==========
-
-. di "WARNING: Ignores state-level clustering, will underestimate standard erro
-> rs"
-WARNING: Ignores state-level clustering, will underestimate standard errors
-
-. di _newline(1)
-
-
+========== TABLE 5: PRIOR AUTHORIZATION BARRIERS (LOGISTIC, MICE) ==========
 
 . 
-. di "--- Current Smoking (Unclustered, MICE) ---"
---- Current Smoking (Unclustered, MICE) ---
+. di _newline(1) "--- STRATUM: Prior Authorization Required (YES) ---"
 
-. mi estimate, eform: poisson current_smoker i.expanded_state##i.post ///
->     i.age_cat i.female i.race i.education i.income i.employed ///
->     [pw=weight], vce(robust)
-
-Multiple-imputation estimates                   Imputations       =          5
-Poisson regression                              Number of obs     =  4,811,040
-                                                Average RVI       =     0.0618
-                                                Largest FMI       =     0.2557
-DF adjustment:   Large sample                   DF:     min       =      72.19
-                                                        avg       = 259,268.81
-                                                        max       = 3287007.45
-Model F test:       Equal FMI                   F(  20,19696.8)   =    1166.53
-Within VCE type:       Robust                   Prob > F          =     0.0000
-
-------------------------------------------------------------------------------
-current_sm~r |     exp(b)   Std. err.      t    P>|t|     [95% conf. interval]
--------------+----------------------------------------------------------------
-1.expanded~e |   1.050857    .010358     5.03   0.000      1.03075    1.071356
-      1.post |   .8836617   .0098921   -11.05   0.000     .8644847    .9032641
-             |
-expanded_s~e#|
-        post |
-        1 1  |   .9843689   .0145584    -1.07   0.287     .9562444    1.013321
-             |
-     age_cat |
-          2  |   .9487813   .0097131    -5.14   0.000     .9299335    .9680111
-          3  |   .7288019   .0075649   -30.48   0.000     .7141244    .7437811
-          4  |   .4139786   .0060283   -60.57   0.000     .4023304    .4259641
-          5  |   .1595748   .0057151   -51.24   0.000     .1487574    .1711788
-             |
-    1.female |   .7788228   .0054451   -35.75   0.000     .7682231    .7895688
-             |
-        race |
-          2  |    .783431   .0104448   -18.31   0.000     .7631548     .804246
-          3  |   .7869255   .0131555   -14.33   0.000      .761513     .813186
-          4  |   1.059357   .0200467     3.05   0.002     1.020709    1.099468
-             |
-   education |
-          2  |   .8906591   .0098745   -10.44   0.000     .8715119    .9102269
-          3  |   .6121084   .0073634   -40.80   0.000     .5978339    .6267238
-             |
-      income |
-          2  |   1.000063   .0153936     0.00   0.997     .9698434    1.031223
-          3  |   .8641414   .0131666    -9.58   0.000      .838333    .8907443
-          4  |   .5840884   .0095646   -32.84   0.000     .5655695    .6032135
-             |
-    employed |
-          2  |   .9154607   .0131087    -6.17   0.000     .8901252    .9415174
-          3  |   1.343793    .017976    22.09   0.000     1.309017    1.379494
-          4  |   .8043052   .0090283   -19.40   0.000     .7868033    .8221966
-          5  |   1.449113     .01823    29.49   0.000     1.413795    1.485314
-             |
-       _cons |   .4422392   .0085066   -42.42   0.000     .4257613    .4593549
-------------------------------------------------------------------------------
-
-. 
-. di _newline(1)
-
-
-
-. di "--- Quit Attempts (Unclustered, MICE) ---"
---- Quit Attempts (Unclustered, MICE) ---
-
-. mi estimate, eform: poisson quit_attempt i.expanded_state##i.post ///
->     i.age_cat i.female i.race i.education i.income i.employed ///
->     if current_smoker == 1 [pw=weight], vce(robust)
-
-Multiple-imputation estimates                   Imputations       =          5
-Poisson regression                              Number of obs     =    827,549
-                                                Average RVI       =     0.0840
-                                                Largest FMI       =     0.3740
-DF adjustment:   Large sample                   DF:     min       =      34.80
-                                                        avg       = 930,034.83
-                                                        max       = 9180733.78
-Model F test:       Equal FMI                   F(  20,11094.7)   =      64.13
-Within VCE type:       Robust                   Prob > F          =     0.0000
-
-------------------------------------------------------------------------------
-quit_attempt |     exp(b)   Std. err.      t    P>|t|     [95% conf. interval]
--------------+----------------------------------------------------------------
-1.expanded~e |   1.021499   .0102467     2.12   0.034     1.001612    1.041781
-      1.post |   1.047987   .0116295     4.22   0.000      1.02544     1.07103
-             |
-expanded_s~e#|
-        post |
-        1 1  |   .9869349   .0144848    -0.90   0.370     .9589496    1.015737
-             |
-     age_cat |
-          2  |    .889665   .0086161   -12.07   0.000     .8729369    .9067137
-          3  |   .8414191   .0082257   -17.66   0.000     .8254505    .8576966
-          4  |    .767512   .0113857   -17.84   0.000     .7455176    .7901552
-          5  |   .6529275   .0279485    -9.96   0.000     .6003843     .710069
-             |
-    1.female |   1.034437   .0072532     4.83   0.000     1.020317    1.048753
-             |
-        race |
-          2  |   1.228559   .0138679    18.24   0.000     1.201436    1.256294
-          3  |   1.124994   .0192834     6.87   0.000     1.086512    1.164839
-          4  |   1.054858    .018649     3.02   0.003     1.018921    1.092063
-             |
-   education |
-          2  |   .9820796   .0110572    -1.61   0.108     .9606387    1.003999
-          3  |   1.037046   .0118105     3.19   0.001     1.014136    1.060475
-             |
-      income |
-          2  |   1.010318   .0143833     0.72   0.472     .9823291    1.039105
-          3  |   .9869555    .013451    -0.96   0.336     .9608752    1.013744
-          4  |   .9667926   .0173503    -1.88   0.068     .9322114    1.002657
-             |
-    employed |
-          2  |   .9768201   .0146141    -1.57   0.117     .9485927    1.005887
-          3  |   1.045969   .0137885     3.41   0.001     1.019282    1.073354
-          4  |   1.012803   .0112835     1.14   0.254     .9909269    1.035162
-          5  |   1.138989   .0137067    10.81   0.000     1.112424    1.166189
-             |
-       _cons |   .5561613    .010237   -31.87   0.000     .5364126    .5766371
-------------------------------------------------------------------------------
-
-. 
-. * METHOD 2: LOGISTIC REGRESSION (MICE)
-. di _newline(2)
-
-
-
-
-. di "========== METHOD 2: LOGISTIC REGRESSION (MICE) =========="
-========== METHOD 2: LOGISTIC REGRESSION (MICE) ==========
-
-. di "Using logistic regression instead of Poisson (with clustering)"
-Using logistic regression instead of Poisson (with clustering)
-
-. di _newline(1)
-
-
-
-. 
-. di "--- Current Smoking (Logistic, MICE) ---"
---- Current Smoking (Logistic, MICE) ---
-
-. mi estimate, eform: svy: logistic current_smoker i.expanded_state##i.post ///
->     i.age_cat i.female i.race i.education i.income i.employed
-
-Multiple-imputation estimates               Imputations       =              5
-Survey: Logistic regression                 Number of obs     =      4,811,041
-
-Number of strata  =         1               Population size   =  2,436,476,775
-Number of PSUs    =        54
-                                            Average RVI       =         0.0662
-                                            Largest FMI       =         0.1587
-                                            Complete DF       =             53
-DF adjustment:   Small sample               DF:     min       =          35.61
-                                                    avg       =          49.41
-                                                    max       =          51.09
-Model F test:       Equal FMI               F(  20,   50.7)   =         714.51
-Within VCE type:   Linearized               Prob > F          =         0.0000
-
-------------------------------------------------------------------------------
-current_sm~r |     exp(b)   Std. err.      t    P>|t|     [95% conf. interval]
--------------+----------------------------------------------------------------
-1.expanded~e |   1.065221   .0471955     1.43   0.160     .9745665    1.164308
-      1.post |   .8605697   .0292957    -4.41   0.000     .8037227    .9214375
-             |
-expanded_s~e#|
-        post |
-        1 1  |   .9789962   .0366156    -0.57   0.573      .908181    1.055333
-             |
-     age_cat |
-          2  |   .9328838   .0137726    -4.71   0.000     .9056389    .9609482
-          3  |   .6708447   .0147499   -18.16   0.000     .6418762    .7011206
-          4  |   .3487726   .0130568   -28.14   0.000     .3235218    .3759941
-          5  |   .1242631   .0083711   -30.96   0.000     .1085449    .1422574
-             |
-    1.female |   .7266924    .012804   -18.12   0.000     .7014364    .7528577
-             |
-        race |
-          2  |   .7341272   .0361024    -6.28   0.000     .6650919    .8103282
-          3  |   .7347315   .0471192    -4.81   0.000     .6459576    .8357056
-          4  |   1.074595   .0587967     1.31   0.195     .9627568    1.199426
-             |
-   education |
-          2  |   .8486896   .0312287    -4.46   0.000     .7882534    .9137596
-          3  |   .5363023   .0216345   -15.45   0.000     .4945759    .5815491
-             |
-      income |
-          2  |   .9943997   .0267173    -0.21   0.836     .9416447     1.05011
-          3  |   .8244876   .0258295    -6.16   0.000     .7739759    .8782958
-          4  |   .5204299   .0170417   -19.94   0.000      .487256    .5558625
-             |
-    employed |
-          2  |   .8975255   .0256143    -3.79   0.000     .8475487    .9504493
-          3  |   1.490208   .0294975    20.15   0.000     1.432141    1.550629
-          4  |   .7753843   .0144416   -13.66   0.000     .7469266    .8049262
-          5  |   1.641809   .0346035    23.52   0.000     1.573735    1.712827
-             |
-       _cons |   .7036234   .0493594    -5.01   0.000     .6111411    .8101009
-------------------------------------------------------------------------------
-
-. 
-. di _newline(1)
-
-
-
-. di "--- Quit Attempts (Logistic, MICE) ---"
---- Quit Attempts (Logistic, MICE) ---
+--- STRATUM: Prior Authorization Required (YES) ---
 
 . mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
 >     i.age_cat i.female i.race i.education i.income i.employed ///
->     if current_smoker == 1
+>     if current_smoker == 1 & prior_auth == 1
 
 Multiple-imputation estimates                 Imputations       =            5
-Survey: Logistic regression                   Number of obs     =      827,549
+Survey: Logistic regression                   Number of obs     =      342,232
 
-Number of strata  =         1                 Population size   =  343,362,765
-Number of PSUs    =        54
-                                              Average RVI       =       0.1245
-                                              Largest FMI       =       0.3376
-                                              Complete DF       =           53
-DF adjustment:   Small sample                 DF:     min       =        19.83
-                                                      avg       =        45.56
-                                                      max       =        51.08
-Model F test:       Equal FMI                 F(  20,   50.2)   =        64.61
+Number of strata  =         1                 Population size   =  140,513,229
+Number of PSUs    =        23
+                                              Average RVI       =       0.1886
+                                              Largest FMI       =       0.4225
+                                              Complete DF       =           22
+DF adjustment:   Small sample                 DF:     min       =         9.05
+                                                      avg       =        18.60
+                                                      max       =        20.24
+Model F test:       Equal FMI                 F(  20,   19.4)   =        49.99
 Within VCE type:   Linearized                 Prob > F          =       0.0000
 
 ------------------------------------------------------------------------------
 quit_attempt |     exp(b)   Std. err.      t    P>|t|     [95% conf. interval]
 -------------+----------------------------------------------------------------
-1.expanded~e |   1.048027   .0366336     1.34   0.186     .9770053    1.124211
-      1.post |   1.110022   .0402233     2.88   0.006     1.032139    1.193783
+1.expanded~e |    1.04159   .0595101     0.71   0.484     .9246461    1.173325
+      1.post |   1.018567   .0658928     0.28   0.779     .8900721    1.165612
              |
 expanded_s~e#|
         post |
-        1 1  |   .9714014   .0406263    -0.69   0.491     .8931739     1.05648
+        1 1  |   1.043025   .0712343     0.62   0.544      .904622    1.202604
              |
      age_cat |
-          2  |   .7551167    .020066   -10.57   0.000      .715887    .7964962
-          3  |    .668551     .01789   -15.05   0.000     .6335838    .7054481
-          4  |   .5553257   .0201003   -16.25   0.000     .5164035    .5971816
-          5  |   .4150216   .0417229    -8.75   0.000      .339173     .507832
+          2  |   .7414757   .0300318    -7.39   0.000     .6814446    .8067951
+          3  |   .6469166    .030551    -9.22   0.000     .5862672    .7138401
+          4  |   .5133814   .0332037   -10.31   0.000     .4486323    .5874754
+          5  |   .3747791   .0459779    -8.00   0.000     .2902149    .4839839
              |
-    1.female |   1.078977   .0207335     3.96   0.000     1.038131     1.12143
+    1.female |   1.080421   .0304935     2.74   0.013     1.018662    1.145924
              |
         race |
-          2  |   1.669711   .0622379    13.75   0.000     1.548362     1.80057
-          3  |   1.320126   .0665021     5.51   0.000     1.189714    1.464833
-          4  |   1.127042   .0518767     2.60   0.012     1.027488    1.236241
+          2  |   1.652342   .1268112     6.54   0.000     1.389199     1.96533
+          3  |   1.221281   .0938766     2.60   0.018      1.03953    1.434808
+          4  |   1.077443   .0642057     1.25   0.225     .9515297    1.220018
              |
    education |
-          2  |   .9633878   .0221884    -1.62   0.112     .9197945    1.009047
-          3  |   1.086217   .0335615     2.68   0.010     1.020804    1.155821
+          2  |   .9597158   .0375011    -1.05   0.305      .884629    1.041176
+          3  |   1.077806   .0416921     1.94   0.067     .9941744    1.168473
              |
       income |
-          2  |   1.022411   .0344462     0.66   0.515     .9547721    1.094841
-          3  |   .9698213   .0322006    -0.92   0.361     .9069981    1.036996
-          4  |   .9283983   .0396822    -1.74   0.098     .8491631    1.015027
+          2  |   1.005001   .0548378     0.09   0.929     .8917806    1.132595
+          3  |   .9700105   .0480704    -0.61   0.547     .8740256    1.076536
+          4  |   .9144743   .0566015    -1.44   0.172     .8001235    1.045168
              |
     employed |
-          2  |   .9545398   .0247385    -1.80   0.079     .9061392    1.005526
-          3  |   1.111332   .0379945     3.09   0.003     1.037563    1.190346
-          4  |   1.031249    .025135     1.26   0.213     .9819946    1.082975
-          5  |   1.354963    .035219    11.69   0.000     1.285942    1.427688
+          2  |   .9613396   .0452751    -0.84   0.412     .8714243    1.060532
+          3  |   1.223935   .0693827     3.56   0.002     1.087477    1.377517
+          4  |    1.03873   .0461182     0.86   0.402     .9469033    1.139462
+          5  |   1.377447   .0507104     8.70   0.000     1.275576    1.487454
              |
-       _cons |    1.28164   .0673652     4.72   0.000     1.152996    1.424636
+       _cons |   1.374122   .1243751     3.51   0.002     1.136775    1.661024
 ------------------------------------------------------------------------------
 
 . 
-. di _newline(2)
+. di _newline(1) "--- STRATUM: No Prior Authorization Required (NO) ---"
 
+--- STRATUM: No Prior Authorization Required (NO) ---
 
+. mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if current_smoker == 1 & prior_auth == 0
 
+Multiple-imputation estimates                 Imputations       =            5
+Survey: Logistic regression                   Number of obs     =      485,317
 
-. di "=========================================================================
-> ="
-==========================================================================
+Number of strata  =         1                 Population size   =  202,849,536
+Number of PSUs    =        31
+                                              Average RVI       =       0.1970
+                                              Largest FMI       =       0.3852
+                                              Complete DF       =           30
+DF adjustment:   Small sample                 DF:     min       =        12.27
+                                                      avg       =        25.23
+                                                      max       =        28.17
+Model F test:       Equal FMI                 F(  20,   27.0)   =        76.92
+Within VCE type:   Linearized                 Prob > F          =       0.0000
 
-. di "SENSITIVITY ANALYSIS SUMMARY (MICE)"
-SENSITIVITY ANALYSIS SUMMARY (MICE)
-
-. di "=========================================================================
-> ="
-==========================================================================
-
-. di "Key findings:"
-Key findings:
-
-. di "  - Point estimates stable across methods with MICE data"
-  - Point estimates stable across methods with MICE data
-
-. di "  - Clustering by state remains CRITICAL for correct inference"
-  - Clustering by state remains CRITICAL for correct inference
-
-. di "  - Without clustering, standard errors severely underestimated even with
->  MI"
-  - Without clustering, standard errors severely underestimated even with MI
-
-. di "  - All MICE methods confirm: no evidence of increased quit attempts"
-  - All MICE methods confirm: no evidence of increased quit attempts
-
-. di _newline(1)
-
-
+------------------------------------------------------------------------------
+quit_attempt |     exp(b)   Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.039234   .0477729     0.84   0.410     .9458657    1.141819
+      1.post |   1.161034   .0424327     4.09   0.000     1.077297    1.251279
+             |
+expanded_s~e#|
+        post |
+        1 1  |   .9425609   .0449037    -1.24   0.225     .8549457    1.039155
+             |
+     age_cat |
+          2  |   .7632139   .0270099    -7.64   0.000     .7098499    .8205896
+          3  |    .682279   .0209641   -12.44   0.000     .6406659    .7265951
+          4  |   .5857896   .0227991   -13.74   0.000     .5409031     .634401
+          5  |   .4429544    .063494    -5.68   0.000     .3302722    .5940815
+             |
+    1.female |   1.079321   .0284377     2.90   0.007     1.022606    1.139181
+             |
+        race |
+          2  |   1.692347   .0710788    12.53   0.000     1.552387    1.844925
+          3  |   1.386196   .0778433     5.82   0.000      1.22957    1.562773
+          4  |     1.1681    .083344     2.18   0.039      1.00869    1.352702
+             |
+   education |
+          2  |   .9659276   .0268801    -1.25   0.224     .9122275    1.022789
+          3  |   1.090695   .0481904     1.96   0.060     .9961128    1.194258
+             |
+      income |
+          2  |   1.034811   .0481349     0.74   0.471     .9384808     1.14103
+          3  |   .9706744    .043994    -0.66   0.518     .8834427    1.066519
+          4  |    .941039   .0544937    -1.05   0.314     .8297436    1.067263
+             |
+    employed |
+          2  |    .949055   .0280224    -1.77   0.087     .8933648    1.008217
+          3  |   1.045007   .0388845     1.18   0.247     .9681376     1.12798
+          4  |   1.025914   .0291705     0.90   0.376     .9678367    1.087476
+          5  |   1.341796   .0499702     7.89   0.000     1.242905    1.448554
+             |
+       _cons |   1.229631   .0773268     3.29   0.003     1.080546    1.399285
+------------------------------------------------------------------------------
 
 . 
-. log close
-      name:  <unnamed>
-       log:  d:\OneDrive\Desktop\Academic\Biostats Courses\Larage Scale Data\fi
-> nal project\log/analysis_mi.log
-  log type:  text
- closed on:   9 Dec 2025, 16:16:19
--------------------------------------------------------------------------------
+. * TABLE 6: CO-PAYMENTS (LOGISTIC, MICE)
+. di _newline(2) "========== TABLE 6: CO-PAYMENT BARRIERS (LOGISTIC, MICE) ====
+> ======"
+
+
+========== TABLE 6: CO-PAYMENT BARRIERS (LOGISTIC, MICE) ==========
+
+. 
+. di _newline(1) "--- STRATUM: Copayment Required (YES) ---"
+
+--- STRATUM: Copayment Required (YES) ---
+
+. mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if current_smoker == 1 & copay == 1
+
+Multiple-imputation estimates                 Imputations       =            5
+Survey: Logistic regression                   Number of obs     =      495,337
+
+Number of strata  =         1                 Population size   =  206,490,755
+Number of PSUs    =        31
+                                              Average RVI       =       0.2403
+                                              Largest FMI       =       0.6094
+                                              Complete DF       =           30
+DF adjustment:   Small sample                 DF:     min       =         6.71
+                                                      avg       =        24.62
+                                                      max       =        28.17
+Model F test:       Equal FMI                 F(  20,   26.7)   =        46.73
+Within VCE type:   Linearized                 Prob > F          =       0.0000
+
+------------------------------------------------------------------------------
+quit_attempt |     exp(b)   Std. err.      t    P>|t|     [95% conf. interval]
+-------------+----------------------------------------------------------------
+1.expanded~e |   1.002897   .0458412     0.06   0.950     .9132813    1.101307
+      1.post |   1.074074    .039568     1.94   0.062     .9960228    1.158241
+             |
+expanded_s~e#|
+        post |
+        1 1  |   1.032731   .0496626     0.67   0.508     .9358766     1.13961
+             |
+     age_cat |
+          2  |   .7265523   .0262212    -8.85   0.000     .6747762    .7823013
+          3  |   .6392674   .0251029   -11.39   0.000     .5898633    .6928093
+          4  |   .5532957   .0300888   -10.88   0.000     .4949854    .6184752
+          5  |   .4150962   .0386305    -9.45   0.000     .3430663    .5022494
+             |
+    1.female |   1.109711    .029525     3.91   0.001     1.050827    1.171893
+             |
+        race |
+          2  |   1.577256   .0628734    11.43   0.000     1.451641    1.713742
+          3  |   1.291622   .0893722     3.70   0.001     1.118877    1.491039
+          4  |   1.084866   .0631775     1.40   0.174      .962238    1.223122
+             |
+   education |
+          2  |   .9796918   .0263322    -0.76   0.452     .9270308    1.035344
+          3  |   1.103972   .0417102     2.62   0.015     1.021243    1.193403
+             |
+      income |
+          2  |   1.039152   .0412552     0.97   0.344     .9568845    1.128493
+          3  |   .9935613   .0405507    -0.16   0.876     .9119191    1.082513
+          4  |   .9703615   .0530767    -0.55   0.600      .851648    1.105623
+             |
+    employed |
+          2  |    .928849   .0326183    -2.10   0.045      .864382    .9981241
+          3  |   1.121255   .0528108     2.43   0.022     1.017894    1.235112
+          4  |   1.020642   .0342246     0.61   0.547     .9528577    1.093248
+          5  |   1.399182   .0471967     9.96   0.000     1.304734    1.500467
+             |
+       _cons |   1.267851   .0836558     3.60   0.001      1.10639    1.452876
+------------------------------------------------------------------------------
+
+. 
+. di _newline(1) "--- STRATUM: No Copayment Required (NO) ---"
+
+--- STRATUM: No Copayment Required (NO) ---
+
+. mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
+>     i.age_cat i.female i.race i.education i.income i.employed ///
+>     if current_smoker == 1 & copay == 0

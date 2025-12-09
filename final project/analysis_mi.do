@@ -189,7 +189,43 @@ mi estimate, eform: svy: poisson quit_attempt i.expanded_state##i.post ///
     i.age_cat i.female i.race i.education i.income i.employed ///
     if current_smoker == 1 & copay == 0
 
-di _newline(1) "Administrative Barriers Analysis Complete (MI)."
+di _newline(1) "Administrative Barriers Analysis Complete (MI - Poisson)."
+
+* LOGISTIC REGRESSION VERSION OF BARRIERS ANALYSIS (MICE)
+di _newline(3)
+di "=========================================================================="
+di "BARRIERS ANALYSIS - LOGISTIC REGRESSION (MICE EXTENSION)"
+di "=========================================================================="
+di "Re-running Tables 5 & 6 with Logistic Regression for robustness check"
+di _newline(1)
+
+* TABLE 5: PRIOR AUTHORIZATION (LOGISTIC, MICE)
+di _newline(2) "========== TABLE 5: PRIOR AUTHORIZATION BARRIERS (LOGISTIC, MICE) =========="
+
+di _newline(1) "--- STRATUM: Prior Authorization Required (YES) ---"
+mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if current_smoker == 1 & prior_auth == 1
+
+di _newline(1) "--- STRATUM: No Prior Authorization Required (NO) ---"
+mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if current_smoker == 1 & prior_auth == 0
+
+* TABLE 6: CO-PAYMENTS (LOGISTIC, MICE)
+di _newline(2) "========== TABLE 6: CO-PAYMENT BARRIERS (LOGISTIC, MICE) =========="
+
+di _newline(1) "--- STRATUM: Copayment Required (YES) ---"
+mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if current_smoker == 1 & copay == 1
+
+di _newline(1) "--- STRATUM: No Copayment Required (NO) ---"
+mi estimate, eform: svy: logistic quit_attempt i.expanded_state##i.post ///
+    i.age_cat i.female i.race i.education i.income i.employed ///
+    if current_smoker == 1 & copay == 0
+
+di _newline(1) "Logistic regression barriers analysis complete (MICE)."
 
 ********************************************************************************
 * SENSITIVITY ANALYSES (MICE Data)
